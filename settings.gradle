@@ -16,7 +16,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "WalletAPIDemo"
-include ':app'
+rootProject.name = "Wallet-API-SDK"
+include ':impl'
 include ':fakewallet'
 include ':seedvault'
