@@ -131,9 +131,6 @@ class MainActivity : AppCompatActivity() {
                             val i = Wallet.requestPublicKey(
                                 event.authToken, event.derivationPath)
                             startActivityForResult(i, REQUEST_GET_PUBLIC_KEY)
-                            val i2 = Wallet.signTransaction(
-                                event.authToken, event.derivationPath, ByteArray(1))
-                            startActivityForResult(i2, REQUEST_SIGN_TRANSACTION)
                         }
                     }
                 }

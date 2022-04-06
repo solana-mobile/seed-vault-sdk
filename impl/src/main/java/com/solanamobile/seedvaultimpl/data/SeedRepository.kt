@@ -347,7 +347,6 @@ class SeedRepository(
                 context.seedCollectionDataStore.updateData {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
-                    val bip32Uri = account.bip32DerivationPathUri.toString()
                     val j = it.seedsList[i].knownAccountsList.indexOfFirst { kae -> kae.accountId == account.id }
                     require(j != -1) { "Seed repository does not contain an entry for account ${account.id} in seed $id" }
                     val newSeedRecordBuilder = it.seedsList[i].toBuilder().setKnownAccounts(j, newKnownAccountEntryBuilder)

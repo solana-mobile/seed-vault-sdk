@@ -15,6 +15,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 public final class WalletContractV1 {
+    // TODO: set to the final Wallet API implementation before shipping
+    public static final String PACKAGE_WALLET = "com.solanamobile.seedvaultimpl";
+
     public static final String AUTHORITY_WALLET = "com.solanamobile.seedvault.v1";
 
     public static final int RESULT_UNSPECIFIED_ERROR = RESULT_FIRST_USER + 1000;
