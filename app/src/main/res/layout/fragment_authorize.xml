@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+    tools:context=".ui.authorize.AuthorizeFragment">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_authorization_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="10pt" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_pin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/edittext_pin"
+        app:layout_constraintBottom_toBottomOf="@id/edittext_pin"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="@string/label_pin"
+        android:textSize="10pt" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/edittext_pin"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintTop_toBottomOf="@id/label_authorization_type"
+        app:layout_constraintStart_toEndOf="@id/label_pin"
+        app:layout_constraintEnd_toStartOf="@id/button_ok"
+        android:inputType="textVisiblePassword"
+        android:textSize="10pt"
+        android:hint="@string/hint_pin" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/button_ok"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/edittext_pin"
+        app:layout_constraintBottom_toBottomOf="@id/edittext_pin"
+        android:text="@string/action_ok"
+        android:textSize="10pt" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_error_invalid_pin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/edittext_pin"
+        android:visibility="gone"
+        android:text="@string/error_invalid_pin"
+        android:textSize="10pt"
+        android:textColor="?attr/colorError" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_error_incorrect_pin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/edittext_pin"
+        android:visibility="gone"
+        android:text="@string/error_incorrect_pin"
+        android:textSize="10pt"
+        android:textColor="?attr/colorError" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="label_error_invalid_pin,label_error_incorrect_pin"
+        app:barrierDirection="bottom" />
+
+    <TextView
+        android:id="@+id/label_fingerprint_option"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/button_simulate_biometrics"
+        app:layout_constraintTop_toBottomOf="@id/barrier_error"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="visible"
+        android:text="@string/label_use_fingerprint"
+        android:textSize="10pt"/>
+    
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/button_simulate_biometrics"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/barrier_error"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:src="?android:fingerprintAuthDrawable" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

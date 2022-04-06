@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option java_package = "com.example.walletapidemo.data.proto";
+option java_multiple_files = true;
+
+message SeedEntry {
+  bytes seed = 1; // Should be either 16 or 32 bytes
+  repeated int32 seed_phrase_word_indices = 2; // Should be either 12 or 24 elements
+  string name = 3;
+  string pin = 4;
+  bool unlock_with_biometrics = 5;
+}
+
+message AuthorizationEntry {
+  int32 uid = 1;
+  int32 auth_token = 2;
+  int32 purpose = 3;
+}
+
+message KnownAccountEntry {
+  int32 account_id = 1;
+  int32 purpose = 2;
+  string bip32_uri = 3;
+  bytes public_key = 4;
+  string name = 5;
+  bool is_user_wallet = 6;
+  bool is_valid = 7;
+}
+
+// The entry representing an individual seed, plus associated metadata
+message SeedRecord {
+  int32 seed_id = 1;
+  SeedEntry seed = 2;
+  repeated AuthorizationEntry authorizations = 3;
+  repeated KnownAccountEntry known_accounts = 4;
+}
+
+// A collection of SeedRecord objects make up the Seed repository
+message SeedCollection {
+  repeated SeedRecord seeds = 1;
+  int32 next_id = 2;
+  int32 next_auth_token = 3;
+  int32 next_account_id = 4;
+}

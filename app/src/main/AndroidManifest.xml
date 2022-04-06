@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.walletapidemo">
+
+    <permission
+        android:name="com.example.seedvault.ACCESS_SEED_VAULT" />
+
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <application
+        android:name=".WalletAPIDemoApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.WalletAPIDemo">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.WalletAPIDemo.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.AuthorizeActivity"
+            android:exported="true"
+            android:permission="com.example.seedvault.ACCESS_SEED_VAULT"
+            android:noHistory="true"
+            android:finishOnCloseSystemDialogs="true"
+            android:theme="@style/Theme.WalletAPIDemo.BottomSheetDialog">
+            <intent-filter>
+                <action android:name="com.example.seedvault.v1.ACTION_AUTHORIZE_SEED_ACCESS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.example.seedvault.v1.ACTION_SIGN_TRANSACTION" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="bip32" />
+                <data android:scheme="bip44" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.example.seedvault.v1.ACTION_GET_PUBLIC_KEY" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="bip32" />
+                <data android:scheme="bip44" />
+            </intent-filter>
+        </activity>
+
+        <provider
+            android:authorities="com.example.seedvault.walletprovider.v1"
+            android:name=".contentprovider.WalletContentProvider"
+            android:exported="true"
+            android:permission="com.example.seedvault.ACCESS_SEED_VAULT"
+            android:syncable="false" />
+
+    </application>
+
+</manifest>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/authorize_nav_graph"
+    app:startDestination="@id/destination_SelectSeedFragment">
+
+    <fragment
+        android:id="@+id/destination_AuthorizeFragment"
+        android:name="com.example.walletapidemo.ui.authorize.AuthorizeFragment"
+        tools:layout="@layout/fragment_authorize" />
+
+    <fragment
+        android:id="@+id/destination_SelectSeedFragment"
+        android:name="com.example.walletapidemo.ui.selectseed.SelectSeedFragment"
+        tools:layout="@layout/fragment_select_seed">
+
+        <action
+            android:id="@+id/action_SelectSeedFragment_to_AuthorizeFragment"
+            app:destination="@id/destination_AuthorizeFragment"
+            app:popUpTo="@id/authorize_nav_graph"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <action
+        android:id="@+id/action_SelectSeedFragment"
+        app:destination="@id/destination_SelectSeedFragment"
+        app:popUpTo="@id/authorize_nav_graph"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/action_AuthorizeFragment"
+        app:destination="@id/destination_AuthorizeFragment"
+        app:popUpTo="@id/authorize_nav_graph"
+        app:popUpToInclusive="true" />
+
+</navigation>

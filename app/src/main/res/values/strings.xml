@@ -1,0 +1,42 @@
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<resources>
+    <string name="app_name">WalletAPIDemo</string>
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="fragment_label_seeds">Seeds</string>
+    <string name="fragment_label_seed_detail">Seed Details</string>
+
+    <!-- Seeds fragment strings -->
+    <string name="menu_action_add">Add</string>
+    <string name="menu_action_clear">Clear</string>
+
+    <!-- Seed Detail fragment strings -->
+    <string name="menu_action_ok">OK</string>
+    <string name="title_seed_phrase">Seed phrase</string>
+    <string name="hint_seed_name">(optional) Friendly seed name</string>
+    <string name="text_phrase_length_12">12</string>
+    <string name="text_phrase_length_24">24</string>
+    <string name="label_pin">PIN</string>
+    <string name="hint_pin">4 to 20 characters</string>
+    <string name="error_invalid_pin">PIN must be between 4 and 20 characters</string>
+    <string name="label_enable_biometrics_for_seed">Enable biometrics for this seed</string>
+    <string name="label_authorized_apps">Authorized wallet apps</string>
+
+    <!-- Seed phrase word RecyclerView item strings -->
+    <string name="error_invalid_seed_word">Word not recognized</string>
+
+    <!-- Select seed fragment -->
+    <string name="label_select_seed">Select a seed</string>
+
+    <!-- Authorize transaction fragment -->
+    <!-- label_pin, hint_pin, error_invalid_pin from Seed Detail fragment -->
+    <string name="label_authorize_seed">Authorize access to seed</string>
+    <string name="label_authorize_transaction">Sign transaction</string>
+    <string name="label_authorize_public_key">Get public key</string>
+    <string name="error_incorrect_pin">Incorrect PIN</string>
+    <string name="label_use_fingerprint">(simulate fingerprint)</string>
+    <string name="action_ok">OK</string>
+</resources>

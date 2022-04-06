@@ -1,0 +1,18 @@
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<resources>
+    <string name="app_name">FakeWallet</string>
+    <string name="label_seed_purpose">Purpose:</string>
+    <string name="label_account_name">Account:</string>
+    <string name="label_public_key">Public Key:</string>
+    <string name="label_derivation_path">Path:</string>
+    <string name="action_sign_transaction">Sign a fake transaction</string>
+    <string name="action_request_random_public_key">Request public key for m/1000\'</string>
+    <plurals name="label_has_unauthorized_seeds">
+        <item quantity="other">(No seeds remaining to be authorized for PURPOSE_SIGN_SOLANA_TRANSACTION)</item>
+        <item quantity="one">Authorize another seed for PURPOSE_SIGN_SOLANA_TRANSACTION</item>
+    </plurals>
+    <string name="title_set_account_name">Name this account</string>
+</resources>
