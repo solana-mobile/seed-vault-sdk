@@ -54,9 +54,10 @@ public final class WalletContractV1 {
     public static final String BIP32_URI_HARDENED_INDEX_IDENTIFIER = "'";
 
     public static final String AUTHORITY_WALLET_PROVIDER = AUTHORITY_WALLET + ".walletprovider";
+    public static final Uri WALLET_PROVIDER_CONTENT_URI_BASE = Uri.parse("content://" + AUTHORITY_WALLET_PROVIDER);
 
     public static final String WALLET_AUTHORIZED_SEEDS_TABLE = "authorizedseeds";
-    public static final Uri WALLET_AUTHORIZED_SEEDS_CONTENT_URI = Uri.parse("content://" + AUTHORITY_WALLET_PROVIDER + "/" + WALLET_AUTHORIZED_SEEDS_TABLE);
+    public static final Uri WALLET_AUTHORIZED_SEEDS_CONTENT_URI = Uri.withAppendedPath(WALLET_PROVIDER_CONTENT_URI_BASE, WALLET_AUTHORIZED_SEEDS_TABLE);
     public static final String WALLET_AUTHORIZED_SEEDS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + WALLET_AUTHORIZED_SEEDS_TABLE;
     // BaseColumns._ID is the auth token for each authorized seed
     public static final String AUTH_PURPOSE = "AuthorizedSeeds_AuthPurpose";
@@ -65,14 +66,14 @@ public final class WalletContractV1 {
             BaseColumns._ID, AUTH_PURPOSE, SEED_NAME };
 
     public static final String WALLET_UNAUTHORIZED_SEEDS_TABLE = "unauthorizedseeds";
-    public static final Uri WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI = Uri.parse("content://" + AUTHORITY_WALLET_PROVIDER + "/" + WALLET_UNAUTHORIZED_SEEDS_TABLE);
+    public static final Uri WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI = Uri.withAppendedPath(WALLET_PROVIDER_CONTENT_URI_BASE, WALLET_UNAUTHORIZED_SEEDS_TABLE);
     public static final String WALLET_UNAUTHORIZED_SEEDS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + WALLET_UNAUTHORIZED_SEEDS_TABLE;
     public static final String HAS_UNAUTHORIZED_SEEDS = "UnauthorizedSeeds_HasUnauthorizedSeeds";
     public static final String[] WALLET_UNAUTHORIZED_SEEDS_ALL_COLUMNS = {
             HAS_UNAUTHORIZED_SEEDS };
 
     public static final String WALLET_ACCOUNTS_TABLE = "accounts";
-    public static final Uri WALLET_ACCOUNTS_CONTENT_URI = Uri.parse("content://" + AUTHORITY_WALLET_PROVIDER + "/" + WALLET_ACCOUNTS_TABLE);
+    public static final Uri WALLET_ACCOUNTS_CONTENT_URI = Uri.withAppendedPath(WALLET_PROVIDER_CONTENT_URI_BASE, WALLET_ACCOUNTS_TABLE);
     public static final String WALLET_ACCOUNTS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + WALLET_ACCOUNTS_TABLE;
     // BaseColumns._ID is the unique account identifier
     public static final String BIP32_DERIVATION_PATH = "Accounts_Bip32DerivationPath";
