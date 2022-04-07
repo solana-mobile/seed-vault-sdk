@@ -36,7 +36,7 @@ public final class Wallet {
     public static Intent authorizeSeed(
             @WalletContractV1.Purpose int purpose) {
         return new Intent()
-                .setPackage(WalletContractV1.PACKAGE_WALLET)
+                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
                 .setAction(WalletContractV1.ACTION_AUTHORIZE_SEED_ACCESS)
                 .putExtra(WalletContractV1.EXTRA_PURPOSE, purpose);
     }
@@ -66,7 +66,7 @@ public final class Wallet {
             @NonNull Uri derivationPath,
             @NonNull byte[] transaction) {
         return new Intent()
-                .setPackage(WalletContractV1.PACKAGE_WALLET)
+                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
                 .setAction(WalletContractV1.ACTION_SIGN_TRANSACTION)
                 .setData(derivationPath)
                 .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
@@ -111,7 +111,7 @@ public final class Wallet {
             @IntRange(from=0) int authToken,
             @NonNull Uri derivationPath) {
         return new Intent()
-                .setPackage(WalletContractV1.PACKAGE_WALLET)
+                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
                 .setAction(WalletContractV1.ACTION_GET_PUBLIC_KEY)
                 .setData(derivationPath)
                 .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
