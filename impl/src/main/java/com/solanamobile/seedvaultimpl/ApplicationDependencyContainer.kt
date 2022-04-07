@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets
  */
 class ApplicationDependencyContainer(
     private val applicationContext: Context,
-    private val applicationScope: CoroutineScope) {
+    val applicationScope: CoroutineScope) {
 
     val seedRepository: SeedRepository by lazy {
         SeedRepository(applicationContext, applicationScope)

@@ -5,8 +5,7 @@
 package com.solanamobile.seedvaultimpl.contentprovider
 
 import android.content.ContentProvider
-import android.content.ContentResolver.CURSOR_DIR_BASE_TYPE
-import android.content.ContentResolver.CURSOR_ITEM_BASE_TYPE
+import android.content.ContentResolver.*
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.UriMatcher
@@ -23,13 +22,11 @@ import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.usecase.Base58EncodeUseCase
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlin.IllegalArgumentException
 
 class WalletContentProvider : ContentProvider() {
     private lateinit var dependencyContainer: ApplicationDependencyContainer
-
-    // TODO: send notifications on Seed repository contents changed
 
     override fun onCreate(): Boolean {
         // NOTE: this occurs before the Application instance is created, so we can't do our
@@ -63,7 +60,7 @@ class WalletContentProvider : ContentProvider() {
         projection: Array<out String>?,
         queryArgs: Bundle?,
         cancellationSignal: CancellationSignal?
-    ): Cursor? {
+    ): Cursor {
         checkDependencyInjection()
 
         val match = uriMatcher.match(uri)
@@ -347,9 +344,91 @@ class WalletContentProvider : ContentProvider() {
     }
 
     private fun checkDependencyInjection() {
+        // Note: this can be executed in an arbitrary thread context. Use double-checked locking
+        // pattern to safely initialize it.
         if (!this::dependencyContainer.isInitialized) {
-            dependencyContainer = (requireContext().applicationContext as SeedVaultImplApplication)
-                .dependencyContainer
+            val didInitialization = synchronized(this::dependencyContainer) {
+                if (!this::dependencyContainer.isInitialized) {
+                    dependencyContainer =
+                        (requireContext().applicationContext as SeedVaultImplApplication)
+                            .dependencyContainer
+                    true
+                } else {
+                    false
+                }
+            }
+
+            if (didInitialization) {
+                observeSeedRepositoryChanges()
+            }
+        }
+    }
+
+    private fun observeSeedRepositoryChanges() {
+        dependencyContainer.applicationScope.launch {
+            dependencyContainer.seedRepository.changes.collect { change ->
+                // NOTE: this is overeager; we aren't checking, e.g., if deleting a particular seed
+                // will affect an observer watching a particular account.
+                val uris: List<Uri> = when (change.category) {
+                    SeedRepository.ChangeNotification.Category.SEED -> {
+                        when (change.type) {
+                            SeedRepository.ChangeNotification.Type.CREATE ->
+                                listOf(WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI)
+                            SeedRepository.ChangeNotification.Type.UPDATE ->
+                                listOf(WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI)
+                            SeedRepository.ChangeNotification.Type.DELETE ->
+                                listOf(
+                                    WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI,
+                                    WalletContractV1.WALLET_ACCOUNTS_CONTENT_URI
+                                )
+                        }
+                    }
+                    SeedRepository.ChangeNotification.Category.AUTHORIZATION -> {
+                        when (change.type) {
+                            SeedRepository.ChangeNotification.Type.CREATE ->
+                                listOf(
+                                    WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI,
+                                    ContentUris.withAppendedId(
+                                        WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI,
+                                        change.id!!.toLong()
+                                    )
+                                )
+                            SeedRepository.ChangeNotification.Type.UPDATE ->
+                                throw AssertionError("Authorizations are not expected to be updated")
+                            SeedRepository.ChangeNotification.Type.DELETE ->
+                                listOf(
+                                    WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI,
+                                    ContentUris.withAppendedId(
+                                        WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI,
+                                        change.id!!.toLong()
+                                    ),
+                                    WalletContractV1.WALLET_ACCOUNTS_CONTENT_URI
+                                )
+                        }
+                    }
+                    SeedRepository.ChangeNotification.Category.ACCOUNT ->
+                        when (change.type) {
+                            SeedRepository.ChangeNotification.Type.CREATE,
+                            SeedRepository.ChangeNotification.Type.UPDATE ->
+                                listOf(
+                                    ContentUris.withAppendedId(
+                                        WalletContractV1.WALLET_ACCOUNTS_CONTENT_URI,
+                                        change.id!!.toLong()
+                                    )
+                                )
+                            SeedRepository.ChangeNotification.Type.DELETE ->
+                                throw AssertionError("Accounts are not expected to be deleted")
+                        }
+                }
+
+                val flags = when (change.type) {
+                    SeedRepository.ChangeNotification.Type.CREATE -> NOTIFY_INSERT
+                    SeedRepository.ChangeNotification.Type.UPDATE -> NOTIFY_UPDATE
+                    SeedRepository.ChangeNotification.Type.DELETE -> NOTIFY_DELETE
+                }
+
+                requireContext().contentResolver.notifyChange(uris, null, flags)
+            }
         }
     }
 

@@ -41,6 +41,15 @@ class SeedRepository(
         val authToken: Int
     )
 
+    data class ChangeNotification(
+        val category: Category,
+        val type: Type,
+        val id: Int?
+    ) {
+        enum class Category { SEED, AUTHORIZATION, ACCOUNT }
+        enum class Type { CREATE, UPDATE, DELETE }
+    }
+
     // Protects all shared state that can be modified by arbitrary threads
     private val mutex = Mutex()
 
@@ -104,6 +113,9 @@ class SeedRepository(
         map
     }.stateIn(repositoryOwnerScope, SharingStarted.Eagerly, mapOf())
 
+    private val _changes: MutableSharedFlow<ChangeNotification> = MutableSharedFlow(extraBufferCapacity = 1)
+    val changes = _changes.asSharedFlow()
+
     suspend fun delayUntilDataValid() {
         // seedCollection is a SharedFlow with replay 1, so first() won't complete until it's
         // emitted at least once.
@@ -133,8 +145,15 @@ class SeedRepository(
                         nextId = id + 1
                     }.build()
                 }
-                id
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.SEED,
+                    ChangeNotification.Type.CREATE,
+                    id
+                )
+            )
         }
 
         Log.d(TAG, "EXIT createSeed: $details -> $id")
@@ -159,6 +178,14 @@ class SeedRepository(
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).build()
                 }
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.SEED,
+                    ChangeNotification.Type.UPDATE,
+                    id
+                )
+            )
         }
 
         Log.d(TAG, "EXIT updateSeed: $details")
@@ -179,6 +206,14 @@ class SeedRepository(
                     it.toBuilder().removeSeeds(i).build()
                 }
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.SEED,
+                    ChangeNotification.Type.DELETE,
+                    id
+                )
+            )
         }
 
         Log.d(TAG, "EXIT deleteSeed: $id")
@@ -197,6 +232,14 @@ class SeedRepository(
                     it.toBuilder().clearSeeds().build()
                 }
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.SEED,
+                    ChangeNotification.Type.DELETE,
+                    null
+                )
+            )
         }
 
         Log.d(TAG, "EXIT deleteAllSeeds")
@@ -239,6 +282,14 @@ class SeedRepository(
 
                 authToken = tentativeAuthToken
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.AUTHORIZATION,
+                    ChangeNotification.Type.CREATE,
+                    authToken
+                )
+            )
         }
 
         Log.d(TAG, "EXIT authorizeSeedForUid: $id/$uid -> $authToken")
@@ -264,6 +315,14 @@ class SeedRepository(
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).build()
                 }
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.AUTHORIZATION,
+                    ChangeNotification.Type.DELETE,
+                    authToken
+                )
+            )
         }
 
         Log.d(TAG, "EXIT deauthorizeSeed: $id/$authToken")
@@ -315,6 +374,14 @@ class SeedRepository(
 
                 accountId = tentativeAccountId
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.ACCOUNT,
+                    ChangeNotification.Type.CREATE,
+                    accountId
+                )
+            )
         }
 
         Log.d(TAG, "EXIT addKnownAccountForSeed")
@@ -323,7 +390,7 @@ class SeedRepository(
     }
 
     suspend fun updateKnownAccountForSeed(id: Int, account: Account) {
-        require(account.id != Account.INVALID_ACCOUNT_ID) { "Accound ID must be valid" }
+        require(account.id != Account.INVALID_ACCOUNT_ID) { "Account ID must be valid" }
         Log.d(TAG, "ENTER updateKnownAccountForSeed")
 
         // NOTE: we can't rely on the incoming coroutine context to remain active for the entire
@@ -353,6 +420,14 @@ class SeedRepository(
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).build()
                 }
             }
+
+            _changes.emit(
+                ChangeNotification(
+                    ChangeNotification.Category.ACCOUNT,
+                    ChangeNotification.Type.UPDATE,
+                    account.id
+                )
+            )
         }
 
         Log.d(TAG, "EXIT updateKnownAccountForSeed")

@@ -5,7 +5,10 @@
 package com.solanamobile.fakewallet.ui
 
 import android.app.Application
+import android.database.ContentObserver
 import android.net.Uri
+import android.os.Handler
+import android.util.Log
 import androidx.core.database.getStringOrNull
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,8 +34,32 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
+            observeSeedVaultContentChanges()
             refreshUiState()
         }
+    }
+
+    private fun observeSeedVaultContentChanges() {
+        val application = getApplication<Application>()
+        application.contentResolver.registerContentObserver(
+            WalletContractV1.WALLET_PROVIDER_CONTENT_URI_BASE,
+            true,
+            object : ContentObserver(Handler(application.mainLooper)) {
+                override fun onChange(selfChange: Boolean) =
+                    throw NotImplementedError("Stub for legacy onChange")
+                override fun onChange(selfChange: Boolean, uri: Uri?) =
+                    throw NotImplementedError("Stub for legacy onChange")
+                override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) =
+                    throw NotImplementedError("Stub for legacy onChange")
+
+                override fun onChange(selfChange: Boolean, uris: Collection<Uri>, flags: Int) {
+                    Log.d(TAG, "Received change notification for $uris (flags=$flags); refreshing viewmodel")
+                    viewModelScope.launch {
+                        refreshUiState()
+                    }
+                }
+            }
+        )
     }
 
     private suspend fun refreshUiState() {
@@ -83,9 +110,6 @@ class MainViewModel(
     }
 
     fun onAuthorizeNewSeedSuccess(authToken: Int) {
-        viewModelScope.launch {
-            refreshUiState()
-        }
         // TODO: mark the first two accounts as valid. This simulates a real wallet exploring each
         // account and marking any with funds as valid.
     }
@@ -103,9 +127,6 @@ class MainViewModel(
     }
 
     fun onDeauthorizeSeedSuccess() {
-        viewModelScope.launch {
-            refreshUiState()
-        }
     }
 
     fun onDeauthorizeSeedFailure(resultCode: Int) {
@@ -125,9 +146,6 @@ class MainViewModel(
     }
 
     fun onUpdateAccountNameSuccess() {
-        viewModelScope.launch {
-            refreshUiState()
-        }
     }
 
     fun onUpdateAccountNameFailure(resultCode: Int) {
