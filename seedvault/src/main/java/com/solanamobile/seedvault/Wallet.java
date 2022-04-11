@@ -5,6 +5,7 @@
 package com.solanamobile.seedvault;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -151,17 +152,42 @@ public final class Wallet {
     }
 
     @Nullable
-    public static Cursor getAllAuthorizedSeeds(
+    public static Cursor getAuthorizedSeeds(
             @NonNull Context context,
             @NonNull String[] projection) {
+        return getAuthorizedSeeds(context, projection, null, null);
+    }
+
+    @Nullable
+    public static Cursor getAuthorizedSeeds(
+            @NonNull Context context,
+            @NonNull String[] projection,
+            @Nullable String filterOnColumn,
+            @Nullable Object value) {
+        final Bundle queryArgs;
+        if (filterOnColumn != null) {
+            if (value == null) {
+                throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
+            } else if (!stringArrayContains(
+                    WalletContractV1.WALLET_AUTHORIZED_SEEDS_ALL_COLUMNS, filterOnColumn)) {
+                throw new IllegalArgumentException("Column '" + filterOnColumn + "' is not a valid column");
+            }
+            queryArgs = new Bundle();
+            queryArgs.putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    filterOnColumn + "=?");
+            queryArgs.putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    new String[] { value.toString() });
+        } else {
+            queryArgs = null;
+        }
         return context.getContentResolver().query(
                 WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI,
                 projection,
-                null,
+                queryArgs,
                 null);
     }
-
-    // TODO: getAllAuthorizedSeeds API with filters
 
     @Nullable
     public static Cursor getAuthorizedSeed(
@@ -185,37 +211,98 @@ public final class Wallet {
         }
     }
 
-    public static boolean hasUnauthorizedSeeds(
+    @Nullable
+    public static Cursor getUnauthorizedSeeds(
+            @NonNull Context context,
+            @NonNull String[] projection) {
+        return getUnauthorizedSeeds(context, projection, null, null);
+    }
+
+    @Nullable
+    public static Cursor getUnauthorizedSeeds(
+            @NonNull Context context,
+            @NonNull String[] projection,
+            @Nullable String filterOnColumn,
+            @Nullable Object value) {
+        final Bundle queryArgs;
+        if (filterOnColumn != null) {
+            if (value == null) {
+                throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
+            } else if (!stringArrayContains(
+                    WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_ALL_COLUMNS, filterOnColumn)) {
+                throw new IllegalArgumentException("Column '" + filterOnColumn + "' is not a valid column");
+            }
+            queryArgs = new Bundle();
+            queryArgs.putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    filterOnColumn + "=?");
+            queryArgs.putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    new String[] { value.toString() });
+        } else {
+            queryArgs = null;
+        }
+        return context.getContentResolver().query(
+                WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI,
+                projection,
+                queryArgs,
+                null);
+    }
+
+    public static boolean hasUnauthorizedSeedsForPurpose(
             @NonNull Context context,
             @WalletContractV1.Purpose int purpose) {
         final Cursor c = context.getContentResolver().query(
-                WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI,
+                ContentUris.withAppendedId(
+                        WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI, purpose),
                 WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_ALL_COLUMNS,
                 null,
                 null);
         if (!c.moveToFirst()) {
             throw new IllegalStateException("Cursor does not contain expected data");
         }
-        boolean hasUnauthorizedSeeds = (c.getInt(0) != 0);
+        boolean hasUnauthorizedSeeds = (c.getInt(1) != 0);
         c.close();
         return hasUnauthorizedSeeds;
     }
 
     @Nullable
-    public static Cursor getAllAccounts(
+    public static Cursor getAccounts(
             @NonNull Context context,
             @IntRange(from=0) int authToken,
             @NonNull String[] projection) {
-        Bundle queryArgs = new Bundle();
+        return getAccounts(context, authToken, projection, null, null);
+    }
+
+    @Nullable
+    public static Cursor getAccounts(
+            @NonNull Context context,
+            @IntRange(from=0) int authToken,
+            @NonNull String[] projection,
+            @Nullable String filterOnColumn,
+            @Nullable Object value) {
+        final Bundle queryArgs = new Bundle();
         queryArgs.putInt(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        if (filterOnColumn != null) {
+            if (value == null) {
+                throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
+            } else if (!stringArrayContains(
+                    WalletContractV1.WALLET_ACCOUNTS_ALL_COLUMNS, filterOnColumn)) {
+                throw new IllegalArgumentException("Column '" + filterOnColumn + "' is not a valid column");
+            }
+            queryArgs.putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    filterOnColumn + "=?");
+            queryArgs.putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    new String[] { value.toString() });
+        }
         return context.getContentResolver().query(
                 WalletContractV1.WALLET_ACCOUNTS_CONTENT_URI,
                 projection,
                 queryArgs,
                 null);
     }
-
-    // TODO: getAllAccounts API with filters
 
     @Nullable
     public static Cursor getAccount(
@@ -281,5 +368,39 @@ public final class Wallet {
                 updateArgs) == 0) {
             throw new NotModifiedException("updateAccountIsValid for AuthToken=" + authToken + "/id=" + id);
         }
+    }
+
+    @NonNull
+    public static Uri resolveDerivationPath(
+            @NonNull Context context,
+            @NonNull Uri derivationPath,
+            @WalletContractV1.Purpose int purpose) {
+        Bundle callArgs = new Bundle();
+        callArgs.putParcelable(WalletContractV1.BIP_DERIVATION_PATH, derivationPath);
+        callArgs.putInt(WalletContractV1.PURPOSE, purpose);
+        Bundle result = context.getContentResolver().call(
+                WalletContractV1.AUTHORITY_WALLET_PROVIDER,
+                WalletContractV1.WALLET_RESOLVE_BIP32_DERIVATION_PATH_METHOD,
+                null,
+                callArgs);
+        if (result == null) {
+            throw new UnsupportedOperationException("Failed to invoke method '" +
+                    WalletContractV1.WALLET_RESOLVE_BIP32_DERIVATION_PATH_METHOD + "'");
+        }
+        Uri resolvedDerivationPath = result.getParcelable(
+                WalletContractV1.RESOLVED_BIP32_DERIVATION_PATH);
+        if (resolvedDerivationPath == null) {
+            throw new UnsupportedOperationException("Failed to resolve BIP32 derivation path");
+        }
+        return resolvedDerivationPath;
+    }
+
+    private static boolean stringArrayContains(@NonNull String[] array, String value) {
+        for (String s : array) {
+            if (s.equals(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

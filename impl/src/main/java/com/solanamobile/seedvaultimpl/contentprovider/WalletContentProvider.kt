@@ -4,24 +4,24 @@
 
 package com.solanamobile.seedvaultimpl.contentprovider
 
-import android.content.ContentProvider
+import android.content.*
 import android.content.ContentResolver.*
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.UriMatcher
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.CancellationSignal
-import android.provider.BaseColumns
 import android.util.Log
+import com.solanamobile.seedvault.BipDerivationPath
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.WalletContractV1.AUTHORITY_WALLET_PROVIDER
 import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.data.SeedRepository
+import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.usecase.Base58EncodeUseCase
+import com.solanamobile.seedvaultimpl.usecase.normalize
+import com.solanamobile.seedvaultimpl.usecase.toBip32DerivationPath
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -43,6 +43,40 @@ class WalletContentProvider : ContentProvider() {
             ACCOUNTS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.WALLET_ACCOUNTS_MIME_SUBTYPE
             else -> null
         }
+    }
+
+    override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        return when (method) {
+            WalletContractV1.WALLET_RESOLVE_BIP32_DERIVATION_PATH_METHOD ->
+                callResolveBip32DerivationPath(arg, extras)
+            else -> {
+                Log.w(TAG, "Method $method is not defined")
+                throw IllegalArgumentException("Method $method is not defined")
+            }
+        }
+    }
+
+    private fun callResolveBip32DerivationPath(arg: String?, extras: Bundle?): Bundle {
+        require(extras != null) { "extras must be defined for method '${WalletContractV1.WALLET_RESOLVE_BIP32_DERIVATION_PATH_METHOD}'" }
+        val uri: Uri? = extras.getParcelable(WalletContractV1.BIP_DERIVATION_PATH)
+        require(uri != null) { "BIP derivation path must be specified" }
+        val purpose = extras.getInt(WalletContractV1.PURPOSE, -1)
+        val purposeAsEnum = Authorization.Purpose.fromWalletContractConstant(purpose)
+        val derivationPath = try {
+            BipDerivationPath.fromUri(uri)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed parsing BIP derivation path '$uri'", e)
+            throw IllegalArgumentException("Failed parsing BIP derivation path '$uri'", e)
+        }
+        val resolvedDerivationPath = derivationPath
+            .toBip32DerivationPath(purposeAsEnum)
+            .normalize(purposeAsEnum)
+        val result = Bundle()
+        result.putParcelable(
+            WalletContractV1.RESOLVED_BIP32_DERIVATION_PATH,
+            resolvedDerivationPath.toUri()
+        )
+        return result
     }
 
     override fun query(
@@ -74,7 +108,10 @@ class WalletContentProvider : ContentProvider() {
                 queryAuthorizedSeeds(uid, ContentUris.parseId(uri).toInt(), projection, queryArgs)
             }
             UNAUTHORIZED_SEEDS -> {
-                queryUnauthorizedSeeds(uid, projection, queryArgs)
+                queryUnauthorizedSeeds(uid, null, projection, queryArgs)
+            }
+            UNAUTHORIZED_SEEDS_ID -> {
+                queryUnauthorizedSeeds(uid, ContentUris.parseId(uri).toInt(), projection, queryArgs)
             }
             ACCOUNTS -> {
                 val authToken = queryArgs?.getInt(
@@ -95,17 +132,30 @@ class WalletContentProvider : ContentProvider() {
         }
     }
 
+    private fun makeQueryParser(queryableColumns: Collection<String>, queryArgs: Bundle?): SimpleQueryParser? {
+        return queryArgs?.let { bundle ->
+            val selection = bundle.getString(QUERY_ARG_SQL_SELECTION) ?: return@let null
+            val selectionArgs = bundle.getStringArray(QUERY_ARG_SQL_SELECTION_ARGS)
+                ?: throw IllegalArgumentException("Selection args required when selection is provided")
+            try {
+                SimpleQueryParser(queryableColumns, selection, selectionArgs)
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Unable to apply selection args '$selection'/$selectionArgs", e)
+                throw e
+            }
+        }
+    }
+
     private fun queryAuthorizedSeeds(
         uid: Int,
         authToken: Int?,
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
-        val defaultProjection = WalletContractV1.WALLET_AUTHORIZED_SEEDS_ALL_COLUMNS.toSet()
+        val defaultProjection = WalletContractV1.WALLET_AUTHORIZED_SEEDS_ALL_COLUMNS.toList()
+        val queryParser = makeQueryParser(defaultProjection, queryArgs)
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
-
-        // TODO: support queries with filter on Purpose
 
         val seedRepository = dependencyContainer.seedRepository
         runBlocking {
@@ -113,13 +163,23 @@ class WalletContentProvider : ContentProvider() {
         }
 
         seedRepository.seeds.value.values.forEach { seed ->
-            seed.authorizations.filter { auth ->
-                auth.uid == uid && (authToken == null || auth.authToken == authToken)
-            }.forEach { auth ->
-                val rowBuilder = cursor.newRow()
-                rowBuilder.add(BaseColumns._ID, auth.authToken)
-                rowBuilder.add(WalletContractV1.AUTH_PURPOSE, auth.purpose.toWalletContractConstant())
-                rowBuilder.add(WalletContractV1.SEED_NAME, seed.details.name ?: "")
+            seed.authorizations.forEach { auth ->
+                // Note: must be in the same order as defaultProjection
+                val values = arrayOf(
+                    auth.authToken,                             // WalletContractV1.AUTH_TOKEN
+                    auth.purpose.toWalletContractConstant(),    // WalletContractV1.AUTH_PURPOSE
+                    seed.details.name ?: ""                     // WalletContractV1.SEED_NAME
+                )
+
+                if (auth.uid == uid
+                    && (authToken == null || auth.authToken == authToken)
+                    && queryParser?.match(*values) != false
+                ) {
+                    val rowBuilder = cursor.newRow()
+                    for (item in defaultProjection.zip(values)) {
+                        rowBuilder.add(item.first, item.second)
+                    }
+                }
             }
         }
 
@@ -128,27 +188,50 @@ class WalletContentProvider : ContentProvider() {
 
     private fun queryUnauthorizedSeeds(
         uid: Int,
+        purpose: Int?,
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
-        val defaultProjection = WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_ALL_COLUMNS.toSet()
+        val purposeAsEnum = purpose?.let { Authorization.Purpose.fromWalletContractConstant(it) }
+        val defaultProjection = WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_ALL_COLUMNS.toList()
+        val queryParser = makeQueryParser(defaultProjection, queryArgs)
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
-
-        // TODO: support queries with filter on Purpose (otherwise, this returns seeds which remain
-        // to be authorized for ANY purpose, which isn't very useful if the wallet is tied to one
-        // chain)
 
         val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
         }
 
-        val firstUnauthorizedSeed = seedRepository.seeds.value.values.firstOrNull { seed ->
-            seed.authorizations.all { auth -> auth.uid != uid }
+        val seeds = seedRepository.seeds.value.values
+        val seedsAuthorizedPurposeCounts = seeds.flatMap { seed ->
+            seed.authorizations.filter { auth ->
+                auth.uid == uid
+            }.map { auth ->
+                auth.purpose
+            }
+        }.groupBy { p ->
+            p
         }
 
-        cursor.newRow().add(WalletContractV1.HAS_UNAUTHORIZED_SEEDS, if (firstUnauthorizedSeed != null) 1 else 0)
+        Authorization.Purpose.values().forEach { p ->
+            val seedPurposeCount = seedsAuthorizedPurposeCounts[p]?.size ?: 0
+
+            // NOTE: must be in the same order as defaultProjection
+            val values = arrayOf(
+                p.toWalletContractConstant(),
+                if (seedPurposeCount < seeds.size) 1 else 0
+            )
+
+            if ((purposeAsEnum == null || p == purposeAsEnum)
+                && queryParser?.match(*values) != false
+            ) {
+                val rowBuilder = cursor.newRow()
+                for (item in defaultProjection.zip(values)) {
+                    rowBuilder.add(item.first, item.second)
+                }
+            }
+        }
 
         return cursor
     }
@@ -160,11 +243,10 @@ class WalletContentProvider : ContentProvider() {
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
-        val defaultProjection = WalletContractV1.WALLET_ACCOUNTS_ALL_COLUMNS.toSet()
+        val defaultProjection = WalletContractV1.WALLET_ACCOUNTS_ALL_COLUMNS.toList()
+        val queryParser = makeQueryParser(defaultProjection, queryArgs)
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
-
-        // TODO: support queries with filters on most columns
 
         val seedRepository = dependencyContainer.seedRepository
         runBlocking {
@@ -174,15 +256,24 @@ class WalletContentProvider : ContentProvider() {
         val authKey = SeedRepository.AuthorizationKey(uid, authToken)
         seedRepository.authorizations.value[authKey]?.let { seed ->
             seed.accounts.forEach { account ->
-                if (accountId == null || account.id == accountId) {
+                // NOTE: must be in the same order as defaultProjection
+                val values = arrayOf(
+                    account.id,                                 // WalletContractV1.ACCOUNT_ID
+                    account.bip32DerivationPathUri.toString(),  // WalletContractV1.BIP32_DERIVATION_PATH
+                    account.publicKey,                          // WalletContractV1.PUBLIC_KEY_RAW
+                    Base58EncodeUseCase(account.publicKey),     // WalletContractV1.PUBLIC_KEY_BASE58
+                    account.name ?: "",                         // WalletContractV1.ACCOUNT_NAME
+                    if (account.isUserWallet) 1 else 0,         // WalletContractV1.ACCOUNT_IS_USER_WALLET
+                    if (account.isValid) 1 else 0               // WalletContractV1.ACCOUNT_IS_VALID
+                )
+
+                if ((accountId == null || account.id == accountId)
+                    && queryParser?.match(*values) != false
+                ) {
                     val rowBuilder = cursor.newRow()
-                    rowBuilder.add(BaseColumns._ID, account.id)
-                    rowBuilder.add(WalletContractV1.BIP32_DERIVATION_PATH, account.bip32DerivationPathUri.toString())
-                    rowBuilder.add(WalletContractV1.PUBLIC_KEY_RAW, account.publicKey)
-                    rowBuilder.add(WalletContractV1.PUBLIC_KEY_BASE58, Base58EncodeUseCase(account.publicKey))
-                    rowBuilder.add(WalletContractV1.ACCOUNT_NAME, account.name ?: "")
-                    rowBuilder.add(WalletContractV1.ACCOUNT_IS_USER_WALLET, if (account.isUserWallet) 1 else 0)
-                    rowBuilder.add(WalletContractV1.ACCOUNT_IS_VALID, if (account.isValid) 1 else 0)
+                    for (item in defaultProjection.zip(values)) {
+                        rowBuilder.add(item.first, item.second)
+                    }
                 }
             }
         }
@@ -438,13 +529,15 @@ class WalletContentProvider : ContentProvider() {
         private const val AUTHORIZED_SEEDS = 1
         private const val AUTHORIZED_SEEDS_ID = 2
         private const val UNAUTHORIZED_SEEDS = 3
-        private const val ACCOUNTS = 4
-        private const val ACCOUNTS_ID = 5
+        private const val UNAUTHORIZED_SEEDS_ID = 4
+        private const val ACCOUNTS = 5
+        private const val ACCOUNTS_ID = 6
 
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_AUTHORIZED_SEEDS_TABLE, AUTHORIZED_SEEDS)
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_AUTHORIZED_SEEDS_TABLE + "/#", AUTHORIZED_SEEDS_ID)
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_TABLE, UNAUTHORIZED_SEEDS)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_TABLE + "/#", UNAUTHORIZED_SEEDS_ID)
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_ACCOUNTS_TABLE, ACCOUNTS)
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_ACCOUNTS_TABLE + "/#", ACCOUNTS_ID)
         }
