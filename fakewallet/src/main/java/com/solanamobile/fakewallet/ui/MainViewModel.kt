@@ -9,13 +9,9 @@ import android.database.ContentObserver
 import android.net.Uri
 import android.os.Handler
 import android.util.Log
-import androidx.core.database.getStringOrNull
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.solanamobile.seedvault.Bip32DerivationPath
-import com.solanamobile.seedvault.Bip32Level
-import com.solanamobile.seedvault.Wallet
-import com.solanamobile.seedvault.WalletContractV1
+import com.solanamobile.seedvault.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -64,37 +60,43 @@ class MainViewModel(
 
     private suspend fun refreshUiState() {
         val hasUnauthorizedSeeds = withContext(Dispatchers.Main) {
-            Wallet.hasUnauthorizedSeeds(getApplication(),
+            Wallet.hasUnauthorizedSeedsForPurpose(getApplication(),
                 WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         }
+
         val seeds = mutableListOf<Seed>()
 
         val authorizedSeedsCursor = withContext(Dispatchers.Main) {
-            Wallet.getAllAuthorizedSeeds(getApplication(),
+            Wallet.getAuthorizedSeeds(getApplication(),
                 WalletContractV1.WALLET_AUTHORIZED_SEEDS_ALL_COLUMNS)!!
         }
         while (authorizedSeedsCursor.moveToNext()) {
             val authToken = authorizedSeedsCursor.getInt(0)
             val authPurpose = authorizedSeedsCursor.getInt(1)
-            val seedName = authorizedSeedsCursor.getStringOrNull(2)
+            val seedName = authorizedSeedsCursor.getString(2)
             val accounts = mutableListOf<Account>()
 
             val accountsCursor = withContext(Dispatchers.Main) {
-                Wallet.getAllAccounts(getApplication(), authToken,
-                    WalletContractV1.WALLET_ACCOUNTS_ALL_COLUMNS)!!
+                Wallet.getAccounts(getApplication(), authToken,
+                    WalletContractV1.WALLET_ACCOUNTS_ALL_COLUMNS,
+                    WalletContractV1.ACCOUNT_IS_USER_WALLET, "1")!!
             }
             while (accountsCursor.moveToNext()) {
                 val accountId = accountsCursor.getInt(0)
                 val derivationPath = Uri.parse(accountsCursor.getString(1))
                 val publicKeyBase58 = accountsCursor.getString(3)
-                val accountName = accountsCursor.getStringOrNull(4)
+                val accountName = accountsCursor.getString(4)
                 accounts.add(Account(accountId,
-                    if (accountName.isNullOrBlank()) publicKeyBase58.substring(0, 10) else accountName,
+                    accountName.ifBlank { publicKeyBase58.substring(0, 10) },
                     derivationPath, publicKeyBase58))
             }
+            accountsCursor.close()
 
-            seeds.add(Seed(authToken, seedName ?: authToken.toString(), authPurpose, accounts))
+            seeds.add(
+                Seed(authToken, seedName.ifBlank { authToken.toString() }, authPurpose, accounts)
+            )
         }
+        authorizedSeedsCursor.close()
 
         _uiState.update {
             it.copy(seeds = seeds, hasUnauthorizedSeeds = hasUnauthorizedSeeds)
@@ -110,8 +112,38 @@ class MainViewModel(
     }
 
     fun onAuthorizeNewSeedSuccess(authToken: Int) {
-        // TODO: mark the first two accounts as valid. This simulates a real wallet exploring each
-        // account and marking any with funds as valid.
+        // Mark two accounts as user wallets. This similates a real wallet app exploring each
+        // account and marking them as containing user funds.
+        viewModelScope.launch {
+            for (i in 0..1) {
+                val derivationPath = Bip44DerivationPath.newBuilder()
+                    .setAccount(Bip32Level(i, true))
+                    .build()
+                val resolvedDerivationPath = Wallet.resolveDerivationPath(
+                    getApplication(),
+                    derivationPath.toUri(),
+                    WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+                )
+                Log.d(TAG, "Resolved BIP derivation path '$derivationPath' to BIP32 derivation path '$resolvedDerivationPath' for purpose ${WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION}")
+                val cursor = Wallet.getAccounts(
+                    getApplication(),
+                    authToken,
+                    arrayOf(WalletContractV1.ACCOUNT_ID, WalletContractV1.ACCOUNT_IS_USER_WALLET),
+                    WalletContractV1.BIP32_DERIVATION_PATH,
+                    resolvedDerivationPath.toString()
+                )!!
+                check(cursor.moveToNext()) { "Failed to find expected account '$resolvedDerivationPath'" }
+                val accountId = cursor.getInt(0)
+                val isUserWallet = (cursor.getInt(1) == 1)
+                cursor.close()
+                if (!isUserWallet) {
+                    Wallet.updateAccountIsUserWallet(getApplication(), authToken, accountId, true)
+                    Log.d(TAG, "Marking account '$resolvedDerivationPath' as a user wallet")
+                } else {
+                    Log.d(TAG, "Account '$resolvedDerivationPath' is already marked as a user wallet")
+                }
+            }
+        }
     }
 
     fun onAuthorizeNewSeedFailure(resultCode: Int) {

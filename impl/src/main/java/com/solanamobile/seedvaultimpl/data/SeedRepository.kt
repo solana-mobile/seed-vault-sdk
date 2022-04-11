@@ -52,6 +52,9 @@ class SeedRepository(
 
     // Protects all shared state that can be modified by arbitrary threads
     private val mutex = Mutex()
+    private var nextSeedId = FIRST_SEED_ID
+    private var nextAuthToken = FIRST_AUTH_TOKEN
+    private var nextAccountId = FIRST_ACCOUNT_ID
 
     private val seedCollection: SharedFlow<SeedCollection> = context.seedCollectionDataStore.data.catch { e ->
         if (e is IOException) {
@@ -64,19 +67,19 @@ class SeedRepository(
         Log.d(TAG, "seedCollection flow opened")
     }.onCompletion {
         Log.d(TAG, "seedCollection flow closed")
+    }.onEach { sc ->
+        mutex.withLock {
+            if (sc.nextId > nextSeedId) {
+                nextSeedId = sc.nextId
+            }
+            if (sc.nextAuthToken > nextAuthToken) {
+                nextAuthToken = sc.nextAuthToken
+            }
+            if (sc.nextAccountId > nextAccountId) {
+                nextAccountId = sc.nextAccountId
+            }
+        }
     }.shareIn(repositoryOwnerScope, SharingStarted.Eagerly, 1)
-
-    private val nextSeedId: StateFlow<Int> = seedCollection.map { sc ->
-        if (sc.nextId >= FIRST_SEED_ID) sc.nextId else FIRST_SEED_ID
-    }.stateIn(repositoryOwnerScope, SharingStarted.Eagerly, FIRST_SEED_ID)
-
-    private val nextAuthToken: StateFlow<Int> = seedCollection.map { sc ->
-        if (sc.nextAuthToken >= FIRST_AUTH_TOKEN) sc.nextAuthToken else FIRST_AUTH_TOKEN
-    }.stateIn(repositoryOwnerScope, SharingStarted.Eagerly, FIRST_AUTH_TOKEN)
-
-    private val nextAccountId: StateFlow<Int> = seedCollection.map { sc ->
-        if (sc.nextAccountId >= FIRST_ACCOUNT_ID) sc.nextAccountId else FIRST_ACCOUNT_ID
-    }.stateIn(repositoryOwnerScope, SharingStarted.Eagerly, FIRST_ACCOUNT_ID)
 
     val seeds: StateFlow<SeedIdMap> = seedCollection.map { sc ->
         sc.seedsList.associate { sr ->
@@ -136,13 +139,13 @@ class SeedRepository(
 
             mutex.withLock {
                 check(!isFull.value) { "Seed repository is full; cannot add a new seed" }
-                id = nextSeedId.value
-                check(!seeds.value.containsKey(id)) { "Seed repository already contains an entry for seed $id" }
-                newSeedRecordBuilder.seedId = id
+                check(!seeds.value.containsKey(nextSeedId)) { "Seed repository already contains an entry for seed $nextSeedId" }
+                newSeedRecordBuilder.seedId = nextSeedId
+                id = nextSeedId
 
                 context.seedCollectionDataStore.updateData {
                     it.toBuilder().addSeeds(newSeedRecordBuilder).apply {
-                        nextId = id + 1
+                        nextId = ++nextSeedId
                     }.build()
                 }
             }
@@ -262,8 +265,8 @@ class SeedRepository(
             }
 
             mutex.withLock {
-                var tentativeAuthToken = nextAuthToken.value
-                newAuthorizationEntryBuilder.authToken = tentativeAuthToken
+                var assignedAuthToken = nextAuthToken
+                newAuthorizationEntryBuilder.authToken = nextAuthToken
 
                 context.seedCollectionDataStore.updateData {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
@@ -271,16 +274,16 @@ class SeedRepository(
                     val existingAuthRecord = it.seedsList[i].authorizationsList.firstOrNull { ae -> ae.uid == uid }
                     if (existingAuthRecord != null) {
                         // UID is already authorized for this seed; don't change anything
-                        tentativeAuthToken = existingAuthRecord.authToken
+                        assignedAuthToken = existingAuthRecord.authToken
                         return@updateData it
                     }
                     val newSeedRecordBuilder = it.seedsList[i].toBuilder().addAuthorizations(newAuthorizationEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).apply {
-                        this.nextAuthToken = tentativeAuthToken + 1
+                        this.nextAuthToken = ++nextAuthToken
                     }.build()
                 }
 
-                authToken = tentativeAuthToken
+                authToken = assignedAuthToken
             }
 
             _changes.emit(
@@ -351,8 +354,8 @@ class SeedRepository(
             }
 
             mutex.withLock {
-                var tentativeAccountId = nextAccountId.value
-                newKnownAccountEntryBuilder.accountId = tentativeAccountId
+                var assignedAccountId = nextAccountId
+                newKnownAccountEntryBuilder.accountId = nextAccountId
 
                 context.seedCollectionDataStore.updateData {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
@@ -363,16 +366,16 @@ class SeedRepository(
                     }
                     if (existingKnownAccountEntry != null) {
                         // Bip32 path is already known for this seed; don't change anything
-                        tentativeAccountId = existingKnownAccountEntry.accountId
+                        assignedAccountId = existingKnownAccountEntry.accountId
                         return@updateData it
                     }
                     val newSeedRecordBuilder = it.seedsList[i].toBuilder().addKnownAccounts(newKnownAccountEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).apply {
-                        nextAccountId = tentativeAccountId + 1
+                        this.nextAccountId = ++nextAccountId
                     }.build()
                 }
 
-                accountId = tentativeAccountId
+                accountId = assignedAccountId
             }
 
             _changes.emit(

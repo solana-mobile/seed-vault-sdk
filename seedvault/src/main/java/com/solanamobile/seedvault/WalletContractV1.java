@@ -59,23 +59,24 @@ public final class WalletContractV1 {
     public static final String WALLET_AUTHORIZED_SEEDS_TABLE = "authorizedseeds";
     public static final Uri WALLET_AUTHORIZED_SEEDS_CONTENT_URI = Uri.withAppendedPath(WALLET_PROVIDER_CONTENT_URI_BASE, WALLET_AUTHORIZED_SEEDS_TABLE);
     public static final String WALLET_AUTHORIZED_SEEDS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + WALLET_AUTHORIZED_SEEDS_TABLE;
-    // BaseColumns._ID is the auth token for each authorized seed
+    public static final String AUTH_TOKEN = BaseColumns._ID;
     public static final String AUTH_PURPOSE = "AuthorizedSeeds_AuthPurpose";
     public static final String SEED_NAME = "AuthorizedSeeds_SeedName";
     public static final String[] WALLET_AUTHORIZED_SEEDS_ALL_COLUMNS = {
-            BaseColumns._ID, AUTH_PURPOSE, SEED_NAME };
+            AUTH_TOKEN, AUTH_PURPOSE, SEED_NAME };
 
     public static final String WALLET_UNAUTHORIZED_SEEDS_TABLE = "unauthorizedseeds";
     public static final Uri WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI = Uri.withAppendedPath(WALLET_PROVIDER_CONTENT_URI_BASE, WALLET_UNAUTHORIZED_SEEDS_TABLE);
     public static final String WALLET_UNAUTHORIZED_SEEDS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + WALLET_UNAUTHORIZED_SEEDS_TABLE;
+    public static final String UNAUTHORIZED_SEED_PURPOSE = BaseColumns._ID;
     public static final String HAS_UNAUTHORIZED_SEEDS = "UnauthorizedSeeds_HasUnauthorizedSeeds";
     public static final String[] WALLET_UNAUTHORIZED_SEEDS_ALL_COLUMNS = {
-            HAS_UNAUTHORIZED_SEEDS };
+            UNAUTHORIZED_SEED_PURPOSE, HAS_UNAUTHORIZED_SEEDS };
 
     public static final String WALLET_ACCOUNTS_TABLE = "accounts";
     public static final Uri WALLET_ACCOUNTS_CONTENT_URI = Uri.withAppendedPath(WALLET_PROVIDER_CONTENT_URI_BASE, WALLET_ACCOUNTS_TABLE);
     public static final String WALLET_ACCOUNTS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + WALLET_ACCOUNTS_TABLE;
-    // BaseColumns._ID is the unique account identifier
+    public static final String ACCOUNT_ID = BaseColumns._ID;
     public static final String BIP32_DERIVATION_PATH = "Accounts_Bip32DerivationPath";
     public static final String PUBLIC_KEY_RAW = "Accounts_PublicKeyRaw";
     public static final String PUBLIC_KEY_BASE58 = "Accounts_PublicKeyBase58";
@@ -83,8 +84,13 @@ public final class WalletContractV1 {
     public static final String ACCOUNT_IS_USER_WALLET = "Accounts_IsUserWallet";
     public static final String ACCOUNT_IS_VALID = "Accounts_IsValid";
     public static final String[] WALLET_ACCOUNTS_ALL_COLUMNS = {
-            BaseColumns._ID, BIP32_DERIVATION_PATH, PUBLIC_KEY_RAW, PUBLIC_KEY_BASE58,
+            ACCOUNT_ID, BIP32_DERIVATION_PATH, PUBLIC_KEY_RAW, PUBLIC_KEY_BASE58,
             ACCOUNT_NAME, ACCOUNT_IS_USER_WALLET, ACCOUNT_IS_VALID };
+
+    public static final String WALLET_RESOLVE_BIP32_DERIVATION_PATH_METHOD = "ResolveBipDerivationPath";
+    public static final String BIP_DERIVATION_PATH = "ResolveBipDerivationPath_BipDerivationPath";
+    public static final String PURPOSE = "ResolveBipDerivationPath_Purpose";
+    public static final String RESOLVED_BIP32_DERIVATION_PATH = "ResolveBipDerivationPath_ResolvedBip32DerivationPath";
 
     private WalletContractV1() {}
 }
