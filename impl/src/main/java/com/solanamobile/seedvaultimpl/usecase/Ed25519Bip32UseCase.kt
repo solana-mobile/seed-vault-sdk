@@ -5,9 +5,9 @@
 package com.solanamobile.seedvaultimpl.usecase
 
 import android.util.Log
-import androidx.annotation.IntRange
 import androidx.annotation.Size
 import com.solanamobile.seedvault.Bip32DerivationPath
+import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.model.SeedDetails
 import java.math.BigInteger
 import javax.crypto.Mac
@@ -125,7 +125,7 @@ object Ed25519Bip32UseCase {
 
     private fun deriveChildPrivateKey(
         kdm: KeyDerivationMaterial,
-        @IntRange(from=0, to=2147483647) index: Int,
+        @WalletContractV1.BipIndex index: Int,
         hardened: Boolean
     ): KeyDerivationMaterial {
         val i: ByteArray

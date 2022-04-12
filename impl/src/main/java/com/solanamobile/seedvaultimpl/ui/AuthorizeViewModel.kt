@@ -58,7 +58,7 @@ class AuthorizeViewModel : ViewModel() {
             }
             WalletContractV1.ACTION_SIGN_TRANSACTION -> {
                 val authToken = getAuthTokenFromIntent(callerIntent)
-                if (authToken == WalletContractV1.AUTH_TOKEN_INVALID) {
+                if (authToken == -1) {
                     Log.e(TAG, "No or invalid auth token provided; aborting...")
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                     return
@@ -85,7 +85,7 @@ class AuthorizeViewModel : ViewModel() {
             }
             WalletContractV1.ACTION_GET_PUBLIC_KEY -> {
                 val authToken = getAuthTokenFromIntent(callerIntent)
-                if (authToken == WalletContractV1.AUTH_TOKEN_INVALID) {
+                if (authToken == -1) {
                     Log.e(TAG, "No or invalid auth token provided; aborting...")
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                     return
@@ -105,7 +105,7 @@ class AuthorizeViewModel : ViewModel() {
             }
             else -> {
                 Log.e(TAG, "Unknown action '${callerIntent.action}'; aborting...")
-                completeAuthorizationWithError(WalletContractV1.RESULT_UNKNOWN_ACTION)
+                completeAuthorizationWithError(WalletContractV1.RESULT_UNSPECIFIED_ERROR)
             }
         }
     }
