@@ -279,7 +279,7 @@ class SeedRepository(
                     }
                     val newSeedRecordBuilder = it.seedsList[i].toBuilder().addAuthorizations(newAuthorizationEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).apply {
-                        this.nextAuthToken = ++nextAuthToken
+                        nextAuthToken = ++this@SeedRepository.nextAuthToken
                     }.build()
                 }
 
@@ -371,7 +371,7 @@ class SeedRepository(
                     }
                     val newSeedRecordBuilder = it.seedsList[i].toBuilder().addKnownAccounts(newKnownAccountEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).apply {
-                        this.nextAccountId = ++nextAccountId
+                        nextAccountId = ++this@SeedRepository.nextAccountId
                     }.build()
                 }
 
