@@ -36,18 +36,19 @@ class WalletContentProvider : ContentProvider() {
 
     override fun getType(uri: Uri): String? {
         return when (uriMatcher.match(uri)) {
-            AUTHORIZED_SEEDS -> CURSOR_DIR_BASE_TYPE + WalletContractV1.WALLET_AUTHORIZED_SEEDS_MIME_SUBTYPE
-            AUTHORIZED_SEEDS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.WALLET_AUTHORIZED_SEEDS_MIME_SUBTYPE
-            UNAUTHORIZED_SEEDS -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_MIME_SUBTYPE
-            ACCOUNTS -> CURSOR_DIR_BASE_TYPE + WalletContractV1.WALLET_ACCOUNTS_MIME_SUBTYPE
-            ACCOUNTS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.WALLET_ACCOUNTS_MIME_SUBTYPE
+            AUTHORIZED_SEEDS -> CURSOR_DIR_BASE_TYPE + WalletContractV1.AUTHORIZED_SEEDS_MIME_SUBTYPE
+            AUTHORIZED_SEEDS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.AUTHORIZED_SEEDS_MIME_SUBTYPE
+            UNAUTHORIZED_SEEDS -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.UNAUTHORIZED_SEEDS_MIME_SUBTYPE
+            UNAUTHORIZED_SEEDS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.UNAUTHORIZED_SEEDS_MIME_SUBTYPE
+            ACCOUNTS -> CURSOR_DIR_BASE_TYPE + WalletContractV1.ACCOUNTS_MIME_SUBTYPE
+            ACCOUNTS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.ACCOUNTS_MIME_SUBTYPE
             else -> null
         }
     }
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
         return when (method) {
-            WalletContractV1.WALLET_RESOLVE_BIP32_DERIVATION_PATH_METHOD ->
+            WalletContractV1.RESOLVE_BIP32_DERIVATION_PATH_METHOD ->
                 callResolveBip32DerivationPath(arg, extras)
             else -> {
                 Log.w(TAG, "Method $method is not defined")
@@ -57,10 +58,10 @@ class WalletContentProvider : ContentProvider() {
     }
 
     private fun callResolveBip32DerivationPath(arg: String?, extras: Bundle?): Bundle {
-        require(extras != null) { "extras must be defined for method '${WalletContractV1.WALLET_RESOLVE_BIP32_DERIVATION_PATH_METHOD}'" }
-        val uri: Uri? = extras.getParcelable(WalletContractV1.BIP_DERIVATION_PATH)
-        require(uri != null) { "BIP derivation path must be specified" }
-        val purpose = extras.getInt(WalletContractV1.PURPOSE, -1)
+        require(arg != null) { "arg must be defined" }
+        val uri = Uri.parse(arg)
+        require(extras != null) { "extras must be defined" }
+        val purpose = extras.getInt(WalletContractV1.EXTRA_PURPOSE, -1)
         val purposeAsEnum = Authorization.Purpose.fromWalletContractConstant(purpose)
         val derivationPath = try {
             BipDerivationPath.fromUri(uri)
@@ -72,9 +73,9 @@ class WalletContentProvider : ContentProvider() {
             .toBip32DerivationPath(purposeAsEnum)
             .normalize(purposeAsEnum)
         val result = Bundle()
-        result.putParcelable(
+        result.putString(
             WalletContractV1.RESOLVED_BIP32_DERIVATION_PATH,
-            resolvedDerivationPath.toUri()
+            resolvedDerivationPath.toUri().toString()
         )
         return result
     }
@@ -114,15 +115,11 @@ class WalletContentProvider : ContentProvider() {
                 queryUnauthorizedSeeds(uid, ContentUris.parseId(uri).toInt(), projection, queryArgs)
             }
             ACCOUNTS -> {
-                val authToken = queryArgs?.getInt(
-                    WalletContractV1.EXTRA_AUTH_TOKEN,
-                    WalletContractV1.AUTH_TOKEN_INVALID) ?: WalletContractV1.AUTH_TOKEN_INVALID
+                val authToken = queryArgs?.getInt(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
                 queryAccounts(uid, authToken, null, projection, queryArgs)
             }
             ACCOUNTS_ID -> {
-                val authToken = queryArgs?.getInt(
-                    WalletContractV1.EXTRA_AUTH_TOKEN,
-                    WalletContractV1.AUTH_TOKEN_INVALID) ?: WalletContractV1.AUTH_TOKEN_INVALID
+                val authToken = queryArgs?.getInt(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
                 queryAccounts(uid, authToken, ContentUris.parseId(uri).toInt(), projection, queryArgs)
             }
             else -> {
@@ -152,7 +149,7 @@ class WalletContentProvider : ContentProvider() {
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
-        val defaultProjection = WalletContractV1.WALLET_AUTHORIZED_SEEDS_ALL_COLUMNS.toList()
+        val defaultProjection = WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS.toList()
         val queryParser = makeQueryParser(defaultProjection, queryArgs)
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
@@ -193,7 +190,7 @@ class WalletContentProvider : ContentProvider() {
         queryArgs: Bundle?
     ): Cursor {
         val purposeAsEnum = purpose?.let { Authorization.Purpose.fromWalletContractConstant(it) }
-        val defaultProjection = WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_ALL_COLUMNS.toList()
+        val defaultProjection = WalletContractV1.UNAUTHORIZED_SEEDS_ALL_COLUMNS.toList()
         val queryParser = makeQueryParser(defaultProjection, queryArgs)
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
@@ -243,7 +240,7 @@ class WalletContentProvider : ContentProvider() {
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
-        val defaultProjection = WalletContractV1.WALLET_ACCOUNTS_ALL_COLUMNS.toList()
+        val defaultProjection = WalletContractV1.ACCOUNTS_ALL_COLUMNS.toList()
         val queryParser = makeQueryParser(defaultProjection, queryArgs)
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
@@ -276,7 +273,7 @@ class WalletContentProvider : ContentProvider() {
                     }
                 }
             }
-        }
+        } ?: throw IllegalArgumentException("authToken $authToken is not a valid auth token")
 
         return cursor
     }
@@ -371,9 +368,7 @@ class WalletContentProvider : ContentProvider() {
 
         return when (match) {
             ACCOUNTS_ID -> {
-                val authToken = extras?.getInt(
-                    WalletContractV1.EXTRA_AUTH_TOKEN,
-                    WalletContractV1.AUTH_TOKEN_INVALID) ?: WalletContractV1.AUTH_TOKEN_INVALID
+                val authToken = extras?.getInt(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
                 updateAccount(uid, authToken, ContentUris.parseId(uri).toInt(), values)
             }
             else -> {
@@ -400,20 +395,20 @@ class WalletContentProvider : ContentProvider() {
             seed.accounts.firstOrNull { account ->
                 account.id == accountId
             }?.let { account ->
-                val updatedName = if (values?.containsKey(WalletContractV1.ACCOUNT_NAME) == true) {
-                    values.getAsString(WalletContractV1.ACCOUNT_NAME)
+                val updatedName = if (values?.containsKey(WalletContractV1.ACCOUNTS_ACCOUNT_NAME) == true) {
+                    values.getAsString(WalletContractV1.ACCOUNTS_ACCOUNT_NAME)
                 } else {
                     account.name
                 }
 
-                val updatedIsUserWallet = if (values?.containsKey(WalletContractV1.ACCOUNT_IS_USER_WALLET) == true) {
-                    values.getAsInteger(WalletContractV1.ACCOUNT_IS_USER_WALLET) == 1
+                val updatedIsUserWallet = if (values?.containsKey(WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET) == true) {
+                    values.getAsInteger(WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET) == 1
                 } else {
                     account.isUserWallet
                 }
 
-                val updatedIsValid = if (values?.containsKey(WalletContractV1.ACCOUNT_IS_VALID) == true) {
-                    values.getAsInteger(WalletContractV1.ACCOUNT_IS_VALID) == 1
+                val updatedIsValid = if (values?.containsKey(WalletContractV1.ACCOUNTS_ACCOUNT_IS_VALID) == true) {
+                    values.getAsInteger(WalletContractV1.ACCOUNTS_ACCOUNT_IS_VALID) == 1
                 } else {
                     account.isValid
                 }
@@ -429,7 +424,7 @@ class WalletContentProvider : ContentProvider() {
                     }
                 }
             }
-        }
+        } ?: throw IllegalArgumentException("authToken $authToken is not a valid auth token")
 
         return if (updated) 1 else 0
     }
@@ -464,13 +459,13 @@ class WalletContentProvider : ContentProvider() {
                     SeedRepository.ChangeNotification.Category.SEED -> {
                         when (change.type) {
                             SeedRepository.ChangeNotification.Type.CREATE ->
-                                listOf(WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI)
+                                listOf(WalletContractV1.UNAUTHORIZED_SEEDS_CONTENT_URI)
                             SeedRepository.ChangeNotification.Type.UPDATE ->
-                                listOf(WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI)
+                                listOf(WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI)
                             SeedRepository.ChangeNotification.Type.DELETE ->
                                 listOf(
-                                    WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI,
-                                    WalletContractV1.WALLET_ACCOUNTS_CONTENT_URI
+                                    WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
+                                    WalletContractV1.ACCOUNTS_CONTENT_URI
                                 )
                         }
                     }
@@ -478,9 +473,9 @@ class WalletContentProvider : ContentProvider() {
                         when (change.type) {
                             SeedRepository.ChangeNotification.Type.CREATE ->
                                 listOf(
-                                    WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI,
+                                    WalletContractV1.UNAUTHORIZED_SEEDS_CONTENT_URI,
                                     ContentUris.withAppendedId(
-                                        WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI,
+                                        WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
                                         change.id!!.toLong()
                                     )
                                 )
@@ -488,12 +483,12 @@ class WalletContentProvider : ContentProvider() {
                                 throw AssertionError("Authorizations are not expected to be updated")
                             SeedRepository.ChangeNotification.Type.DELETE ->
                                 listOf(
-                                    WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_CONTENT_URI,
+                                    WalletContractV1.UNAUTHORIZED_SEEDS_CONTENT_URI,
                                     ContentUris.withAppendedId(
-                                        WalletContractV1.WALLET_AUTHORIZED_SEEDS_CONTENT_URI,
+                                        WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
                                         change.id!!.toLong()
                                     ),
-                                    WalletContractV1.WALLET_ACCOUNTS_CONTENT_URI
+                                    WalletContractV1.ACCOUNTS_CONTENT_URI
                                 )
                         }
                     }
@@ -503,7 +498,7 @@ class WalletContentProvider : ContentProvider() {
                             SeedRepository.ChangeNotification.Type.UPDATE ->
                                 listOf(
                                     ContentUris.withAppendedId(
-                                        WalletContractV1.WALLET_ACCOUNTS_CONTENT_URI,
+                                        WalletContractV1.ACCOUNTS_CONTENT_URI,
                                         change.id!!.toLong()
                                     )
                                 )
@@ -534,12 +529,12 @@ class WalletContentProvider : ContentProvider() {
         private const val ACCOUNTS_ID = 6
 
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
-            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_AUTHORIZED_SEEDS_TABLE, AUTHORIZED_SEEDS)
-            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_AUTHORIZED_SEEDS_TABLE + "/#", AUTHORIZED_SEEDS_ID)
-            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_TABLE, UNAUTHORIZED_SEEDS)
-            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_UNAUTHORIZED_SEEDS_TABLE + "/#", UNAUTHORIZED_SEEDS_ID)
-            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_ACCOUNTS_TABLE, ACCOUNTS)
-            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.WALLET_ACCOUNTS_TABLE + "/#", ACCOUNTS_ID)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.AUTHORIZED_SEEDS_TABLE, AUTHORIZED_SEEDS)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.AUTHORIZED_SEEDS_TABLE + "/#", AUTHORIZED_SEEDS_ID)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.UNAUTHORIZED_SEEDS_TABLE, UNAUTHORIZED_SEEDS)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.UNAUTHORIZED_SEEDS_TABLE + "/#", UNAUTHORIZED_SEEDS_ID)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.ACCOUNTS_TABLE, ACCOUNTS)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.ACCOUNTS_TABLE + "/#", ACCOUNTS_ID)
         }
     }
 }

@@ -68,7 +68,7 @@ class MainViewModel(
 
         val authorizedSeedsCursor = withContext(Dispatchers.Main) {
             Wallet.getAuthorizedSeeds(getApplication(),
-                WalletContractV1.WALLET_AUTHORIZED_SEEDS_ALL_COLUMNS)!!
+                WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS)!!
         }
         while (authorizedSeedsCursor.moveToNext()) {
             val authToken = authorizedSeedsCursor.getInt(0)
@@ -78,8 +78,8 @@ class MainViewModel(
 
             val accountsCursor = withContext(Dispatchers.Main) {
                 Wallet.getAccounts(getApplication(), authToken,
-                    WalletContractV1.WALLET_ACCOUNTS_ALL_COLUMNS,
-                    WalletContractV1.ACCOUNT_IS_USER_WALLET, "1")!!
+                    WalletContractV1.ACCOUNTS_ALL_COLUMNS,
+                    WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, "1")!!
             }
             while (accountsCursor.moveToNext()) {
                 val accountId = accountsCursor.getInt(0)
@@ -117,7 +117,7 @@ class MainViewModel(
         viewModelScope.launch {
             for (i in 0..1) {
                 val derivationPath = Bip44DerivationPath.newBuilder()
-                    .setAccount(Bip32Level(i, true))
+                    .setAccount(BipLevel(i, true))
                     .build()
                 val resolvedDerivationPath = Wallet.resolveDerivationPath(
                     getApplication(),
@@ -128,8 +128,11 @@ class MainViewModel(
                 val cursor = Wallet.getAccounts(
                     getApplication(),
                     authToken,
-                    arrayOf(WalletContractV1.ACCOUNT_ID, WalletContractV1.ACCOUNT_IS_USER_WALLET),
-                    WalletContractV1.BIP32_DERIVATION_PATH,
+                    arrayOf(
+                        WalletContractV1.ACCOUNTS_ACCOUNT_ID,
+                        WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET
+                    ),
+                    WalletContractV1.ACCOUNTS_BIP32_DERIVATION_PATH,
                     resolvedDerivationPath.toString()
                 )!!
                 check(cursor.moveToNext()) { "Failed to find expected account '$resolvedDerivationPath'" }
@@ -203,7 +206,7 @@ class MainViewModel(
 
     fun requestPublicKeyForM1000H(authToken: Int) {
         val derivationPath = Bip32DerivationPath.newBuilder()
-            .appendLevel(Bip32Level(1000, true))
+            .appendLevel(BipLevel(1000, true))
             .build()
         viewModelScope.launch {
             _viewModelEvents.emit(

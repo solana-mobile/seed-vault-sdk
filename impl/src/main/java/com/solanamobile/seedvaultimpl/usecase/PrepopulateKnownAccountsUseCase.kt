@@ -6,7 +6,7 @@ package com.solanamobile.seedvaultimpl.usecase
 
 import android.util.Log
 import com.solanamobile.seedvault.Bip32DerivationPath
-import com.solanamobile.seedvault.Bip32Level
+import com.solanamobile.seedvault.BipLevel
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Account
 import com.solanamobile.seedvaultimpl.model.Authorization
@@ -20,8 +20,8 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
         when (purpose) {
             Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS -> {
                 val derivationRootPath = Bip32DerivationPath.newBuilder()
-                    .appendLevel(Bip32Level(BIP44_PURPOSE, true))
-                    .appendLevel(Bip32Level(BIP44_COIN_TYPE_SOLANA, true))
+                    .appendLevel(BipLevel(BIP44_PURPOSE, true))
+                    .appendLevel(BipLevel(BIP44_COIN_TYPE_SOLANA, true))
                     .build().normalize(purpose)
                 val derivationRoot = Ed25519Slip10UseCase.derivePublicKeyPartialDerivation(
                     seed.details, derivationRootPath
@@ -30,7 +30,7 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
 
                 for (i in 0 until SOLANA_NUM_KNOWN_ACCOUNTS) {
                     // Type 1 paths: m/44'/501'/X'
-                    val type1Levels = listOf(Bip32Level(i, true))
+                    val type1Levels = listOf(BipLevel(i, true))
                     val type1Uri = Bip32DerivationPath.newBuilder()
                         .appendLevels(derivationRootPath.levels)
                         .appendLevels(type1Levels)
@@ -63,7 +63,7 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                     }
 
                     // Type 2 paths: m/44'/501'/X'/0'
-                    val type2Levels = listOf(Bip32Level(i, true), Bip32Level(0, true))
+                    val type2Levels = listOf(BipLevel(i, true), BipLevel(0, true))
                     val type2Uri = Bip32DerivationPath.newBuilder()
                         .appendLevels(derivationRootPath.levels)
                         .appendLevels(type2Levels)

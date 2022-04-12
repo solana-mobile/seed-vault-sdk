@@ -5,7 +5,7 @@
 package com.solanamobile.seedvaultimpl.usecase
 
 import com.solanamobile.seedvault.Bip32DerivationPath
-import com.solanamobile.seedvault.Bip32Level
+import com.solanamobile.seedvault.BipLevel
 import com.solanamobile.seedvault.Bip44DerivationPath
 import com.solanamobile.seedvault.BipDerivationPath
 import com.solanamobile.seedvaultimpl.data.SeedRepository
@@ -40,8 +40,6 @@ class BipDerivationUseCase(private val seedRepository: SeedRepository) {
         derivationPath: Bip32DerivationPath,
         partialPublicDerivation: PartialPublicDerivation? = null
     ): ByteArray {
-        // First, check if we already have the public key cached for this derivation path
-
         return when (purpose) {
             Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS ->
                 Ed25519Slip10UseCase.derivePublicKey(seed.details, derivationPath, partialPublicDerivation)
@@ -109,8 +107,8 @@ fun Bip44DerivationPath.toBip32DerivationPath(
     return when (purpose) {
         Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS -> {
             Bip32DerivationPath.newBuilder()
-                .appendLevel(Bip32Level(BIP44_PURPOSE, true))
-                .appendLevel(Bip32Level(BIP44_COIN_TYPE_SOLANA, true))
+                .appendLevel(BipLevel(BIP44_PURPOSE, true))
+                .appendLevel(BipLevel(BIP44_COIN_TYPE_SOLANA, true))
                 .appendLevels(hardenAllLevels().levels)
                 .build()
         }
@@ -122,7 +120,9 @@ private fun Bip32DerivationPath.hardenAllLevels(): Bip32DerivationPath {
     if (levels.all { level -> level.hardened }) {
         return this
     }
-    return Bip32DerivationPath(levels.map { level -> Bip32Level(level.index, true) })
+    return Bip32DerivationPath(levels.map { level ->
+        BipLevel(level.index, true)
+    })
 }
 
 private fun Bip44DerivationPath.hardenAllLevels(): Bip44DerivationPath {
@@ -131,7 +131,7 @@ private fun Bip44DerivationPath.hardenAllLevels(): Bip44DerivationPath {
         return this
     }
     val newLevels = levels.map { level ->
-        if (level.hardened) level else Bip32Level(level.index, true)
+        if (level.hardened) level else BipLevel(level.index, true)
     }
     return Bip44DerivationPath(newLevels[0], newLevels.getOrNull(1), newLevels.getOrNull(2))
 }

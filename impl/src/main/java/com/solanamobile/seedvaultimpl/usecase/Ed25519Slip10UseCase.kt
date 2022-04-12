@@ -5,12 +5,12 @@
 package com.solanamobile.seedvaultimpl.usecase
 
 import android.util.Log
-import androidx.annotation.IntRange
 import androidx.annotation.Size
+import com.goterl.lazysodium.exceptions.SodiumException
 import com.solanamobile.seedvault.Bip32DerivationPath
+import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.model.SeedDetails
-import com.goterl.lazysodium.exceptions.SodiumException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -107,7 +107,7 @@ object Ed25519Slip10UseCase {
 
     private fun deriveChildSecretKey(
         kdm: KeyDerivationMaterial,
-        @IntRange(from=0, to=2147483647) index: Int,
+        @WalletContractV1.BipIndex index: Int,
         hardened: Boolean
     ): KeyDerivationMaterial {
         require(hardened) { "Ed25519-SLIP10 does not support non-hardened keys" }

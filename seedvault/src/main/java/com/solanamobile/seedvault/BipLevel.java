@@ -4,17 +4,25 @@
 
 package com.solanamobile.seedvault;
 
-import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
 import java.util.Objects;
 
-public class Bip32Level {
-    @IntRange(from=0, to=2147483647)
+/** An immutable data class encoding a level in a {@link BipDerivationPath} */
+public class BipLevel {
+    /** Index of this {@link BipLevel} */
+    @WalletContractV1.BipIndex
     public final int index;
+
+    /** Whether this {@link BipLevel} is hardened */
     public final boolean hardened;
 
-    public Bip32Level(@IntRange(from=0, to=2147483647) int index, boolean hardened) {
+    /**
+     * Construct a new {@link BipLevel}
+     * @param index level index
+     * @param hardened whether or not this level should be hardened
+     */
+    public BipLevel(@WalletContractV1.BipIndex int index, boolean hardened) {
         if (index < 0) {
             throw new IllegalArgumentException("index must be in the range [0, 2^31)");
         }
@@ -26,7 +34,7 @@ public class Bip32Level {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Bip32Level that = (Bip32Level) o;
+        BipLevel that = (BipLevel) o;
         return index == that.index && hardened == that.hardened;
     }
 

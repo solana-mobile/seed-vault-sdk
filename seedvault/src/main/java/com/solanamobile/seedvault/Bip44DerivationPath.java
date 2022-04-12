@@ -16,43 +16,75 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * An immutable BIP44 derivation path (see
+ * <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP-0044</a>)
+ */
 public class Bip44DerivationPath extends BipDerivationPath {
+    /** Builder pattern for {@link Bip44DerivationPath} */
     public static class Builder {
-        private Bip32Level mAccount;
-        private Bip32Level mChange;
-        private Bip32Level mAddressIndex;
+        private BipLevel mAccount;
+        private BipLevel mChange;
+        private BipLevel mAddressIndex;
 
         private Builder() {}
 
+        /**
+         * Set the account {@link BipLevel} for this {@link Builder}
+         * @param account the account {@link BipLevel}
+         * @return this builder
+         */
         @NonNull
-        public Builder setAccount(@NonNull Bip32Level account) {
+        public Builder setAccount(@NonNull BipLevel account) {
             mAccount = account;
             return this;
         }
 
+        /**
+         * Set the change {@link BipLevel} for this {@link Builder}
+         * @param change the change {@link BipLevel}
+         * @return this builder
+         */
         @NonNull
-        public Builder setChange(@Nullable Bip32Level change) {
+        public Builder setChange(@Nullable BipLevel change) {
             mChange = change;
             return this;
         }
 
+        /**
+         * Set the address index {@link BipLevel} for this {@link Builder}
+         * @param addressIndex the address index {@link BipLevel}
+         * @return this builder
+         */
         @NonNull
-        public Builder setAddressIndex(@Nullable Bip32Level addressIndex) {
+        public Builder setAddressIndex(@Nullable BipLevel addressIndex) {
             mAddressIndex = addressIndex;
             return this;
         }
 
+        /**
+         * Construct a new {@link Bip44DerivationPath} from this builder
+         * @return a new {@link Bip44DerivationPath}
+         */
         @NonNull
         public Bip44DerivationPath build() {
             return new Bip44DerivationPath(mAccount, mChange, mAddressIndex);
         }
     }
 
-    private final List<Bip32Level> mLevels = new ArrayList<>();
+    private final List<BipLevel> mLevels = new ArrayList<>();
 
-    public Bip44DerivationPath(@NonNull Bip32Level account,
-                               @Nullable Bip32Level change,
-                               @Nullable Bip32Level addressIndex) {
+    /**
+     * Construct a new {@link Bip44DerivationPath}
+     * @param account the account {@link BipLevel}
+     * @param change the change {@link BipLevel}
+     * @param addressIndex the address index {@link BipLevel}
+     * @throws UnsupportedOperationException if account is not hardened, or if change is null and
+     *      addressIndex is not null
+     */
+    public Bip44DerivationPath(@NonNull BipLevel account,
+                               @Nullable BipLevel change,
+                               @Nullable BipLevel addressIndex) {
         if (!account.hardened) {
             throw new UnsupportedOperationException("account must be hardened");
         } else if (change == null && addressIndex != null) {
@@ -68,50 +100,75 @@ public class Bip44DerivationPath extends BipDerivationPath {
         }
     }
 
+    /**
+     * Get the account {@link BipLevel} for this {@link Bip44DerivationPath}
+     * @return the account {@link BipLevel}
+     */
     @NonNull
-    public Bip32Level getAccount() {
+    public BipLevel getAccount() {
         return mLevels.get(0);
     }
 
+    /**
+     * Test whether this {@link Bip44DerivationPath} has the change level
+     * @return true if this {@link Bip44DerivationPath} has the change level, else false
+     */
     public boolean hasChange() {
         return mLevels.size() >= 2;
     }
 
+    /**
+     * Get the change {@link BipLevel} for this {@link Bip44DerivationPath}
+     * @return the change {@link BipLevel}
+     */
     @Nullable
-    public Bip32Level getChange() {
+    public BipLevel getChange() {
         if (!hasChange()) {
             return null;
         }
         return mLevels.get(1);
     }
 
+    /**
+     * Test whether this {@link Bip44DerivationPath} has the address index level
+     * @return true if this {@link Bip44DerivationPath} has the address level, else false
+     */
     public boolean hasAddressIndex() {
         return mLevels.size() >= 3;
     }
 
+    /**
+     * Get the address index {@link BipLevel} for this {@link Bip44DerivationPath}
+     * @return the address index {@link BipLevel}
+     */
     @Nullable
-    public Bip32Level getAddressIndex() {
+    public BipLevel getAddressIndex() {
         if (!hasAddressIndex()) {
             return null;
         }
         return mLevels.get(2);
     }
 
+    /**
+     * Get an immutable list of the {@link BipLevel}s in this {@link Bip44DerivationPath}
+     * @return an immutable list of {@link BipLevel}s
+     */
     @NonNull
-    public List<Bip32Level> getLevels() {
+    public List<BipLevel> getLevels() {
         return Collections.unmodifiableList(mLevels);
     }
 
+    @Override
     @NonNull
     public Uri toUri() {
         final Uri.Builder builder = new Uri.Builder();
 
         builder.scheme(WalletContractV1.BIP44_URI_SCHEME);
 
-        for (Bip32Level level : mLevels) {
+        for (BipLevel level : mLevels) {
             final String pathElement;
             if (level.hardened) {
-                pathElement = level.index + WalletContractV1.BIP32_URI_HARDENED_INDEX_IDENTIFIER;
+                pathElement = level.index + WalletContractV1.BIP_URI_HARDENED_INDEX_IDENTIFIER;
             } else {
                 pathElement = String.valueOf(level.index);
             }
@@ -122,6 +179,14 @@ public class Bip44DerivationPath extends BipDerivationPath {
         return builder.build();
     }
 
+    /**
+     * Create a {@link Bip44DerivationPath} from the specified {@link Uri}. It must follow the
+     * format defined in {@link WalletContractV1#BIP44_URI_SCHEME}.
+     * @param bip44Uri a {@link WalletContractV1#BIP44_URI_SCHEME} {@link Uri}
+     * @return a new {@link Bip44DerivationPath}
+     * @throws UnsupportedOperationException if bip44Uri is not a valid
+     *      {@link WalletContractV1#BIP44_URI_SCHEME} {@link Uri}
+     */
     @NonNull
     public static Bip44DerivationPath fromUri(@NonNull Uri bip44Uri) {
         if (!bip44Uri.isHierarchical()) {
@@ -153,16 +218,16 @@ public class Bip44DerivationPath extends BipDerivationPath {
 
         for (int i = 0; i < path.size(); i++) {
             final String pathElement = path.get(i);
-            final boolean hardened = pathElement.endsWith(WalletContractV1.BIP32_URI_HARDENED_INDEX_IDENTIFIER);
+            final boolean hardened = pathElement.endsWith(WalletContractV1.BIP_URI_HARDENED_INDEX_IDENTIFIER);
             final int index;
             try {
                 index = Integer.parseInt(pathElement.substring(0, pathElement.length() -
-                        WalletContractV1.BIP32_URI_HARDENED_INDEX_IDENTIFIER.length()));
+                        WalletContractV1.BIP_URI_HARDENED_INDEX_IDENTIFIER.length()));
             } catch (NumberFormatException e) {
                 throw new UnsupportedOperationException("Path element " + i + " could not be parsed as a BIP32 level");
             }
 
-            final Bip32Level level = new Bip32Level(index, hardened);
+            final BipLevel level = new BipLevel(index, hardened);
 
             switch (i) {
                 case 0: builder.setAccount(level); break;
@@ -175,6 +240,10 @@ public class Bip44DerivationPath extends BipDerivationPath {
         return builder.build();
     }
 
+    /**
+     * Create a new {@link Bip32DerivationPath.Builder}
+     * @return a new {@link Bip32DerivationPath.Builder}
+     */
     @NonNull
     @Contract(value = " -> new", pure = true)
     public static Builder newBuilder() {
