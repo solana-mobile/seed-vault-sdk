@@ -157,7 +157,7 @@ public final class WalletContractV1 {
      * Auth token for this action, query, etc, as previously returned in response to
      * {@link #ACTION_AUTHORIZE_SEED_ACCESS}. All auth tokens for the current app can be enumerated
      * with {@link #AUTHORIZED_SEEDS_TABLE}.
-     * <p/>Type: {@code int}
+     * <p/>Type: {@code long}
      */
     public static final String EXTRA_AUTH_TOKEN = "AuthToken";
 
@@ -225,7 +225,7 @@ public final class WalletContractV1 {
     /** Wallet content provider authorized seeds table MIME subtype */
     public static final String AUTHORIZED_SEEDS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + AUTHORIZED_SEEDS_TABLE;
 
-    /** Type: {@code int} */
+    /** Type: {@code long} */
     public static final String AUTHORIZED_SEEDS_AUTH_TOKEN = BaseColumns._ID;
 
     /** Type: {@code int} (see {@code PURPOSE_*} constants) */
@@ -250,7 +250,7 @@ public final class WalletContractV1 {
     /** Type: {@code int} (see {@code PURPOSE_*} constants) */
     public static final String UNAUTHORIZED_SEEDS_AUTH_PURPOSE = BaseColumns._ID;
 
-    /** Type: {@code int} (1 for true, 0 for false) */
+    /** Type: {@code short} (1 for true, 0 for false) */
     public static final String UNAUTHORIZED_SEEDS_HAS_UNAUTHORIZED_SEEDS = "UnauthorizedSeeds_HasUnauthorizedSeeds";
 
     /** All columns for the Wallet content provider unauthorized seeds table */
@@ -266,7 +266,7 @@ public final class WalletContractV1 {
     /** Wallet content provider accounts table MIME subtype */
     public static final String ACCOUNTS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + ACCOUNTS_TABLE;
 
-    /** Type: {@code int} */
+    /** Type: {@code long} */
     public static final String ACCOUNTS_ACCOUNT_ID = BaseColumns._ID;
 
     /** Type: {@code: String} (string value of a {@link #BIP32_URI_SCHEME} Uri) */
@@ -281,10 +281,10 @@ public final class WalletContractV1 {
     /** Type {@code String} (may be blank) */
     public static final String ACCOUNTS_ACCOUNT_NAME = "Accounts_AccountName";
 
-    /** Type: {@code int} (1 for true, 0 for false) */
+    /** Type: {@code short} (1 for true, 0 for false) */
     public static final String ACCOUNTS_ACCOUNT_IS_USER_WALLET = "Accounts_IsUserWallet";
 
-    /** Type: {@code int} (1 for true, 0 for false) */
+    /** Type: {@code short} (1 for true, 0 for false) */
     public static final String ACCOUNTS_ACCOUNT_IS_VALID = "Accounts_IsValid";
 
     /** All columns for the Wallet content provider accounts table */
@@ -310,12 +310,12 @@ public final class WalletContractV1 {
 
     /** Annotation for the valid account ID range */
     @Retention(RetentionPolicy.SOURCE)
-    @IntRange(from=0, to=Integer.MAX_VALUE)
+    @IntRange(from=0, to=Long.MAX_VALUE)
     public @interface AccountId {}
 
     /** Annotation for the valid auth token range */
     @Retention(RetentionPolicy.SOURCE)
-    @IntRange(from=0, to=Integer.MAX_VALUE)
+    @IntRange(from=0, to=Long.MAX_VALUE)
     public @interface AuthToken {}
 
     /** Annotation for the valid BIP index range */

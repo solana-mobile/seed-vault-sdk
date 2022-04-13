@@ -77,7 +77,7 @@ class SeedListAdapter(
 
     override fun getItemId(position: Int): Long {
         val seed = getItem(position)
-        return seed.authToken.toLong()
+        return seed.authToken
     }
 }
 

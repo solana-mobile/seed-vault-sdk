@@ -80,7 +80,7 @@ class SelectSeedViewModel private constructor(
         }
     }
 
-    fun setSelectedSeed(seedId: Int?) {
+    fun setSelectedSeed(seedId: Long?) {
         Log.d(TAG, "setSelectedSeed($seedId)")
         _selectSeedUiState.update { it.copy(selectedSeedId = seedId) }
     }
@@ -114,5 +114,5 @@ class SelectSeedViewModel private constructor(
 
 data class SelectSeedUiState(
     val seeds: List<Seed> = listOf(),
-    val selectedSeedId: Int? = null
+    val selectedSeedId: Long? = null
 )

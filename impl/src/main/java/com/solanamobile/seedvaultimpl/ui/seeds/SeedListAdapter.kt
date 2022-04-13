@@ -60,7 +60,7 @@ class SeedListAdapter(
 
     override fun getItemId(position: Int): Long {
         val seed = getItem(position)
-        return seed.id.toLong()
+        return seed.id
     }
 }
 

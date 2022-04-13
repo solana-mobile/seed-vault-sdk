@@ -68,7 +68,7 @@ class AccountListAdapter(
 
     override fun getItemId(position: Int): Long {
         val account = getItem(position)
-        return account.id.toLong()
+        return account.id
     }
 }
 

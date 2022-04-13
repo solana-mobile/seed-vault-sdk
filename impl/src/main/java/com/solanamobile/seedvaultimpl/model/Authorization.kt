@@ -9,7 +9,7 @@ import com.solanamobile.seedvault.WalletContractV1
 
 data class Authorization(
     val uid: Int,
-    val authToken: Int,
+    @WalletContractV1.AuthToken val authToken: Long,
     val purpose: Purpose
 ) {
     enum class Purpose {

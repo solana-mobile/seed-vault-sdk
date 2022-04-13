@@ -5,7 +5,7 @@
 package com.solanamobile.seedvaultimpl.model
 
 data class Seed(
-    val id: Int,
+    val id: Long,
     val details: SeedDetails,
     val authorizations: List<Authorization> = listOf(),
     val accounts: List<Account> = listOf()

@@ -33,7 +33,7 @@ class SeedsViewModel private constructor(
         }
     }
 
-    fun deleteSeed(seedId: Int) {
+    fun deleteSeed(seedId: Long) {
         viewModelScope.launch {
             Log.d(TAG, "Deleting seed $seedId")
             seedRepository.deleteSeed(seedId)

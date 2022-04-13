@@ -58,7 +58,7 @@ class AuthorizeViewModel : ViewModel() {
             }
             WalletContractV1.ACTION_SIGN_TRANSACTION -> {
                 val authToken = getAuthTokenFromIntent(callerIntent)
-                if (authToken == -1) {
+                if (authToken == -1L) {
                     Log.e(TAG, "No or invalid auth token provided; aborting...")
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                     return
@@ -85,7 +85,7 @@ class AuthorizeViewModel : ViewModel() {
             }
             WalletContractV1.ACTION_GET_PUBLIC_KEY -> {
                 val authToken = getAuthTokenFromIntent(callerIntent)
-                if (authToken == -1) {
+                if (authToken == -1L) {
                     Log.e(TAG, "No or invalid auth token provided; aborting...")
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                     return
@@ -110,8 +110,8 @@ class AuthorizeViewModel : ViewModel() {
         }
     }
 
-    private fun getAuthTokenFromIntent(intent: Intent): Int {
-        return intent.getIntExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1)
+    private fun getAuthTokenFromIntent(intent: Intent): Long {
+        return intent.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1)
     }
 
     private fun getBipDerivationPathFromIntent(intent: Intent): BipDerivationPath? {
@@ -125,7 +125,7 @@ class AuthorizeViewModel : ViewModel() {
         }
     }
 
-    fun updateSeedRequestWithSeedId(seedId: Int) {
+    fun updateSeedRequestWithSeedId(seedId: Long) {
         Log.d(TAG, "updateSeedRequestWithSeedId($seedId)")
         val origRequest = cachedRequest
         check(origRequest != null && origRequest.type is AuthorizeRequestType.Seed) { "Expected AuthorizeRequestType.Seed; is ${origRequest?.type}" }
@@ -150,7 +150,7 @@ class AuthorizeViewModel : ViewModel() {
         }
     }
 
-    fun completeAuthorizationWithAuthToken(authToken: Int) {
+    fun completeAuthorizationWithAuthToken(@WalletContractV1.AuthToken authToken: Long) {
         Log.d(TAG, "completeAuthorizationWithAuthToken($authToken)")
         val intent = Intent().putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
         val event = AuthorizeEvent(AuthorizeEventType.COMPLETE, RESULT_OK, intent)
@@ -205,11 +205,11 @@ class AuthorizeViewModel : ViewModel() {
 sealed interface AuthorizeRequestType {
     data class Seed(
         val purpose: Authorization.Purpose,
-        val seedId: Int? = null
+        val seedId: Long? = null
     ) : AuthorizeRequestType
 
     data class Transaction(
-        val authToken: Int,
+        @WalletContractV1.AuthToken val authToken: Long,
         val transaction: ByteArray,
         val derivationPath: BipDerivationPath
     ) : AuthorizeRequestType {
@@ -221,19 +221,21 @@ sealed interface AuthorizeRequestType {
 
             if (authToken != other.authToken) return false
             if (!transaction.contentEquals(other.transaction)) return false
+            if (derivationPath != other.derivationPath) return false
 
             return true
         }
 
         override fun hashCode(): Int {
-            var result = authToken
+            var result = authToken.hashCode()
             result = 31 * result + transaction.contentHashCode()
+            result = 31 * result + derivationPath.hashCode()
             return result
         }
     }
 
     data class PublicKey(
-        val authToken: Int,
+        @WalletContractV1.AuthToken val authToken: Long,
         val derivationPath: BipDerivationPath
     ) : AuthorizeRequestType
 }

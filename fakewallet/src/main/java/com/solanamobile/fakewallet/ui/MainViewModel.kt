@@ -71,7 +71,7 @@ class MainViewModel(
                 WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS)!!
         }
         while (authorizedSeedsCursor.moveToNext()) {
-            val authToken = authorizedSeedsCursor.getInt(0)
+            val authToken = authorizedSeedsCursor.getLong(0)
             val authPurpose = authorizedSeedsCursor.getInt(1)
             val seedName = authorizedSeedsCursor.getString(2)
             val accounts = mutableListOf<Account>()
@@ -82,7 +82,7 @@ class MainViewModel(
                     WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, "1")!!
             }
             while (accountsCursor.moveToNext()) {
-                val accountId = accountsCursor.getInt(0)
+                val accountId = accountsCursor.getLong(0)
                 val derivationPath = Uri.parse(accountsCursor.getString(1))
                 val publicKeyBase58 = accountsCursor.getString(3)
                 val accountName = accountsCursor.getString(4)
@@ -111,7 +111,7 @@ class MainViewModel(
         }
     }
 
-    fun onAuthorizeNewSeedSuccess(authToken: Int) {
+    fun onAuthorizeNewSeedSuccess(authToken: Long) {
         // Mark two accounts as user wallets. This similates a real wallet app exploring each
         // account and marking them as containing user funds.
         viewModelScope.launch {
@@ -136,8 +136,8 @@ class MainViewModel(
                     resolvedDerivationPath.toString()
                 )!!
                 check(cursor.moveToNext()) { "Failed to find expected account '$resolvedDerivationPath'" }
-                val accountId = cursor.getInt(0)
-                val isUserWallet = (cursor.getInt(1) == 1)
+                val accountId = cursor.getLong(0)
+                val isUserWallet = (cursor.getShort(1) == 1.toShort())
                 cursor.close()
                 if (!isUserWallet) {
                     Wallet.updateAccountIsUserWallet(getApplication(), authToken, accountId, true)
@@ -153,7 +153,7 @@ class MainViewModel(
         showErrorMessage(resultCode)
     }
 
-    fun deauthorizeSeed(authToken: Int) {
+    fun deauthorizeSeed(authToken: Long) {
         viewModelScope.launch {
             _viewModelEvents.emit(
                 ViewModelEvent.DeauthorizeSeed(authToken)
@@ -169,8 +169,8 @@ class MainViewModel(
     }
 
     fun updateAccountName(
-        authToken: Int,
-        accountId: Int,
+        @WalletContractV1.AuthToken authToken: Long,
+        @WalletContractV1.AccountId accountId: Long,
         name: String?
     ) {
         viewModelScope.launch {
@@ -187,7 +187,7 @@ class MainViewModel(
         showErrorMessage(resultCode)
     }
 
-    fun signFakeTransaction(authToken: Int, account: Account) {
+    fun signFakeTransaction(@WalletContractV1.AuthToken authToken: Long, account: Account) {
         val fakeTransaction = byteArrayOf(0.toByte())
         viewModelScope.launch {
             _viewModelEvents.emit(
@@ -204,7 +204,7 @@ class MainViewModel(
         showErrorMessage(resultCode)
     }
 
-    fun requestPublicKeyForM1000H(authToken: Int) {
+    fun requestPublicKeyForM1000H(@WalletContractV1.AuthToken authToken: Long) {
         val derivationPath = Bip32DerivationPath.newBuilder()
             .appendLevel(BipLevel(1000, true))
             .build()
@@ -249,16 +249,16 @@ class MainViewModel(
 }
 
 data class Account(
-    val id: Int,
+    @WalletContractV1.AccountId val id: Long,
     val name: String,
     val derivationPath: Uri,
     val publicKeyBase58: String
 )
 
 data class Seed(
-    val authToken: Int,
+    @WalletContractV1.AuthToken val authToken: Long,
     val name: String,
-    val purpose: Int,
+    @WalletContractV1.Purpose val purpose: Int,
     val accounts: List<Account> = listOf()
 )
 
@@ -274,23 +274,23 @@ sealed interface ViewModelEvent {
     object AuthorizeNewSeed : ViewModelEvent
 
     data class DeauthorizeSeed(
-        val authToken: Int
+        @WalletContractV1.AuthToken val authToken: Long
     ) : ViewModelEvent
 
     data class UpdateAccountName(
-        val authToken: Int,
-        val accountId: Int,
+        @WalletContractV1.AuthToken val authToken: Long,
+        @WalletContractV1.AccountId val accountId: Long,
         val name: String?,
     ) : ViewModelEvent
 
     data class SignTransaction(
-        val authToken: Int,
+        @WalletContractV1.AuthToken val authToken: Long,
         val derivationPath: Uri,
         val transaction: ByteArray,
     ) : ViewModelEvent
 
     data class RequestPublicKey(
-        val authToken: Int,
+        @WalletContractV1.AuthToken val authToken: Long,
         val derivationPath: Uri,
     ) : ViewModelEvent
 }

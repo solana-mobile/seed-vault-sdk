@@ -73,7 +73,7 @@ public final class Wallet {
      * @throws ActionFailedException if the authorization failed
      */
     @WalletContractV1.AuthToken
-    public static int onAuthorizeSeedResult(
+    public static long onAuthorizeSeedResult(
             int resultCode,
             @Nullable Intent result) throws ActionFailedException {
         if (resultCode != Activity.RESULT_OK) {
@@ -82,7 +82,7 @@ public final class Wallet {
             throw new ActionFailedException("authorizeSeed failed to return a result");
         }
 
-        final int authToken = result.getIntExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1);
+        final long authToken = result.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1);
         if (authToken == -1) {
             throw new ActionFailedException("authorizeSeed returned an invalid AuthToken");
         }
@@ -105,7 +105,7 @@ public final class Wallet {
      */
     @NonNull
     public static Intent signTransaction(
-            @WalletContractV1.AuthToken int authToken,
+            @WalletContractV1.AuthToken long authToken,
             @NonNull Uri derivationPath,
             @NonNull byte[] transaction) {
         return new Intent()
@@ -182,7 +182,7 @@ public final class Wallet {
      */
     @NonNull
     public static Intent requestPublicKey(
-            @WalletContractV1.AuthToken int authToken,
+            @WalletContractV1.AuthToken long authToken,
             @NonNull Uri derivationPath) {
         return new Intent()
                 .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
@@ -314,7 +314,7 @@ public final class Wallet {
     @Nullable
     public static Cursor getAuthorizedSeed(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken,
+            @WalletContractV1.AuthToken long authToken,
             @NonNull String[] projection) {
         return context.getContentResolver().query(
                 ContentUris.withAppendedId(WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI, authToken),
@@ -331,7 +331,7 @@ public final class Wallet {
      */
     public static void deauthorizeSeed(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken) throws NotModifiedException {
+            @WalletContractV1.AuthToken long authToken) throws NotModifiedException {
         if (context.getContentResolver().delete(
                 ContentUris.withAppendedId(WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI, authToken),
                 null) == 0) {
@@ -421,7 +421,7 @@ public final class Wallet {
         if (!c.moveToFirst()) {
             throw new IllegalStateException("Cursor does not contain expected data");
         }
-        boolean hasUnauthorizedSeeds = (c.getInt(1) != 0);
+        boolean hasUnauthorizedSeeds = (c.getShort(1) != 0);
         c.close();
         return hasUnauthorizedSeeds;
     }
@@ -439,7 +439,7 @@ public final class Wallet {
     @Nullable
     public static Cursor getAccounts(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken,
+            @WalletContractV1.AuthToken long authToken,
             @NonNull String[] projection) {
         return getAccounts(context, authToken, projection, null, null);
     }
@@ -462,12 +462,12 @@ public final class Wallet {
     @Nullable
     public static Cursor getAccounts(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken,
+            @WalletContractV1.AuthToken long authToken,
             @NonNull String[] projection,
             @Nullable String filterOnColumn,
             @Nullable Object value) {
         final Bundle queryArgs = new Bundle();
-        queryArgs.putInt(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        queryArgs.putLong(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
         if (filterOnColumn != null) {
             if (value == null) {
                 throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
@@ -503,11 +503,11 @@ public final class Wallet {
     @Nullable
     public static Cursor getAccount(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken,
-            @WalletContractV1.AccountId int id,
+            @WalletContractV1.AuthToken long authToken,
+            @WalletContractV1.AccountId long id,
             @NonNull String[] projection) {
         Bundle queryArgs = new Bundle();
-        queryArgs.putInt(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        queryArgs.putLong(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
         return context.getContentResolver().query(
                 ContentUris.withAppendedId(WalletContractV1.ACCOUNTS_CONTENT_URI, id),
                 projection,
@@ -526,11 +526,11 @@ public final class Wallet {
      */
     public static void updateAccountName(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken,
-            @WalletContractV1.AccountId int id,
+            @WalletContractV1.AuthToken long authToken,
+            @WalletContractV1.AccountId long id,
             @Nullable String name) throws NotModifiedException {
         Bundle updateArgs = new Bundle();
-        updateArgs.putInt(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        updateArgs.putLong(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
         ContentValues updateValues = new ContentValues(1);
         updateValues.put(WalletContractV1.ACCOUNTS_ACCOUNT_NAME, name);
         if (context.getContentResolver().update(
@@ -555,13 +555,13 @@ public final class Wallet {
      */
     public static void updateAccountIsUserWallet(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken,
-            @WalletContractV1.AccountId int id,
+            @WalletContractV1.AuthToken long authToken,
+            @WalletContractV1.AccountId long id,
             boolean isUserWallet) throws NotModifiedException {
         Bundle updateArgs = new Bundle();
-        updateArgs.putInt(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        updateArgs.putLong(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
         ContentValues updateValues = new ContentValues(1);
-        updateValues.put(WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, isUserWallet ? 1 : 0);
+        updateValues.put(WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, isUserWallet ? (short)1 : (short)0);
         if (context.getContentResolver().update(
                 ContentUris.withAppendedId(WalletContractV1.ACCOUNTS_CONTENT_URI, id),
                 updateValues,
@@ -585,13 +585,13 @@ public final class Wallet {
      */
     public static void updateAccountIsValid(
             @NonNull Context context,
-            @WalletContractV1.AuthToken int authToken,
-            @WalletContractV1.AccountId int id,
+            @WalletContractV1.AuthToken long authToken,
+            @WalletContractV1.AccountId long id,
             boolean isValid) throws NotModifiedException {
         Bundle updateArgs = new Bundle();
-        updateArgs.putInt(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        updateArgs.putLong(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
         ContentValues updateValues = new ContentValues(1);
-        updateValues.put(WalletContractV1.ACCOUNTS_ACCOUNT_IS_VALID, isValid ? 1 : 0);
+        updateValues.put(WalletContractV1.ACCOUNTS_ACCOUNT_IS_VALID, isValid ? (short)1 : (short)0);
         if (context.getContentResolver().update(
                 ContentUris.withAppendedId(WalletContractV1.ACCOUNTS_CONTENT_URI, id),
                 updateValues,
