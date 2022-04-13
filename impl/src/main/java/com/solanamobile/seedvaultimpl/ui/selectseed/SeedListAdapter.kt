@@ -18,7 +18,7 @@ import com.solanamobile.seedvaultimpl.usecase.GetNameUseCase
 typealias SeedWithSelectionState = Pair<Seed, Boolean>
 
 class SeedListAdapter(
-    val onSelect: (Int?) -> Unit
+    val onSelect: (Long?) -> Unit
 ) : ListAdapter<SeedWithSelectionState, SeedListAdapter.SeedViewHolder>(SeedDiffCallback) {
     class SeedViewHolder(
         private val binding: ItemSeedNameBinding
@@ -43,8 +43,8 @@ class SeedListAdapter(
         super.onAttachedToRecyclerView(recyclerView)
 
         val itemKeyProvider = object : ItemKeyProvider<Long>(SCOPE_MAPPED) {
-            override fun getKey(position: Int): Long = currentList[position].first.id.toLong()
-            override fun getPosition(key: Long): Int = currentList.indexOfFirst { it.first.id == key.toInt() }
+            override fun getKey(position: Int): Long = currentList[position].first.id
+            override fun getPosition(key: Long): Int = currentList.indexOfFirst { it.first.id == key }
         }
 
         val itemDetailsLookup = object : ItemDetailsLookup<Long>() {
@@ -67,7 +67,7 @@ class SeedListAdapter(
 
         val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
             override fun onSelectionChanged() {
-                onSelect(seedListSelectionTracker.selection.firstOrNull()?.toInt())
+                onSelect(seedListSelectionTracker.selection.firstOrNull())
             }
         }
         seedListSelectionTracker.addObserver(selectionObserver)
@@ -85,7 +85,7 @@ class SeedListAdapter(
 
     override fun getItemId(position: Int): Long {
         val seedWithSelectionState = getItem(position)
-        return seedWithSelectionState.first.id.toLong()
+        return seedWithSelectionState.first.id
     }
 }
 

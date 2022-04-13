@@ -7,7 +7,7 @@ package com.solanamobile.seedvaultimpl.model
 import android.net.Uri
 
 data class Account(
-    val id: Int = INVALID_ACCOUNT_ID,
+    val id: Long = INVALID_ACCOUNT_ID,
     val purpose: Authorization.Purpose,
     val bip32DerivationPathUri: Uri,
     val publicKey: ByteArray,
@@ -33,7 +33,7 @@ data class Account(
     }
 
     override fun hashCode(): Int {
-        var result = id
+        var result = id.hashCode()
         result = 31 * result + purpose.hashCode()
         result = 31 * result + bip32DerivationPathUri.hashCode()
         result = 31 * result + publicKey.contentHashCode()
@@ -44,6 +44,6 @@ data class Account(
     }
 
     companion object {
-        const val INVALID_ACCOUNT_ID = -1
+        const val INVALID_ACCOUNT_ID = -1L
     }
 }

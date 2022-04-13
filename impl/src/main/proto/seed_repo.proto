@@ -13,12 +13,12 @@ message SeedEntry {
 
 message AuthorizationEntry {
   int32 uid = 1;
-  int32 auth_token = 2;
+  int64 auth_token = 2;
   int32 purpose = 3;
 }
 
 message KnownAccountEntry {
-  int32 account_id = 1;
+  int64 account_id = 1;
   int32 purpose = 2;
   string bip32_uri = 3;
   bytes public_key = 4;
@@ -29,7 +29,7 @@ message KnownAccountEntry {
 
 // The entry representing an individual seed, plus associated metadata
 message SeedRecord {
-  int32 seed_id = 1;
+  int64 seed_id = 1;
   SeedEntry seed = 2;
   repeated AuthorizationEntry authorizations = 3;
   repeated KnownAccountEntry known_accounts = 4;
@@ -38,7 +38,7 @@ message SeedRecord {
 // A collection of SeedRecord objects make up the Seed repository
 message SeedCollection {
   repeated SeedRecord seeds = 1;
-  int32 next_id = 2;
-  int32 next_auth_token = 3;
-  int32 next_account_id = 4;
+  int64 next_id = 2;
+  int64 next_auth_token = 3;
+  int64 next_account_id = 4;
 }

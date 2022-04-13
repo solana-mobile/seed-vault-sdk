@@ -106,7 +106,7 @@ class WalletContentProvider : ContentProvider() {
                 queryAuthorizedSeeds(uid, null, projection, queryArgs)
             }
             AUTHORIZED_SEEDS_ID -> {
-                queryAuthorizedSeeds(uid, ContentUris.parseId(uri).toInt(), projection, queryArgs)
+                queryAuthorizedSeeds(uid, ContentUris.parseId(uri), projection, queryArgs)
             }
             UNAUTHORIZED_SEEDS -> {
                 queryUnauthorizedSeeds(uid, null, projection, queryArgs)
@@ -115,12 +115,12 @@ class WalletContentProvider : ContentProvider() {
                 queryUnauthorizedSeeds(uid, ContentUris.parseId(uri).toInt(), projection, queryArgs)
             }
             ACCOUNTS -> {
-                val authToken = queryArgs?.getInt(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
+                val authToken = queryArgs?.getLong(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
                 queryAccounts(uid, authToken, null, projection, queryArgs)
             }
             ACCOUNTS_ID -> {
-                val authToken = queryArgs?.getInt(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
-                queryAccounts(uid, authToken, ContentUris.parseId(uri).toInt(), projection, queryArgs)
+                val authToken = queryArgs?.getLong(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
+                queryAccounts(uid, authToken, ContentUris.parseId(uri), projection, queryArgs)
             }
             else -> {
                 Log.w(TAG, "Query not supported for $uri")
@@ -145,7 +145,7 @@ class WalletContentProvider : ContentProvider() {
 
     private fun queryAuthorizedSeeds(
         uid: Int,
-        authToken: Int?,
+        @WalletContractV1.AuthToken authToken: Long?,
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
@@ -163,9 +163,9 @@ class WalletContentProvider : ContentProvider() {
             seed.authorizations.forEach { auth ->
                 // Note: must be in the same order as defaultProjection
                 val values = arrayOf(
-                    auth.authToken,                             // WalletContractV1.AUTH_TOKEN
-                    auth.purpose.toWalletContractConstant(),    // WalletContractV1.AUTH_PURPOSE
-                    seed.details.name ?: ""                     // WalletContractV1.SEED_NAME
+                    auth.authToken,                             // WalletContractV1.AUTHORIZED_SEEDS_AUTH_TOKEN
+                    auth.purpose.toWalletContractConstant(),    // WalletContractV1.AUTHORIZED_SEEDS_AUTH_PURPOSE
+                    seed.details.name ?: ""                     // WalletContractV1.AUTHORIZED_SEEDS_SEED_NAME
                 )
 
                 if (auth.uid == uid
@@ -185,7 +185,7 @@ class WalletContentProvider : ContentProvider() {
 
     private fun queryUnauthorizedSeeds(
         uid: Int,
-        purpose: Int?,
+        @WalletContractV1.Purpose purpose: Int?,
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
@@ -216,8 +216,8 @@ class WalletContentProvider : ContentProvider() {
 
             // NOTE: must be in the same order as defaultProjection
             val values = arrayOf(
-                p.toWalletContractConstant(),
-                if (seedPurposeCount < seeds.size) 1 else 0
+                p.toWalletContractConstant(),                   // WalletContractV1.UNAUTHORIZED_SEEDS_AUTH_PURPOSE
+                if (seedPurposeCount < seeds.size) 1.toShort() else 0.toShort() // WalletContractV1.UNAUTHORIZED_SEEDS_HAS_UNAUTHORIZED_SEEDS
             )
 
             if ((purposeAsEnum == null || p == purposeAsEnum)
@@ -235,8 +235,8 @@ class WalletContentProvider : ContentProvider() {
 
     private fun queryAccounts(
         uid: Int,
-        authToken: Int,
-        accountId: Int?,
+        @WalletContractV1.AuthToken authToken: Long,
+        @WalletContractV1.AccountId accountId: Long?,
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
@@ -255,13 +255,13 @@ class WalletContentProvider : ContentProvider() {
             seed.accounts.forEach { account ->
                 // NOTE: must be in the same order as defaultProjection
                 val values = arrayOf(
-                    account.id,                                 // WalletContractV1.ACCOUNT_ID
-                    account.bip32DerivationPathUri.toString(),  // WalletContractV1.BIP32_DERIVATION_PATH
-                    account.publicKey,                          // WalletContractV1.PUBLIC_KEY_RAW
-                    Base58EncodeUseCase(account.publicKey),     // WalletContractV1.PUBLIC_KEY_BASE58
-                    account.name ?: "",                         // WalletContractV1.ACCOUNT_NAME
-                    if (account.isUserWallet) 1 else 0,         // WalletContractV1.ACCOUNT_IS_USER_WALLET
-                    if (account.isValid) 1 else 0               // WalletContractV1.ACCOUNT_IS_VALID
+                    account.id,                                 // WalletContractV1.ACCOUNTS_ACCOUNT_ID
+                    account.bip32DerivationPathUri.toString(),  // WalletContractV1.ACCOUNTS_BIP32_DERIVATION_PATH
+                    account.publicKey,                          // WalletContractV1.ACCOUNTS_PUBLIC_KEY_RAW
+                    Base58EncodeUseCase(account.publicKey),     // WalletContractV1.ACCOUNTS_PUBLIC_KEY_BASE58
+                    account.name ?: "",                         // WalletContractV1.ACCOUNTS_ACCOUNT_NAME
+                    if (account.isUserWallet) 1.toShort() else 0.toShort(), // WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET
+                    if (account.isValid) 1.toShort() else 0.toShort()       // WalletContractV1.ACCOUNTS_ACCOUNT_IS_VALID
                 )
 
                 if ((accountId == null || account.id == accountId)
@@ -313,7 +313,7 @@ class WalletContentProvider : ContentProvider() {
 
         return when (match) {
             AUTHORIZED_SEEDS_ID -> {
-                deleteAuthorizedSeed(uid, ContentUris.parseId(uri).toInt())
+                deleteAuthorizedSeed(uid, ContentUris.parseId(uri))
             }
             else -> {
                 Log.w(TAG, "Delete not supported for $uri")
@@ -324,7 +324,7 @@ class WalletContentProvider : ContentProvider() {
 
     private fun deleteAuthorizedSeed(
         uid: Int,
-        authToken: Int
+        @WalletContractV1.AuthToken authToken: Long
     ): Int {
         val seedRepository = dependencyContainer.seedRepository
         runBlocking {
@@ -368,8 +368,8 @@ class WalletContentProvider : ContentProvider() {
 
         return when (match) {
             ACCOUNTS_ID -> {
-                val authToken = extras?.getInt(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
-                updateAccount(uid, authToken, ContentUris.parseId(uri).toInt(), values)
+                val authToken = extras?.getLong(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
+                updateAccount(uid, authToken, ContentUris.parseId(uri), values)
             }
             else -> {
                 Log.w(TAG, "Update not supported for $uri")
@@ -380,8 +380,8 @@ class WalletContentProvider : ContentProvider() {
 
     private fun updateAccount(
         uid: Int,
-        authToken: Int,
-        accountId: Int,
+        @WalletContractV1.AuthToken authToken: Long,
+        @WalletContractV1.AccountId accountId: Long,
         values: ContentValues?
     ): Int {
         val seedRepository = dependencyContainer.seedRepository

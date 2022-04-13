@@ -19,13 +19,13 @@ import kotlinx.coroutines.launch
 
 class SeedDetailViewModel private constructor(
     private val seedRepository: SeedRepository,
-    private val seedId: Int
+    private val seedId: Long
 ) : ViewModel() {
     private val _seedDetailUiState: MutableStateFlow<SeedDetailUiState> = MutableStateFlow(SeedDetailUiState())
     val seedDetailUiState = _seedDetailUiState.asStateFlow()
 
     init {
-        if (seedId == 0) {
+        if (seedId == 0L) {
             // Initializing for create
             _seedDetailUiState.value = SeedDetailUiState()
         } else {
@@ -99,7 +99,7 @@ class SeedDetailViewModel private constructor(
 
             Log.i(TAG, "Successfully created Seed $seed; committing to SeedRepository")
             viewModelScope.launch {
-                if (seedId == 0) {
+                if (seedId == 0L) {
                     seedRepository.createSeed(seed)
                 } else {
                     seedRepository.updateSeed(seedId, seed)
@@ -113,7 +113,7 @@ class SeedDetailViewModel private constructor(
         return true
     }
 
-    fun deauthorize(authToken: Int) {
+    fun deauthorize(authToken: Long) {
         Log.d(TAG, "Deauthorizing AuthToken $authToken for seed $seedId")
 
         viewModelScope.launch {
@@ -134,7 +134,7 @@ class SeedDetailViewModel private constructor(
 
         fun provideFactory(
             seedRepository: SeedRepository,
-            seedId: Int
+            seedId: Long
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {

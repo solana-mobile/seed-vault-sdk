@@ -13,6 +13,7 @@ import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.SeedDetails
 import com.solanamobile.seedvaultimpl.model.Seed
 import com.google.protobuf.ByteString
+import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.data.proto.seedCollectionDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -21,7 +22,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
-typealias SeedIdMap = Map<Int, Seed> // maps from seed ID to Seed
+typealias SeedIdMap = Map<Long, Seed> // maps from seed ID to Seed
 typealias SeedAuthorizationMap = Map<SeedRepository.AuthorizationKey, Seed> // maps from Authorization to Seed
 
 class SeedRepository(
@@ -31,20 +32,20 @@ class SeedRepository(
     companion object {
         private val TAG = SeedRepository::class.simpleName
         private const val MAX_SEEDS = 4
-        private const val FIRST_SEED_ID = 1000
-        private const val FIRST_AUTH_TOKEN = 4000
-        private const val FIRST_ACCOUNT_ID = 7000
+        private const val FIRST_SEED_ID = 1000L
+        private const val FIRST_AUTH_TOKEN = 4000L
+        private const val FIRST_ACCOUNT_ID = 7000L
     }
 
     data class AuthorizationKey(
         val uid: Int,
-        val authToken: Int
+        @WalletContractV1.AuthToken val authToken: Long
     )
 
     data class ChangeNotification(
         val category: Category,
         val type: Type,
-        val id: Int?
+        val id: Long?
     ) {
         enum class Category { SEED, AUTHORIZATION, ACCOUNT }
         enum class Type { CREATE, UPDATE, DELETE }
@@ -125,14 +126,14 @@ class SeedRepository(
         seedCollection.first()
     }
 
-    suspend fun createSeed(details: SeedDetails): Int {
+    suspend fun createSeed(details: SeedDetails): Long {
         Log.d(TAG, "ENTER createSeed: $details")
 
         // NOTE: we can't rely on the incoming coroutine context to remain active for the entire
         // duration of validating this action and operating on the repository. As such, switch to
         // the repository owner context immediately, to ensure that this action will complete, even
         // in the event of cancellation of the originating context.
-        val id: Int
+        val id: Long
         withContext(repositoryOwnerScope.coroutineContext) {
             val newSeedEntryBuilder = createSeedEntryBuilderFromSeed(details)
             val newSeedRecordBuilder = SeedRecord.newBuilder().setSeed(newSeedEntryBuilder)
@@ -163,7 +164,7 @@ class SeedRepository(
         return id
     }
 
-    suspend fun updateSeed(id: Int, details: SeedDetails) {
+    suspend fun updateSeed(id: Long, details: SeedDetails) {
         Log.d(TAG, "ENTER updateSeed: $details")
 
         // NOTE: we can't rely on the incoming coroutine context to remain active for the entire
@@ -194,7 +195,7 @@ class SeedRepository(
         Log.d(TAG, "EXIT updateSeed: $details")
     }
 
-    suspend fun deleteSeed(id: Int) {
+    suspend fun deleteSeed(id: Long) {
         Log.d(TAG, "ENTER deleteSeed: $id")
 
         // NOTE: we can't rely on the incoming coroutine context to remain active for the entire
@@ -248,11 +249,12 @@ class SeedRepository(
         Log.d(TAG, "EXIT deleteAllSeeds")
     }
 
-    suspend fun authorizeSeedForUid(id: Int, uid: Int, purpose: Authorization.Purpose): Int {
+    @WalletContractV1.AuthToken
+    suspend fun authorizeSeedForUid(id: Long, uid: Int, purpose: Authorization.Purpose): Long {
         require(uid > Authorization.INVALID_UID) { "UID $uid is invalid" }
         Log.d(TAG, "ENTER authorizeSeedForUid")
 
-        val authToken: Int
+        @WalletContractV1.AuthToken val authToken: Long
 
         // NOTE: we can't rely on the incoming coroutine context to remain active for the entire
         // duration of validating this action and operating on the repository. As such, switch to
@@ -300,7 +302,7 @@ class SeedRepository(
         return authToken
     }
 
-    suspend fun deauthorizeSeed(id: Int, authToken: Int) {
+    suspend fun deauthorizeSeed(id: Long, @WalletContractV1.AuthToken authToken: Long) {
         Log.d(TAG, "ENTER deauthorizeSeed: $id/$authToken")
 
         // NOTE: we can't rely on the incoming coroutine context to remain active for the entire
@@ -331,11 +333,12 @@ class SeedRepository(
         Log.d(TAG, "EXIT deauthorizeSeed: $id/$authToken")
     }
 
-    suspend fun addKnownAccountForSeed(id: Int, account: Account): Int {
+    @WalletContractV1.AccountId
+    suspend fun addKnownAccountForSeed(id: Long, account: Account): Long {
         require(account.id == Account.INVALID_ACCOUNT_ID) { "Accound ID must be invalid" }
         Log.d(TAG, "ENTER addKnownAccountForSeed")
 
-        val accountId: Int
+        @WalletContractV1.AccountId val accountId: Long
 
         // NOTE: we can't rely on the incoming coroutine context to remain active for the entire
         // duration of validating this action and operating on the repository. As such, switch to
@@ -392,7 +395,7 @@ class SeedRepository(
         return accountId
     }
 
-    suspend fun updateKnownAccountForSeed(id: Int, account: Account) {
+    suspend fun updateKnownAccountForSeed(id: Long, account: Account) {
         require(account.id != Account.INVALID_ACCOUNT_ID) { "Account ID must be valid" }
         Log.d(TAG, "ENTER updateKnownAccountForSeed")
 
