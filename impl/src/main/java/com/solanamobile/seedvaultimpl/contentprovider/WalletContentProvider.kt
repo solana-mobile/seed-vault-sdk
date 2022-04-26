@@ -258,7 +258,7 @@ class WalletContentProvider : ContentProvider() {
                     account.id,                                 // WalletContractV1.ACCOUNTS_ACCOUNT_ID
                     account.bip32DerivationPathUri.toString(),  // WalletContractV1.ACCOUNTS_BIP32_DERIVATION_PATH
                     account.publicKey,                          // WalletContractV1.ACCOUNTS_PUBLIC_KEY_RAW
-                    Base58EncodeUseCase(account.publicKey),     // WalletContractV1.ACCOUNTS_PUBLIC_KEY_BASE58
+                    Base58EncodeUseCase(account.publicKey),     // WalletContractV1.ACCOUNTS_PUBLIC_KEY_ENCODED
                     account.name ?: "",                         // WalletContractV1.ACCOUNTS_ACCOUNT_NAME
                     if (account.isUserWallet) 1.toShort() else 0.toShort(), // WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET
                     if (account.isValid) 1.toShort() else 0.toShort()       // WalletContractV1.ACCOUNTS_ACCOUNT_IS_VALID
