@@ -47,7 +47,7 @@ class AccountListAdapter(
         fun bind(account: Account) {
             this.account = account
             binding.textviewAccountName.text = account.name
-            binding.textviewPublicKey.text = account.publicKeyBase58
+            binding.textviewPublicKey.text = account.publicKeyEncoded
             binding.textviewDerivationPath.text = account.derivationPath.toString()
         }
     }

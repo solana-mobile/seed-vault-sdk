@@ -84,11 +84,11 @@ class MainViewModel(
             while (accountsCursor.moveToNext()) {
                 val accountId = accountsCursor.getLong(0)
                 val derivationPath = Uri.parse(accountsCursor.getString(1))
-                val publicKeyBase58 = accountsCursor.getString(3)
+                val publicKeyEncoded = accountsCursor.getString(3)
                 val accountName = accountsCursor.getString(4)
                 accounts.add(Account(accountId,
-                    accountName.ifBlank { publicKeyBase58.substring(0, 10) },
-                    derivationPath, publicKeyBase58))
+                    accountName.ifBlank { publicKeyEncoded.substring(0, 10) },
+                    derivationPath, publicKeyEncoded))
             }
             accountsCursor.close()
 
@@ -252,7 +252,7 @@ data class Account(
     @WalletContractV1.AccountId val id: Long,
     val name: String,
     val derivationPath: Uri,
-    val publicKeyBase58: String
+    val publicKeyEncoded: String
 )
 
 data class Seed(

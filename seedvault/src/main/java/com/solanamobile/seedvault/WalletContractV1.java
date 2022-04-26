@@ -275,8 +275,11 @@ public final class WalletContractV1 {
     /** Type: {@code byte[]} */
     public static final String ACCOUNTS_PUBLIC_KEY_RAW = "Accounts_PublicKeyRaw";
 
-    /** Type: {@code String} (Base58 encoding of {@link #ACCOUNTS_PUBLIC_KEY_RAW}) */
-    public static final String ACCOUNTS_PUBLIC_KEY_BASE58 = "Accounts_PublicKeyBase58";
+    /**
+     * Type: {@code String} (Purpose-specific encoding of {@link #ACCOUNTS_PUBLIC_KEY_RAW};
+     * for e.g., Base58-encoding for {@link #PURPOSE_SIGN_SOLANA_TRANSACTION})
+     */
+    public static final String ACCOUNTS_PUBLIC_KEY_ENCODED = "Accounts_PublicKeyEncoded";
 
     /** Type {@code String} (may be blank) */
     public static final String ACCOUNTS_ACCOUNT_NAME = "Accounts_AccountName";
@@ -290,7 +293,7 @@ public final class WalletContractV1 {
     /** All columns for the Wallet content provider accounts table */
     public static final String[] ACCOUNTS_ALL_COLUMNS = {
             ACCOUNTS_ACCOUNT_ID, ACCOUNTS_BIP32_DERIVATION_PATH, ACCOUNTS_PUBLIC_KEY_RAW,
-            ACCOUNTS_PUBLIC_KEY_BASE58, ACCOUNTS_ACCOUNT_NAME, ACCOUNTS_ACCOUNT_IS_USER_WALLET,
+            ACCOUNTS_PUBLIC_KEY_ENCODED, ACCOUNTS_ACCOUNT_NAME, ACCOUNTS_ACCOUNT_IS_USER_WALLET,
             ACCOUNTS_ACCOUNT_IS_VALID};
 
     /**
