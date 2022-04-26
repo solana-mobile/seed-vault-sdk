@@ -47,14 +47,10 @@
             <intent-filter>
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_TRANSACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="bip32" />
-                <data android:scheme="bip44" />
             </intent-filter>
             <intent-filter>
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_GET_PUBLIC_KEY" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="bip32" />
-                <data android:scheme="bip44" />
             </intent-filter>
         </activity>
 

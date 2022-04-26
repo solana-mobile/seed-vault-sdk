@@ -16,14 +16,16 @@ class SeedListAdapter(
     private val onSignTransaction: (Seed, Account) -> Unit,
     private val onAccountNameUpdated: (Seed, Account, String) -> Unit,
     private val onDeauthorizeSeed: (Seed) -> Unit,
-    private val onRequestPublicKeyForM1000H: (Seed) -> Unit
+    private val onRequestPublicKeyForM1000HAndM1001H: (Seed) -> Unit,
+    private val onSignTwoTransactionsWithTwoSignatures: (Seed) -> Unit
 ) : ListAdapter<Seed, SeedListAdapter.SeedViewHolder>(SeedDiffCallback) {
     class SeedViewHolder(
         private val binding: ItemSeedBinding,
         private val onSignTransaction: (Seed, Account) -> Unit,
         private val onAccountNameUpdated: (Seed, Account, String) -> Unit,
         private val onDeauthorizeSeed: (Seed) -> Unit,
-        private val onRequestPublicKeyForM1000H: (Seed) -> Unit
+        private val onRequestPublicKeyForM1000HAndM1001H: (Seed) -> Unit,
+        private val onSignTwoTransactionsWithTwoSignatures: (Seed) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         private var seed: Seed? = null
         private val adapter: AccountListAdapter = AccountListAdapter(
@@ -45,9 +47,14 @@ class SeedListAdapter(
                     onDeauthorizeSeed(s)
                 }
             }
-            binding.buttonRequestRandomPublicKey.setOnClickListener {
+            binding.buttonRequestTwoPublicKeys.setOnClickListener {
                 seed?.let { s ->
-                    onRequestPublicKeyForM1000H(s)
+                    onRequestPublicKeyForM1000HAndM1001H(s)
+                }
+            }
+            binding.buttonSignTwoTransactionsWithTwoSignatures.setOnClickListener {
+                seed?.let { s ->
+                    onSignTwoTransactionsWithTwoSignatures(s)
                 }
             }
             binding.recyclerviewAccounts.adapter = adapter
@@ -67,7 +74,8 @@ class SeedListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SeedViewHolder {
         val binding = ItemSeedBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return SeedViewHolder(binding, onSignTransaction, onAccountNameUpdated, onDeauthorizeSeed, onRequestPublicKeyForM1000H)
+        return SeedViewHolder(binding, onSignTransaction, onAccountNameUpdated, onDeauthorizeSeed,
+            onRequestPublicKeyForM1000HAndM1001H, onSignTwoTransactionsWithTwoSignatures)
     }
 
     override fun onBindViewHolder(holder: SeedViewHolder, position: Int) {

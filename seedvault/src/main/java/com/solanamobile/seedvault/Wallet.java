@@ -13,9 +13,13 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Programming interfaces for {@link WalletContractV1}
@@ -95,7 +99,7 @@ public final class Wallet {
      * purpose originally specified for this auth token). The returned {@link Intent} should be used
      * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
      * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
-     * {@link #onSignTransactionResult(int, Intent)}.
+     * {@link #onSignTransactionsResult(int, Intent)}.
      * @param authToken the auth token for the seed with which to perform transaction signing
      * @param derivationPath a {@link BipDerivationPath} representing the account with which to
      *      sign this transaction
@@ -108,71 +112,74 @@ public final class Wallet {
             @WalletContractV1.AuthToken long authToken,
             @NonNull Uri derivationPath,
             @NonNull byte[] transaction) {
-        return new Intent()
-                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
-                .setAction(WalletContractV1.ACTION_SIGN_TRANSACTION)
-                .setData(derivationPath)
-                .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
-                .putExtra(WalletContractV1.EXTRA_TRANSACTION, transaction);
+        final ArrayList<Uri> paths = new ArrayList<>(1);
+        paths.add(derivationPath);
+        final ArrayList<SigningRequest> req = new ArrayList<>(1);
+        req.add(new SigningRequest(transaction, paths));
+        return signTransactions(authToken, req);
     }
 
     /**
-     * An immutable data class containing the results of {@link #signTransaction(int, Uri, byte[])}
+     * Request that the provided transactions be signed (with whatever method is appropriate for the
+     * purpose originally specified for this auth token). The returned {@link Intent} should be used
+     * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
+     * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
+     * {@link #onSignTransactionsResult(int, Intent)}.
+     * @param authToken the auth token for the seed with which to perform transaction signing
+     * @param signingRequests the set of transactions to be signed
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalArgumentException if signingRequests is empty
      */
-    public static final class SignTransactionResult {
-        /** The transaction signature */
-        @NonNull public final byte[] signature;
-
-        /**
-         * The fully resolved derivation path representing the account with which signing was
-         * performed. This will include, e.g. mandatory hardening or translation from BIP44 to
-         * BIP32.
-         */
-        @NonNull public final Uri resolvedDerivationPath;
-
-        private SignTransactionResult(@NonNull byte[] signature, @NonNull Uri resolvedDerivationPath) {
-            this.signature = signature;
-            this.resolvedDerivationPath = resolvedDerivationPath;
+    @NonNull
+    public static Intent signTransactions(
+            @WalletContractV1.AuthToken long authToken,
+            @NonNull ArrayList<SigningRequest> signingRequests) {
+        if (signingRequests.isEmpty()) {
+            throw new IllegalArgumentException("signingRequests must not be empty");
         }
+        return new Intent()
+                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
+                .setAction(WalletContractV1.ACTION_SIGN_TRANSACTION)
+                .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
+                .putParcelableArrayListExtra(WalletContractV1.EXTRA_SIGNING_REQUEST,
+                        signingRequests);
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #signTransaction(int, Uri, byte[])})
+     * invocation of {@link #signTransaction(long, Uri, byte[])} or
+     * {@link #signTransactions(long, ArrayList)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
-     * @return a {@link SignTransactionResult} with the transaction signature
-     * @throws ActionFailedException if the transaction signing failed
+     * @return a {@link List} of {@link SigningResponse}s with the transaction signatures
+     * @throws ActionFailedException if transaction signing failed
      */
     @NonNull
-    public static SignTransactionResult onSignTransactionResult(
+    public static ArrayList<SigningResponse> onSignTransactionsResult(
             int resultCode,
             @Nullable Intent result) throws ActionFailedException {
         if (resultCode != Activity.RESULT_OK) {
-            throw new ActionFailedException("signTransaction failed with result=" + resultCode);
+            throw new ActionFailedException("signTransactions failed with result=" + resultCode);
         } else if (result == null) {
-            throw new ActionFailedException("signTransaction failed to return a result");
+            throw new ActionFailedException("signTransactions failed to return a result");
         }
 
-        final byte[] sig = result.getByteArrayExtra(WalletContractV1.EXTRA_SIGNATURE);
-        if (sig == null) {
-            throw new ActionFailedException("signTransaction returned a null signature");
+        final ArrayList<SigningResponse> signingResponses = result.getParcelableArrayListExtra(
+                WalletContractV1.EXTRA_SIGNING_RESPONSE);
+        if (signingResponses == null) {
+            throw new ActionFailedException("signTransactions returned no results");
         }
 
-        final Uri resolvedDerivationPath = result.getData();
-        if (resolvedDerivationPath == null) {
-            throw new ActionFailedException("signTransaction returned a null derivation path");
-        }
-
-        return new SignTransactionResult(sig, resolvedDerivationPath);
+        return signingResponses;
     }
 
     /**
      * Request the public key for a given {@link BipDerivationPath} of a seed. The returned
      * {@link Intent} should be used with {@link Activity#startActivityForResult(Intent, int)}, and
      * the result (as returned to {@link Activity#onActivityResult(int, int, Intent)}) should be
-     * used as parameters to {@link #onRequestPublicKeyResult(int, Intent)}. If the public key is
-     * not present in the results of {@link #getAccounts(Context, int, String[])}, the user will be
+     * used as parameters to {@link #onRequestPublicKeysResult(int, Intent)}. If the public key is
+     * not present in the results of {@link #getAccounts(Context, long, String[])}, the user will be
      * asked to authorize access to this public key.
      * @param authToken the auth token for the seed with which to request a public key
      * @param derivationPath a {@link BipDerivationPath} representing the account from which to
@@ -184,62 +191,65 @@ public final class Wallet {
     public static Intent requestPublicKey(
             @WalletContractV1.AuthToken long authToken,
             @NonNull Uri derivationPath) {
-        return new Intent()
-                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
-                .setAction(WalletContractV1.ACTION_GET_PUBLIC_KEY)
-                .setData(derivationPath)
-                .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        final ArrayList<Uri> paths = new ArrayList<>(1);
+        paths.add(derivationPath);
+        return requestPublicKeys(authToken, paths);
     }
 
     /**
-     * An immutable data class containing the results of {@link #requestPublicKey(int, Uri)}
+     * Request the public keys for a set of {@link BipDerivationPath}s of a seed. The returned
+     * {@link Intent} should be used with {@link Activity#startActivityForResult(Intent, int)}, and
+     * the result (as returned to {@link Activity#onActivityResult(int, int, Intent)}) should be
+     * used as parameters to {@link #onRequestPublicKeysResult(int, Intent)}. If the public keys are
+     * not present in the results of {@link #getAccounts(Context, long, String[])}, the user will be
+     * asked to authorize access to these public keys.
+     * @param authToken the auth token for the seed with which to request a public key
+     * @param derivationPaths an {@link ArrayList} of {@link BipDerivationPath}s representing the
+     *      accounts from which to request the public keys
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalArgumentException if derivationPaths is empty
      */
-    public static final class RequestPublicKeyResult {
-        /** The public key */
-        @NonNull public final byte[] publicKey;
-
-        /**
-         * The fully resolved derivation path representing the account for which the public key was
-         * retrieved. This will include, e.g. mandatory hardening or translation from BIP44 to
-         * BIP32.
-         */
-        @NonNull public final Uri resolvedDerivationPath;
-
-        private RequestPublicKeyResult(@NonNull byte[] publicKey, @NonNull Uri resolvedDerivationPath) {
-            this.publicKey = publicKey;
-            this.resolvedDerivationPath = resolvedDerivationPath;
+    @NonNull
+    public static Intent requestPublicKeys(
+            @WalletContractV1.AuthToken long authToken,
+            @NonNull ArrayList<Uri> derivationPaths) {
+        if (derivationPaths.isEmpty()) {
+            throw new IllegalArgumentException("derivationPaths must not be empty");
         }
+        return new Intent()
+                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
+                .setAction(WalletContractV1.ACTION_GET_PUBLIC_KEY)
+                .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
+                .putParcelableArrayListExtra(WalletContractV1.EXTRA_DERIVATION_PATH,
+                        derivationPaths);
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #requestPublicKey(int, Uri)})
+     * invocation of {@link #requestPublicKeys(long, ArrayList)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
-     * @return a {@link RequestPublicKeyResult} with the public key
-     * @throws ActionFailedException if the public key request failed
+     * @return an {@link ArrayList} of {@link PublicKeyResponse}s with the public keys
+     * @throws ActionFailedException if the public keys request failed
      */
     @NonNull
-    public static RequestPublicKeyResult onRequestPublicKeyResult(
+    public static ArrayList<PublicKeyResponse> onRequestPublicKeysResult(
             int resultCode,
             @Nullable Intent result) throws ActionFailedException {
         if (resultCode != Activity.RESULT_OK) {
-            throw new ActionFailedException("requestPublicKey failed with result=" + resultCode);
+            throw new ActionFailedException("requestPublicKeys failed with result=" + resultCode);
         } else if (result == null) {
-            throw new ActionFailedException("requestPublicKey failed to return a result");
+            throw new ActionFailedException("requestPublicKeys failed to return a result");
         }
 
-        final byte[] publicKey = result.getByteArrayExtra(WalletContractV1.EXTRA_PUBLIC_KEY);
-        if (publicKey == null) {
-            throw new ActionFailedException("requestPublicKey returned a null public key");
+        final ArrayList<PublicKeyResponse> publicKeys = result.getParcelableArrayListExtra(
+                WalletContractV1.EXTRA_PUBLIC_KEY);
+        if (publicKeys == null || publicKeys.isEmpty()) {
+            throw new UnsupportedOperationException("requestPublicKeys did not return a result");
         }
 
-        final Uri resolvedDerivationPath = result.getData();
-        if (resolvedDerivationPath == null) {
-            throw new ActionFailedException("requestPublicKey returned a null derivation path");
-        }
-
-        return new RequestPublicKeyResult(publicKey, resolvedDerivationPath);
+        return publicKeys;
     }
 
     /**
@@ -276,24 +286,8 @@ public final class Wallet {
             @NonNull String[] projection,
             @Nullable String filterOnColumn,
             @Nullable Object value) {
-        final Bundle queryArgs;
-        if (filterOnColumn != null) {
-            if (value == null) {
-                throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
-            } else if (!stringArrayContains(
-                    WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS, filterOnColumn)) {
-                throw new IllegalArgumentException("Column '" + filterOnColumn + "' is not a valid column");
-            }
-            queryArgs = new Bundle();
-            queryArgs.putString(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION,
-                    filterOnColumn + "=?");
-            queryArgs.putStringArray(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                    new String[] { value.toString() });
-        } else {
-            queryArgs = null;
-        }
+        final Bundle queryArgs = createSingleColumnQuery(
+                WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS, filterOnColumn, value);
         return context.getContentResolver().query(
                 WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
                 projection,
@@ -355,7 +349,7 @@ public final class Wallet {
     }
 
     /**
-     * Request a {@link Cursor} containing whether or not there are seeds remainining to be
+     * Request a {@link Cursor} containing whether or not there are seeds remaining to be
      * authorized for each purpose for the current app which match the provided query. The
      * projection should be a subset of the columns in
      * {@link WalletContractV1#UNAUTHORIZED_SEEDS_ALL_COLUMNS}.
@@ -375,24 +369,8 @@ public final class Wallet {
             @NonNull String[] projection,
             @Nullable String filterOnColumn,
             @Nullable Object value) {
-        final Bundle queryArgs;
-        if (filterOnColumn != null) {
-            if (value == null) {
-                throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
-            } else if (!stringArrayContains(
-                    WalletContractV1.UNAUTHORIZED_SEEDS_ALL_COLUMNS, filterOnColumn)) {
-                throw new IllegalArgumentException("Column '" + filterOnColumn + "' is not a valid column");
-            }
-            queryArgs = new Bundle();
-            queryArgs.putString(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION,
-                    filterOnColumn + "=?");
-            queryArgs.putStringArray(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                    new String[] { value.toString() });
-        } else {
-            queryArgs = null;
-        }
+        final Bundle queryArgs = createSingleColumnQuery(
+                WalletContractV1.UNAUTHORIZED_SEEDS_ALL_COLUMNS, filterOnColumn, value);
         return context.getContentResolver().query(
                 WalletContractV1.UNAUTHORIZED_SEEDS_CONTENT_URI,
                 projection,
@@ -466,22 +444,9 @@ public final class Wallet {
             @NonNull String[] projection,
             @Nullable String filterOnColumn,
             @Nullable Object value) {
-        final Bundle queryArgs = new Bundle();
+        final Bundle queryArgs = createSingleColumnQuery(
+                WalletContractV1.ACCOUNTS_ALL_COLUMNS, filterOnColumn, value);
         queryArgs.putLong(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
-        if (filterOnColumn != null) {
-            if (value == null) {
-                throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
-            } else if (!stringArrayContains(
-                    WalletContractV1.ACCOUNTS_ALL_COLUMNS, filterOnColumn)) {
-                throw new IllegalArgumentException("Column '" + filterOnColumn + "' is not a valid column");
-            }
-            queryArgs.putString(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION,
-                    filterOnColumn + "=?");
-            queryArgs.putStringArray(
-                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
-                    new String[] { value.toString() });
-        }
         return context.getContentResolver().query(
                 WalletContractV1.ACCOUNTS_CONTENT_URI,
                 projection,
@@ -601,6 +566,82 @@ public final class Wallet {
     }
 
     /**
+     * Request a {@link Cursor} containing the implementation limits for the Seed Vault
+     * implementation. The projection should be a subset of the columns in
+     * {@link WalletContractV1#IMPLEMENTATION_LIMITS_ALL_COLUMNS}.
+     * @param context the {@link Context} in which to perform this request
+     * @param projection the set of columns to be present in the returned {@link Cursor}
+     * @return a {@link Cursor}
+     */
+    @Nullable
+    public static Cursor getImplementationLimits(
+            @NonNull Context context,
+            @NonNull String[] projection) {
+        return getImplementationLimits(context, projection, null, null);
+    }
+
+    /**
+     * Request a {@link Cursor} containing the implementation limits for the Seed Vault
+     * implementation. The projection should be a subset of the columns in
+     * {@link WalletContractV1#IMPLEMENTATION_LIMITS_ALL_COLUMNS}.
+     * @param context the {@link Context} in which to perform this request
+     * @param projection the set of columns to be present in the returned {@link Cursor}
+     * @param filterOnColumn the column from
+     *      {@link WalletContractV1#IMPLEMENTATION_LIMITS_ALL_COLUMNS} on which to filter
+     * @param value the value of filterOnColumn which all returned rows must match
+     * @return a {@link Cursor}
+     * @throws IllegalArgumentException if filterOnColumn is not a column in
+     *      {@link WalletContractV1#IMPLEMENTATION_LIMITS_ALL_COLUMNS}, or if value cannot be
+     *      interpreted as an appropriate type to match against filterOnColumn values.
+     */
+    @Nullable
+    public static Cursor getImplementationLimits(
+            @NonNull Context context,
+            @NonNull String[] projection,
+            @Nullable String filterOnColumn,
+            @Nullable Object value) {
+        final Bundle queryArgs = createSingleColumnQuery(
+                WalletContractV1.IMPLEMENTATION_LIMITS_ALL_COLUMNS, filterOnColumn, value);
+        return context.getContentResolver().query(
+                WalletContractV1.IMPLEMENTATION_LIMITS_CONTENT_URI,
+                projection,
+                queryArgs,
+                null);
+    }
+
+    /**
+     * Request the implementation limits of the specified purpose for the Seed Vault implementation.
+     * @param context the {@link Context} in which to perform this request
+     * @param purpose the {@code WalletContractV1.PURPOSE_*} purpose
+     * @return a {@link ArrayMap} with {@code WalletContractV1.IMPLEMENTATION_LIMITS_MAX_*} column
+     *      names as keys, and the corresponding limits as values
+     */
+    @NonNull
+    public static ArrayMap<String, Long> getImplementationLimitsForPurpose(
+            @NonNull Context context,
+            @WalletContractV1.Purpose int purpose) {
+        final Cursor c = context.getContentResolver().query(
+                ContentUris.withAppendedId(WalletContractV1.IMPLEMENTATION_LIMITS_CONTENT_URI, purpose),
+                WalletContractV1.IMPLEMENTATION_LIMITS_ALL_COLUMNS,
+                null,
+                null);
+        if (!c.moveToNext()) {
+            throw new UnsupportedOperationException("Failed to get implementation limits");
+        }
+        final ArrayMap<String, Long> implementationLimitsMap = new ArrayMap<>(3);
+        implementationLimitsMap.put(
+                WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS,
+                (long)c.getShort(1));
+        implementationLimitsMap.put(
+                WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES,
+                (long)c.getShort(2));
+        implementationLimitsMap.put(
+                WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS,
+                (long)c.getShort(3));
+        return implementationLimitsMap;
+    }
+
+    /**
      * Resolve the provided BIP derivation path {@link Uri} with scheme
      * {@link WalletContractV1#BIP32_URI_SCHEME} or {@link WalletContractV1#BIP44_URI_SCHEME} and
      * the provided {@code WalletContractV1.PURPOSE_*} purpose to a BIP32 derivation path.
@@ -631,8 +672,8 @@ public final class Wallet {
             throw new UnsupportedOperationException("Failed to invoke method '" +
                     WalletContractV1.RESOLVE_BIP32_DERIVATION_PATH_METHOD + "'");
         }
-        Uri resolvedDerivationPath = Uri.parse(result.getString(
-                WalletContractV1.RESOLVED_BIP32_DERIVATION_PATH));
+        Uri resolvedDerivationPath = result.getParcelable(
+                WalletContractV1.EXTRA_RESOLVED_BIP32_DERIVATION_PATH);
         if (resolvedDerivationPath == null) {
             throw new UnsupportedOperationException("Failed to resolve BIP32 derivation path");
         }
@@ -646,5 +687,27 @@ public final class Wallet {
             }
         }
         return false;
+    }
+
+    @NonNull
+    private static Bundle createSingleColumnQuery(
+            @NonNull String[] allColumns,
+            @Nullable String filterOnColumn,
+            @Nullable Object value) {
+        final Bundle queryArgs = new Bundle();
+        if (filterOnColumn != null) {
+            if (value == null) {
+                throw new IllegalArgumentException("value cannot be null when filterOnColumn is specified");
+            } else if (!stringArrayContains(allColumns, filterOnColumn)) {
+                throw new IllegalArgumentException("Column '" + filterOnColumn + "' is not a valid column");
+            }
+            queryArgs.putString(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION,
+                    filterOnColumn + "=?");
+            queryArgs.putStringArray(
+                    ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                    new String[] { value.toString() });
+        }
+        return queryArgs;
     }
 }

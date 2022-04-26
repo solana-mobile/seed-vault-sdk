@@ -7,11 +7,11 @@ package com.solanamobile.seedvaultimpl.ui
 import android.app.Activity.RESULT_OK
 import android.content.ComponentName
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.solanamobile.seedvault.BipDerivationPath
-import com.solanamobile.seedvault.WalletContractV1
+import com.solanamobile.seedvault.*
 import com.solanamobile.seedvaultimpl.model.Authorization
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -63,21 +63,14 @@ class AuthorizeViewModel : ViewModel() {
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                     return
                 }
-                val transaction = callerIntent.getByteArrayExtra(WalletContractV1.EXTRA_TRANSACTION)
-                if (transaction == null || transaction.isEmpty()) {
-                    Log.e(TAG, "No or empty transaction payload provided; aborting...")
+                val signingRequests = callerIntent.getParcelableArrayListExtra<SigningRequest>(WalletContractV1.EXTRA_SIGNING_REQUEST)
+                if (signingRequests == null || signingRequests.isEmpty()) {
+                    Log.e(TAG, "No or empty signing requests provided; aborting...")
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_TRANSACTION)
                     return
                 }
-                // TODO: validate transaction is a Solana txn
-                val derivationPath = getBipDerivationPathFromIntent(callerIntent)
-                if (derivationPath == null) {
-                    Log.e(TAG, "No or invalid derivation path provided; aborting...")
-                    completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_DERIVATION_PATH)
-                    return
-                }
                 startAuthorization()
-                val request = AuthorizeRequest(AuthorizeRequestType.Transaction(authToken, transaction, derivationPath), callerActivity, callerUid)
+                val request = AuthorizeRequest(AuthorizeRequestType.Transaction(authToken, signingRequests), callerActivity, callerUid)
                 cachedRequest = request
                 viewModelScope.launch {
                     _requests.emit(request)
@@ -90,14 +83,14 @@ class AuthorizeViewModel : ViewModel() {
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                     return
                 }
-                val derivationPath = getBipDerivationPathFromIntent(callerIntent)
-                if (derivationPath == null) {
-                    Log.e(TAG, "No or invalid derivation path provided; aborting...")
+                val derivationPaths = callerIntent.getParcelableArrayListExtra<Uri>(WalletContractV1.EXTRA_DERIVATION_PATH)
+                if (derivationPaths == null) {
+                    Log.e(TAG, "No or empty derivation paths provided; aborting...")
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_DERIVATION_PATH)
                     return
                 }
                 startAuthorization()
-                val request = AuthorizeRequest(AuthorizeRequestType.PublicKey(authToken, derivationPath), callerActivity, callerUid)
+                val request = AuthorizeRequest(AuthorizeRequestType.PublicKey(authToken, derivationPaths), callerActivity, callerUid)
                 cachedRequest = request
                 viewModelScope.launch {
                     _requests.emit(request)
@@ -112,17 +105,6 @@ class AuthorizeViewModel : ViewModel() {
 
     private fun getAuthTokenFromIntent(intent: Intent): Long {
         return intent.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1)
-    }
-
-    private fun getBipDerivationPathFromIntent(intent: Intent): BipDerivationPath? {
-        return intent.data?.let { derivationPathUri ->
-            try {
-                BipDerivationPath.fromUri(derivationPathUri)
-            } catch (e: UnsupportedOperationException) {
-                Log.e(TAG, "Invalid BIP derivation path URI '$derivationPathUri'; aborting...", e)
-                null
-            }
-        }
     }
 
     fun updateSeedRequestWithSeedId(seedId: Long) {
@@ -159,30 +141,20 @@ class AuthorizeViewModel : ViewModel() {
         }
     }
 
-    fun completeAuthorizationWithSignature(
-        signature: ByteArray,
-        derivationPath: BipDerivationPath
-    ) {
-        @Suppress("EXPERIMENTAL_API_USAGE")
-        Log.d(TAG, "completeAuthorizationWithSignature(${signature.toUByteArray().toList()}, $derivationPath)")
+    fun completeAuthorizationWithSignatures(signatures: ArrayList<SigningResponse>) {
+        Log.d(TAG, "completeAuthorizationWithSignatures($signatures)")
         val intent = Intent()
-            .putExtra(WalletContractV1.EXTRA_SIGNATURE, signature)
-            .setData(derivationPath.toUri())
+            .putExtra(WalletContractV1.EXTRA_SIGNING_RESPONSE, signatures)
         val event = AuthorizeEvent(AuthorizeEventType.COMPLETE, RESULT_OK, intent)
         viewModelScope.launch {
             _events.emit(event)
         }
     }
 
-    fun completeAuthorizationWithPublicKey(
-        key: ByteArray,
-        derivationPath: BipDerivationPath
-    ) {
-        @Suppress("EXPERIMENTAL_API_USAGE")
-        Log.d(TAG, "completeAuthorizationWithPublicKey(${key.toUByteArray().toList()}, $derivationPath)")
+    fun completeAuthorizationWithPublicKeys(publicKeys: ArrayList<PublicKeyResponse>) {
+        Log.d(TAG, "completeAuthorizationWithPublicKeys($publicKeys")
         val intent = Intent()
-            .putExtra(WalletContractV1.EXTRA_PUBLIC_KEY, key)
-            .setData(derivationPath.toUri())
+            .putExtra(WalletContractV1.EXTRA_PUBLIC_KEY, publicKeys)
         val event = AuthorizeEvent(AuthorizeEventType.COMPLETE, RESULT_OK, intent)
         viewModelScope.launch {
             _events.emit(event)
@@ -210,33 +182,12 @@ sealed interface AuthorizeRequestType {
 
     data class Transaction(
         @WalletContractV1.AuthToken val authToken: Long,
-        val transaction: ByteArray,
-        val derivationPath: BipDerivationPath
-    ) : AuthorizeRequestType {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Transaction
-
-            if (authToken != other.authToken) return false
-            if (!transaction.contentEquals(other.transaction)) return false
-            if (derivationPath != other.derivationPath) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = authToken.hashCode()
-            result = 31 * result + transaction.contentHashCode()
-            result = 31 * result + derivationPath.hashCode()
-            return result
-        }
-    }
+        val transactions: List<SigningRequest>,
+    ) : AuthorizeRequestType
 
     data class PublicKey(
         @WalletContractV1.AuthToken val authToken: Long,
-        val derivationPath: BipDerivationPath
+        val derivationPaths: List<Uri>,
     ) : AuthorizeRequestType
 }
 

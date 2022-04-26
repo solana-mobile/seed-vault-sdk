@@ -51,20 +51,25 @@ public final class WalletContractV1 {
     public static final String ACTION_AUTHORIZE_SEED_ACCESS = AUTHORITY_WALLET + ".ACTION_AUTHORIZE_SEED_ACCESS";
 
     /**
-     * Intent action to request that a transaction be signed. The Intent data should specify the
-     * account derivation path as a Uri, with a scheme of either {@link #BIP32_URI_SCHEME} or
-     * {@link #BIP44_URI_SCHEME}. The Intent should also contain an {@link #EXTRA_AUTH_TOKEN} extra
-     * specifying the authorized seed with which to sign, and an {@link #EXTRA_TRANSACTION} extra
-     * containing the payload to be signed.
-     * <p/>On {@link android.app.Activity#RESULT_OK}, the resulting
-     * Intent will contain an {@link #EXTRA_SIGNATURE} extra with the transaction signature payload.
+     * Intent action to request that a set of transactions be signed. The Intent should contain an
+     * {@link #EXTRA_SIGNING_REQUEST} extra {@link SigningRequest}s, one per transaction to be
+     * signed. Each {@link SigningRequest} may contain multiple requested signature BIP derivation
+     * paths. These derivation paths should be {@link Uri}s with a scheme of either
+     * {@link #BIP32_URI_SCHEME} or {@link #BIP44_URI_SCHEME}. The Intent should also contain an
+     * {@link #EXTRA_AUTH_TOKEN} extra specifying the authorized seed with which to sign.
+     * <p/>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
+     * {@link #EXTRA_SIGNING_RESPONSE} extra with {@link SigningResponse}s, one per
+     * {@link SigningRequest}. Each {@link SigningResponse} contains the requested signatures.
      * <p/>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
-     * will be returned. If the specified derivation path is not a valid BIP32 or BIP44 derivation
-     * path Uri, {@link #RESULT_INVALID_DERIVATION_PATH} will be returned. If the specified auth
-     * token is not valid, {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If the specified
-     * transaction is not valid for signing with this auth token,
-     * {@link #RESULT_INVALID_TRANSACTION} will be returned. If the user failed to authorize the
-     * transaction, {@link #RESULT_AUTHENTICATION_FAILED} will be returned.
+     * will be returned. If the specified auth token is not valid,
+     * {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If any transaction is not valid for
+     * signing with this auth token, {@link #RESULT_INVALID_TRANSACTION} will be returned. If any
+     * requested signature derivation path is not a valid BIP32 or BIP44 derivation path Uri,
+     * {@link #RESULT_INVALID_DERIVATION_PATH} will be returned. If the user failed to authorize
+     * signing the set of transactions, {@link #RESULT_AUTHENTICATION_FAILED} will be returned. If
+     * the number of {@link SigningRequest}s or the number of BIP derivation paths in a
+     * {@link SigningRequest} is more than the quantity supported by the Seed Vault implementation,
+     * {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED} will be returned.
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
@@ -72,21 +77,24 @@ public final class WalletContractV1 {
     public static final String ACTION_SIGN_TRANSACTION = AUTHORITY_WALLET + ".ACTION_SIGN_TRANSACTION";
 
     /**
-     * Intent action to request the public key for an account. The Intent data should specify the
-     * account derivation path as a Uri, with a scheme of either {@link #BIP32_URI_SCHEME} or
-     * {@link #BIP44_URI_SCHEME}. The Intent should also contain an {@link #EXTRA_AUTH_TOKEN} extra
-     * specifying the authorized seed from which to derive the public key. If this account is
-     * present in {@link #ACCOUNTS_TABLE}, the public key will be returned without requiring
-     * user authentication.
+     * Intent action to request the public key for a set of accounts. The Intent should contain an
+     * {@link #EXTRA_DERIVATION_PATH} extra with account BIP derivation path URIs, each with a
+     * scheme of either {@link #BIP32_URI_SCHEME} or {@link #BIP44_URI_SCHEME}. The Intent should
+     * also contain an {@link #EXTRA_AUTH_TOKEN} extra specifying the authorized seed from which to
+     * derive the account public keys. If all of these accounts are present in
+     * {@link #ACCOUNTS_TABLE}, the public keys will be returned without requiring user
+     * authentication.
      * <p/>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
-     * {@link #EXTRA_PUBLIC_KEY} extra with the public key payload.
+     * {@link #EXTRA_PUBLIC_KEY} extra with {@link PublicKeyResponse}s, one per BIP derivation path
+     * URI.
      * <p/>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
-     * will be returned. If the specified derivation path is not a valid BIP32 or BIP44 derivation
-     * path Uri, {@link #RESULT_INVALID_DERIVATION_PATH} will be returned. If the specified auth
-     * token is not valid, {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If no key exists for
-     * the specified derivation path (which is a possibility in some key derivation schemes),
-     * {@link #RESULT_KEY_UNAVAILABLE} will be returned. If the user failed to authorize the
-     * transaction, {@link #RESULT_AUTHENTICATION_FAILED} will be returned.
+     * will be returned. If any requested account derivation path is not a valid BIP32 or BIP44
+     * derivation path Uri, {@link #RESULT_INVALID_DERIVATION_PATH} will be returned. If the
+     * specified auth token is not valid, {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If
+     * the user failed to authorize the transaction, {@link #RESULT_AUTHENTICATION_FAILED} will be
+     * returned. If the number of account BIP derivation path URIs is more than the quantity
+     * supported by the Seed Vault implementation, {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED}
+     * will be returned.
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
@@ -104,7 +112,7 @@ public final class WalletContractV1 {
     public static final int RESULT_INVALID_AUTH_TOKEN = RESULT_FIRST_USER + 1001;
 
     /**
-     * The transaction payload provided to {@link #ACTION_SIGN_TRANSACTION} was not valid for the
+     * A transaction payload provided to {@link #ACTION_SIGN_TRANSACTION} was not valid for the
      * signing purpose associated with the corresponding {@link #EXTRA_AUTH_TOKEN}
      */
     public static final int RESULT_INVALID_TRANSACTION = RESULT_FIRST_USER + 1002;
@@ -132,8 +140,8 @@ public final class WalletContractV1 {
     public static final int RESULT_INVALID_PURPOSE = RESULT_FIRST_USER + 1005;
 
     /**
-     * The Uri data provided to {@link #ACTION_SIGN_TRANSACTION} or {@link #ACTION_GET_PUBLIC_KEY}
-     * is not a valid BIP32 or BIP44 Uri
+     * A BIP derivation path URI provided to {@link #ACTION_SIGN_TRANSACTION} or
+     * {@link #ACTION_GET_PUBLIC_KEY} is not a valid BIP32 or BIP44 Uri
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
@@ -141,10 +149,11 @@ public final class WalletContractV1 {
     public static final int RESULT_INVALID_DERIVATION_PATH = RESULT_FIRST_USER + 1006;
 
     /**
-     * No key is available for the BIP derivation path provided to {@link #ACTION_GET_PUBLIC_KEY}
-     * (which is a possibility in some key derivation schemes)
+     * An implementation limit was exceeded for this action. The
+     * {@link #IMPLEMENTATION_LIMITS_CONTENT_URI} Wallet content provider table can be queried to
+     * get the Seed Vault implementation limits.
      */
-    public static final int RESULT_KEY_UNAVAILABLE = RESULT_FIRST_USER + 1007;
+    public static final int RESULT_IMPLEMENTATION_LIMIT_EXCEEDED = RESULT_FIRST_USER + 1007;
 
     /**
      * Purpose of this action, query, etc. It should be one of the {@code PURPOSE_*} constants
@@ -162,20 +171,26 @@ public final class WalletContractV1 {
     public static final String EXTRA_AUTH_TOKEN = "AuthToken";
 
     /**
-     * Transaction payload for {@link #ACTION_SIGN_TRANSACTION}
-     * <p/>Type: {@code byte[]}
+     * A set of {@link SigningRequest}s for {@link #ACTION_SIGN_TRANSACTION}
+     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link SigningRequest}{@code >}
      */
-    public static final String EXTRA_TRANSACTION = "Transaction";
+    public static final String EXTRA_SIGNING_REQUEST = "SigningRequest";
 
     /**
-     * Signature payload for response to {@link #ACTION_SIGN_TRANSACTION}
-     * <p/>Type: {@code byte[]}
+     * A set of {@link SigningResponse}s for response to {@link #ACTION_SIGN_TRANSACTION}
+     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link SigningResponse}{@code >}
      */
-    public static final String EXTRA_SIGNATURE = "Signature";
+    public static final String EXTRA_SIGNING_RESPONSE = "SigningResponse";
 
     /**
-     * Public key payload for response to {@link #ACTION_GET_PUBLIC_KEY}
-     * <p/>Type: {@code byte[]}
+     * A set of BIP derivation path URIs for {@link #ACTION_GET_PUBLIC_KEY}
+     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link Uri}{@code >}
+     */
+    public static final String EXTRA_DERIVATION_PATH = "DerivationPath";
+
+    /**
+     * A set of account public keys for response to {@link #ACTION_GET_PUBLIC_KEY}
+     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link PublicKeyResponse}{@code >}
      */
     public static final String EXTRA_PUBLIC_KEY = "PublicKey";
 
@@ -209,6 +224,24 @@ public final class WalletContractV1 {
      * {@link #BIP44_URI_SCHEME} derivation Uri
      */
     public static final String BIP_URI_HARDENED_INDEX_IDENTIFIER = "'";
+
+    /**
+     * The minimum number of {@link SigningRequest}s per {@link #ACTION_SIGN_TRANSACTION} that all
+     * Seed Vault implementations must support
+     */
+    public static final int MIN_SUPPORTED_SIGNING_REQUESTS = 3;
+
+    /**
+     * The minimum number of requested signatures per {@link SigningRequest} that all Seed Vault
+     * implementations must support
+     */
+    public static final int MIN_SUPPORTED_REQUESTED_SIGNATURES = 3;
+
+    /**
+     * The minimum number of BIP derivation paths per {@link #ACTION_GET_PUBLIC_KEY} that all Seed
+     * Vault implementations must support
+     */
+    public static final int MIN_SUPPORTED_REQUESTED_PUBLIC_KEYS = 10;
 
     /** Authority of the Seed Vault Wallet content provider */
     public static final String AUTHORITY_WALLET_PROVIDER = AUTHORITY_WALLET + ".walletprovider";
@@ -269,7 +302,7 @@ public final class WalletContractV1 {
     /** Type: {@code long} */
     public static final String ACCOUNTS_ACCOUNT_ID = BaseColumns._ID;
 
-    /** Type: {@code: String} (string value of a {@link #BIP32_URI_SCHEME} Uri) */
+    /** Type: {@code String} (string value of a {@link #BIP32_URI_SCHEME} Uri) */
     public static final String ACCOUNTS_BIP32_DERIVATION_PATH = "Accounts_Bip32DerivationPath";
 
     /** Type: {@code byte[]} */
@@ -296,20 +329,47 @@ public final class WalletContractV1 {
             ACCOUNTS_PUBLIC_KEY_ENCODED, ACCOUNTS_ACCOUNT_NAME, ACCOUNTS_ACCOUNT_IS_USER_WALLET,
             ACCOUNTS_ACCOUNT_IS_VALID};
 
+    /** Wallet content provider implementation limits table name */
+    public static final String IMPLEMENTATION_LIMITS_TABLE = "implementationlimits";
+
+    /** Wallet content provider implementation limits table content Uri */
+    public static final Uri IMPLEMENTATION_LIMITS_CONTENT_URI = Uri.withAppendedPath(WALLET_PROVIDER_CONTENT_URI_BASE, IMPLEMENTATION_LIMITS_TABLE);
+
+    /** Wallet content provider implementation limits table MIME subtype */
+    public static final String IMPLEMENTATION_LIMITS_MIME_SUBTYPE = "vnd." + AUTHORITY_WALLET_PROVIDER + "." + IMPLEMENTATION_LIMITS_TABLE;
+
+    /** Type: {@code int} (see {@code PURPOSE_*} constants) */
+    public static final String IMPLEMENTATION_LIMITS_AUTH_PURPOSE = BaseColumns._ID;
+
+    /** Type: {@code short} */
+    public static final String IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS = "MaxSigningRequests";
+
+    /** Type: {@code short} */
+    public static final String IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES = "MaxRequestedSignatures";
+
+    /** Type: {@code short} */
+    public static final String IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS = "MaxRequestedPublicKeys";
+
+    /** All columns for the Wallet content provider implementation limits table */
+    public static final String[] IMPLEMENTATION_LIMITS_ALL_COLUMNS = {
+            IMPLEMENTATION_LIMITS_AUTH_PURPOSE, IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS,
+            IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES,
+            IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS};
+
     /**
      * Wallet content provider method to resolve a {@link #BIP32_URI_SCHEME} or
      * {@link #BIP44_URI_SCHEME} derivation path Uri into a normalized form for the specified
      * purpose. The arg should be the derivation path Uri, and the extras bundle should contain an
      * {@link #EXTRA_PURPOSE} extra. The result bundle will contain an
-     * {@link #RESOLVED_BIP32_DERIVATION_PATH} extra.
+     * {@link #EXTRA_RESOLVED_BIP32_DERIVATION_PATH} extra.
      */
     public static final String RESOLVE_BIP32_DERIVATION_PATH_METHOD = "ResolveBipDerivationPath";
 
     /**
      * The resolved {@link #BIP32_URI_SCHEME} derivation path URI
-     * <p/>Type: {@code String} (string value of a {@link #BIP32_URI_SCHEME} Uri)
+     * <p/>Type: {@code Uri} (a {@link #BIP32_URI_SCHEME} Uri)
      * */
-    public static final String RESOLVED_BIP32_DERIVATION_PATH = "ResolveBipDerivationPath_ResolvedBip32DerivationPath";
+    public static final String EXTRA_RESOLVED_BIP32_DERIVATION_PATH = "ResolveBipDerivationPath_ResolvedBip32DerivationPath";
 
     /** Annotation for the valid account ID range */
     @Retention(RetentionPolicy.SOURCE)
