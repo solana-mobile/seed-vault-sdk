@@ -46,8 +46,11 @@ class MainActivity : AppCompatActivity() {
             onDeauthorizeSeed = { seed ->
                 viewModel.deauthorizeSeed(seed.authToken)
             },
-            onRequestPublicKeyForM1000H = { seed ->
-                viewModel.requestPublicKeyForM1000H(seed.authToken)
+            onRequestPublicKeyForM1000HAndM1001H = { seed ->
+                viewModel.requestPublicKeyForM1000HAndM1001H(seed.authToken)
+            },
+            onSignTwoTransactionsWithTwoSignatures = { seed ->
+                viewModel.signTwoTransactionsWithTwoSignatures(seed.authToken)
             }
         )
         val remainingSeedsAdapter = HasUnauthorizedSeedsAdapter(
@@ -55,12 +58,14 @@ class MainActivity : AppCompatActivity() {
                 viewModel.authorizeNewSeed()
             }
         )
+        val implementationLimitsAdapter = ImplementationLimitsAdapter()
         val concatAdapter = ConcatAdapter(
             ConcatAdapter.Config.Builder().setStableIdMode(
                 ConcatAdapter.Config.StableIdMode.ISOLATED_STABLE_IDS
             ).build(),
             seedListadapter,
-            remainingSeedsAdapter
+            remainingSeedsAdapter,
+            implementationLimitsAdapter
         )
         binding.recyclerviewSeeds.adapter = concatAdapter
         binding.recyclerviewSeeds.addItemDecoration(DividerItemDecoration(
@@ -71,6 +76,9 @@ class MainActivity : AppCompatActivity() {
                 viewModel.uiState.collect { uiState ->
                     seedListadapter.submitList(uiState.seeds)
                     remainingSeedsAdapter.submitList(listOf(uiState.hasUnauthorizedSeeds))
+                    implementationLimitsAdapter.submitList(uiState.implementationLimits.map { entry ->
+                        entry.key to entry.value
+                    })
 
                     if (uiState.messages.isNotEmpty()) {
                         val i = shownMessageIndex
@@ -122,15 +130,15 @@ class MainActivity : AppCompatActivity() {
                                 viewModel.onUpdateAccountNameFailure(-1)
                             }
                         }
-                        is ViewModelEvent.SignTransaction -> {
-                            val i = Wallet.signTransaction(
-                                event.authToken, event.derivationPath, event.transaction)
-                            startActivityForResult(i, REQUEST_SIGN_TRANSACTION)
+                        is ViewModelEvent.SignTransactions -> {
+                            val i = Wallet.signTransactions(
+                                event.authToken, event.transactions)
+                            startActivityForResult(i, REQUEST_SIGN_TRANSACTIONS)
                         }
-                        is ViewModelEvent.RequestPublicKey ->  {
-                            val i = Wallet.requestPublicKey(
-                                event.authToken, event.derivationPath)
-                            startActivityForResult(i, REQUEST_GET_PUBLIC_KEY)
+                        is ViewModelEvent.RequestPublicKeys ->  {
+                            val i = Wallet.requestPublicKeys(
+                                event.authToken, event.derivationPaths)
+                            startActivityForResult(i, REQUEST_GET_PUBLIC_KEYS)
                         }
                     }
                 }
@@ -152,28 +160,24 @@ class MainActivity : AppCompatActivity() {
                     viewModel.onAuthorizeNewSeedFailure(resultCode)
                 }
             }
-            REQUEST_SIGN_TRANSACTION -> {
+            REQUEST_SIGN_TRANSACTIONS -> {
                 try {
-                    val result = Wallet.onSignTransactionResult(resultCode, data)
-                    Log.d(TAG, "Transaction signed: " +
-                            "signature=${result.signature.asUByteArray().toList()}, " +
-                            "derivationPath=${result.resolvedDerivationPath}")
-                    viewModel.onSignTransactionSuccess(result.signature)
+                    val result = Wallet.onSignTransactionsResult(resultCode, data)
+                    Log.d(TAG, "Transaction signed: signatures=$result")
+                    viewModel.onSignTransactionsSuccess(result)
                 } catch (e: Wallet.ActionFailedException) {
                     Log.e(TAG, "Transaction signing failed", e)
-                    viewModel.onSignTransactionFailure(resultCode)
+                    viewModel.onSignTransactionsFailure(resultCode)
                 }
             }
-            REQUEST_GET_PUBLIC_KEY -> {
+            REQUEST_GET_PUBLIC_KEYS -> {
                 try {
-                    val result = Wallet.onRequestPublicKeyResult(resultCode, data)
-                    Log.d(TAG, "Public key retrieved: " +
-                            "publicKey=${result.publicKey.asUByteArray().toList()}, " +
-                            "derivationPath=${result.resolvedDerivationPath}")
-                    viewModel.onRequestPublicKeySuccess(result.publicKey)
+                    val result = Wallet.onRequestPublicKeysResult(resultCode, data)
+                    Log.d(TAG, "Public key retrieved: publicKey=$result")
+                    viewModel.onRequestPublicKeysSuccess(result)
                 } catch (e: Wallet.ActionFailedException) {
                     Log.e(TAG, "Transaction signing failed", e)
-                    viewModel.onRequestPublicKeyFailure(resultCode)
+                    viewModel.onRequestPublicKeysFailure(resultCode)
                 }
             }
         }
@@ -182,7 +186,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private val TAG = MainActivity::class.simpleName
         private const val REQUEST_AUTHORIZE_SEED_ACCESS = 0
-        private const val REQUEST_SIGN_TRANSACTION = 1
-        private const val REQUEST_GET_PUBLIC_KEY = 2
+        private const val REQUEST_SIGN_TRANSACTIONS = 1
+        private const val REQUEST_GET_PUBLIC_KEYS = 2
     }
 }

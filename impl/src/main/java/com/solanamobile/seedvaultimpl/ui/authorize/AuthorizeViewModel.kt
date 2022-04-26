@@ -4,12 +4,12 @@
 
 package com.solanamobile.seedvaultimpl.ui.authorize
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.solanamobile.seedvault.Bip32DerivationPath
-import com.solanamobile.seedvault.WalletContractV1
+import com.solanamobile.seedvault.*
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Account
 import com.solanamobile.seedvaultimpl.model.Authorization
@@ -35,7 +35,7 @@ class AuthorizeViewModel private constructor(
     private var seed: Seed? = null
     private var purpose: Authorization.Purpose? = null
     private var request: AuthorizeRequest? = null
-    private var normalizedDerivationPath: Bip32DerivationPath? = null
+    private var normalizedDerivationPaths: List<List<Bip32DerivationPath>>? = null
 
     init {
         viewModelScope.launch {
@@ -49,8 +49,11 @@ class AuthorizeViewModel private constructor(
                     seed = null
                     purpose = null
                     this@AuthorizeViewModel.request = null
+                    normalizedDerivationPaths = null
                     return@collect
                 }
+
+                this@AuthorizeViewModel.request = request
 
                 val seed: Seed?
                 val authorizationType: AuthorizeUiState.AuthorizationType
@@ -64,6 +67,7 @@ class AuthorizeViewModel private constructor(
                         check(seed != null) { "Seed should be non-null for authorization" }
                         this@AuthorizeViewModel.seed = seed
                         this@AuthorizeViewModel.purpose = request.type.purpose
+                        normalizedDerivationPaths = null
                     }
 
                     is AuthorizeRequestType.Transaction -> {
@@ -83,8 +87,32 @@ class AuthorizeViewModel private constructor(
                             auth.authToken == authKey.authToken
                         }.purpose
                         this@AuthorizeViewModel.purpose = purpose
-                        normalizedDerivationPath = request.type.derivationPath
-                            .toBip32DerivationPath(purpose).normalize(purpose)
+                        if (request.type.transactions.any { t -> t.payload.isEmpty() }) {
+                            Log.e(TAG, "Only non-empty transaction payloads can be signed")
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_TRANSACTION)
+                            return@collect
+                        }
+                        val numTransactions = request.type.transactions.size
+                        if (numTransactions > RequestLimitsUseCase.MAX_SIGNING_REQUESTS) {
+                            Log.e(TAG, "Too many transactions provided: actual=$numTransactions, max=${RequestLimitsUseCase.MAX_SIGNING_REQUESTS}")
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED)
+                            return@collect
+                        }
+                        val maxRequestedSignatures = request.type.transactions.maxOf { t -> t.requestedSignatures.size }
+                        if (maxRequestedSignatures > RequestLimitsUseCase.MAX_REQUESTED_SIGNATURES) {
+                            Log.e(TAG, "Too many signatures requested: actual=$maxRequestedSignatures, max=${RequestLimitsUseCase.MAX_REQUESTED_SIGNATURES}")
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED)
+                            return@collect
+                        }
+                        try {
+                            normalizedDerivationPaths = request.type.transactions.map { t ->
+                                normalizeDerivationPaths(t.requestedSignatures)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed normalizing BIP derivation paths", e)
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_DERIVATION_PATH)
+                            return@collect
+                        }
                     }
 
                     is AuthorizeRequestType.PublicKey -> {
@@ -104,23 +132,29 @@ class AuthorizeViewModel private constructor(
                             auth.authToken == authKey.authToken
                         }.purpose
                         this@AuthorizeViewModel.purpose = purpose
-                        val normalizedDerivationPath = request.type.derivationPath
-                            .toBip32DerivationPath(purpose).normalize(purpose)
-                        this@AuthorizeViewModel.normalizedDerivationPath = normalizedDerivationPath
-
-                        // Check if we already have a cached public key for this address
-                        val account = seed.accounts.firstOrNull { account ->
-                            account.purpose == purpose && account.bip32DerivationPathUri == normalizedDerivationPath.toUri()
+                        val numDerivationPaths = request.type.derivationPaths.size
+                        if (numDerivationPaths > RequestLimitsUseCase.MAX_REQUESTED_PUBLIC_KEYS) {
+                            Log.e(TAG, "Too many public keys requested: actual=$numDerivationPaths, max=${RequestLimitsUseCase.MAX_REQUESTED_PUBLIC_KEYS}")
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED)
+                            return@collect
                         }
-                        if (account != null) {
-                            Log.i(TAG, "Returning cached public key for $purpose:$normalizedDerivationPath")
-                            activityViewModel.completeAuthorizationWithPublicKey(account.publicKey, normalizedDerivationPath)
+                        val normalizedDerivationPaths = try {
+                            listOf(normalizeDerivationPaths(request.type.derivationPaths))
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed normalizing BIP derivation paths", e)
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_DERIVATION_PATH)
+                            return@collect
+                        }
+                        this@AuthorizeViewModel.normalizedDerivationPaths = normalizedDerivationPaths
+
+                        // Check if we already have cached public keys for these addresses
+                        if (normalizedDerivationPaths[0].all { path -> publicKeyForPath(path.toUri()) != null }) {
+                            doAuthorizationAction()
                             return@collect
                         }
                     }
                 }
 
-                this@AuthorizeViewModel.request = request
                 _uiState.value = AuthorizeUiState(
                     authorizationType = authorizationType,
                     enableBiometrics = seed.details.unlockWithBiometrics
@@ -154,6 +188,20 @@ class AuthorizeViewModel private constructor(
 
     fun biometricAuthorizationSuccess() = doAuthorizationAction()
 
+    private fun normalizeDerivationPaths(derivationPaths: List<Uri>): List<Bip32DerivationPath> {
+        require(derivationPaths.isNotEmpty()) { "At least one derivation path must be provided" }
+        val purpose = purpose!!
+        return derivationPaths.map { uri ->
+            BipDerivationPath.fromUri(uri).toBip32DerivationPath(purpose).normalize(purpose)
+        }
+    }
+
+    private fun publicKeyForPath(derivationPath: Uri): ByteArray? {
+        return seed!!.accounts.firstOrNull { account ->
+            account.purpose == purpose && account.bip32DerivationPathUri == derivationPath
+        }?.publicKey
+    }
+
     private fun doAuthorizationAction() {
         val purpose = purpose!!
         val request = request!!
@@ -172,52 +220,60 @@ class AuthorizeViewModel private constructor(
             }
 
             is AuthorizeRequestType.Transaction -> {
-                val derivationPath = normalizedDerivationPath!!
+                val normalizedDerivationPaths = normalizedDerivationPaths!!
 
                 viewModelScope.launch {
-                    val privateKey: ByteArray
-                    val sig: ByteArray
-
-                    try {
-                        withContext(Dispatchers.Default) {
-                            val bipDerivationUseCase = BipDerivationUseCase(seedRepository)
-                            privateKey = bipDerivationUseCase.derivePrivateKey(purpose, seed, derivationPath)
-                            sig = SignTransactionUseCase(purpose, privateKey, request.type.transaction)
+                    val signatures = ArrayList<SigningResponse>(request.type.transactions.size)
+                    val bipDerivationUseCase = BipDerivationUseCase(seedRepository)
+                    request.type.transactions.mapIndexedTo(signatures) { i, sr ->
+                        val requestNormalizedDerivationPaths = normalizedDerivationPaths[i]
+                        val sigs = requestNormalizedDerivationPaths.map { path ->
+                            try {
+                                withContext(Dispatchers.Default) {
+                                    val privateKey = bipDerivationUseCase.derivePrivateKey(purpose, seed, path)
+                                    SignTransactionUseCase(purpose, privateKey, sr.payload)
+                                }
+                            } catch (_: BipDerivationUseCase.KeyDoesNotExistException) {
+                                Log.e(TAG, "Key does not exist for $purpose:$path")
+                                // Technically, it's the key that's invalid, not the derivation path.
+                                // However, the caller should have verified the account was valid before
+                                // using it, and discovered it was invalid then. Thus, the use of this
+                                // derivation path can be considered invalid.
+                                activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_DERIVATION_PATH)
+                                return@launch
+                            }
                         }
-                    } catch (_: BipDerivationUseCase.KeyDoesNotExistException) {
-                        Log.e(TAG, "Key does not exist for $purpose:$derivationPath")
-                        activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_KEY_UNAVAILABLE)
-                        return@launch
+                        SigningResponse(sigs, requestNormalizedDerivationPaths.map { path -> path.toUri() })
                     }
-
-                    activityViewModel.completeAuthorizationWithSignature(sig, derivationPath)
+                    activityViewModel.completeAuthorizationWithSignatures(signatures)
                 }
             }
 
             is AuthorizeRequestType.PublicKey -> {
-                val derivationPath = normalizedDerivationPath!!
+                val normalizedDerivationPaths = normalizedDerivationPaths!![0]
 
                 viewModelScope.launch {
-                    val publicKey: ByteArray
-
-                    try {
-                        withContext(Dispatchers.Default) {
-                            val bipDerivationUseCase = BipDerivationUseCase(seedRepository)
-                            publicKey = bipDerivationUseCase.derivePublicKey(purpose, seed, derivationPath)
+                    val publicKeys = ArrayList<PublicKeyResponse>(normalizedDerivationPaths.size)
+                    val bipDerivationUseCase = BipDerivationUseCase(seedRepository)
+                    normalizedDerivationPaths.mapTo(publicKeys) { path ->
+                        val pathUri = path.toUri()
+                        val publicKey = publicKeyForPath(pathUri) ?: run {
+                            try {
+                                withContext(Dispatchers.Default) {
+                                    bipDerivationUseCase.derivePublicKey(purpose, seed, path).also {
+                                        seedRepository.addKnownAccountForSeed(seed.id, Account(
+                                            Account.INVALID_ACCOUNT_ID, purpose, pathUri, it))
+                                    }
+                                }
+                            } catch (_: BipDerivationUseCase.KeyDoesNotExistException) {
+                                Log.e(TAG, "Key does not exist for $purpose:$path")
+                                null
+                            }
                         }
-                    } catch (_: BipDerivationUseCase.KeyDoesNotExistException) {
-                        Log.e(TAG, "Key does not exist for $purpose:$derivationPath")
-                        activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_KEY_UNAVAILABLE)
-                        return@launch
+                        PublicKeyResponse(publicKey, publicKey?.let { Base58EncodeUseCase(it) }, pathUri)
                     }
-
-                    // Save new public key to known account set
-                    val account = Account(Account.INVALID_ACCOUNT_ID, purpose, derivationPath.toUri(), publicKey)
-                    seedRepository.addKnownAccountForSeed(seed.id, account)
-
-                    activityViewModel.completeAuthorizationWithPublicKey(publicKey, derivationPath)
+                    activityViewModel.completeAuthorizationWithPublicKeys(publicKeys)
                 }
-
             }
         }
     }

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022 Solana Mobile Inc.
+ */
+
 package com.solanamobile.seedvaultimpl.contentprovider
 
 import java.lang.UnsupportedOperationException

@@ -20,6 +20,7 @@ import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.usecase.Base58EncodeUseCase
+import com.solanamobile.seedvaultimpl.usecase.RequestLimitsUseCase
 import com.solanamobile.seedvaultimpl.usecase.normalize
 import com.solanamobile.seedvaultimpl.usecase.toBip32DerivationPath
 import kotlinx.coroutines.launch
@@ -42,11 +43,13 @@ class WalletContentProvider : ContentProvider() {
             UNAUTHORIZED_SEEDS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.UNAUTHORIZED_SEEDS_MIME_SUBTYPE
             ACCOUNTS -> CURSOR_DIR_BASE_TYPE + WalletContractV1.ACCOUNTS_MIME_SUBTYPE
             ACCOUNTS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.ACCOUNTS_MIME_SUBTYPE
+            IMPLEMENTATION_LIMITS -> CURSOR_DIR_BASE_TYPE + WalletContractV1.IMPLEMENTATION_LIMITS_MIME_SUBTYPE
+            IMPLEMENTATION_LIMITS_ID -> CURSOR_ITEM_BASE_TYPE + WalletContractV1.IMPLEMENTATION_LIMITS_MIME_SUBTYPE
             else -> null
         }
     }
 
-    override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+    override fun call(method: String, arg: String?, extras: Bundle?): Bundle {
         return when (method) {
             WalletContractV1.RESOLVE_BIP32_DERIVATION_PATH_METHOD ->
                 callResolveBip32DerivationPath(arg, extras)
@@ -73,10 +76,7 @@ class WalletContentProvider : ContentProvider() {
             .toBip32DerivationPath(purposeAsEnum)
             .normalize(purposeAsEnum)
         val result = Bundle()
-        result.putString(
-            WalletContractV1.RESOLVED_BIP32_DERIVATION_PATH,
-            resolvedDerivationPath.toUri().toString()
-        )
+        result.putParcelable(WalletContractV1.EXTRA_RESOLVED_BIP32_DERIVATION_PATH, resolvedDerivationPath.toUri())
         return result
     }
 
@@ -121,6 +121,12 @@ class WalletContentProvider : ContentProvider() {
             ACCOUNTS_ID -> {
                 val authToken = queryArgs?.getLong(WalletContractV1.EXTRA_AUTH_TOKEN, -1) ?: -1
                 queryAccounts(uid, authToken, ContentUris.parseId(uri), projection, queryArgs)
+            }
+            IMPLEMENTATION_LIMITS -> {
+                queryImplementationLimits(null, projection, queryArgs)
+            }
+            IMPLEMENTATION_LIMITS_ID -> {
+                queryImplementationLimits(ContentUris.parseId(uri).toInt(), projection, queryArgs)
             }
             else -> {
                 Log.w(TAG, "Query not supported for $uri")
@@ -216,7 +222,7 @@ class WalletContentProvider : ContentProvider() {
 
             // NOTE: must be in the same order as defaultProjection
             val values = arrayOf(
-                p.toWalletContractConstant(),                   // WalletContractV1.UNAUTHORIZED_SEEDS_AUTH_PURPOSE
+                p.toWalletContractConstant(),                                   // WalletContractV1.UNAUTHORIZED_SEEDS_AUTH_PURPOSE
                 if (seedPurposeCount < seeds.size) 1.toShort() else 0.toShort() // WalletContractV1.UNAUTHORIZED_SEEDS_HAS_UNAUTHORIZED_SEEDS
             )
 
@@ -255,11 +261,11 @@ class WalletContentProvider : ContentProvider() {
             seed.accounts.forEach { account ->
                 // NOTE: must be in the same order as defaultProjection
                 val values = arrayOf(
-                    account.id,                                 // WalletContractV1.ACCOUNTS_ACCOUNT_ID
-                    account.bip32DerivationPathUri.toString(),  // WalletContractV1.ACCOUNTS_BIP32_DERIVATION_PATH
-                    account.publicKey,                          // WalletContractV1.ACCOUNTS_PUBLIC_KEY_RAW
-                    Base58EncodeUseCase(account.publicKey),     // WalletContractV1.ACCOUNTS_PUBLIC_KEY_ENCODED
-                    account.name ?: "",                         // WalletContractV1.ACCOUNTS_ACCOUNT_NAME
+                    account.id,                                             // WalletContractV1.ACCOUNTS_ACCOUNT_ID
+                    account.bip32DerivationPathUri.toString(),              // WalletContractV1.ACCOUNTS_BIP32_DERIVATION_PATH
+                    account.publicKey,                                      // WalletContractV1.ACCOUNTS_PUBLIC_KEY_RAW
+                    Base58EncodeUseCase(account.publicKey),                 // WalletContractV1.ACCOUNTS_PUBLIC_KEY_ENCODED
+                    account.name ?: "",                                     // WalletContractV1.ACCOUNTS_ACCOUNT_NAME
                     if (account.isUserWallet) 1.toShort() else 0.toShort(), // WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET
                     if (account.isValid) 1.toShort() else 0.toShort()       // WalletContractV1.ACCOUNTS_ACCOUNT_IS_VALID
                 )
@@ -274,6 +280,39 @@ class WalletContentProvider : ContentProvider() {
                 }
             }
         } ?: throw IllegalArgumentException("authToken $authToken is not a valid auth token")
+
+        return cursor
+    }
+
+    private fun queryImplementationLimits(
+        @WalletContractV1.Purpose purpose: Int?,
+        projection: Array<out String>?,
+        queryArgs: Bundle?
+    ): Cursor {
+        val purposeAsEnum = purpose?.let { Authorization.Purpose.fromWalletContractConstant(it) }
+        val defaultProjection = WalletContractV1.IMPLEMENTATION_LIMITS_ALL_COLUMNS.toList()
+        val queryParser = makeQueryParser(defaultProjection, queryArgs)
+        val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
+        val cursor = MatrixCursor(filteredProjection.toTypedArray())
+
+        // Currently, all Purposes have the same set of implementation limits
+        for (p in Authorization.Purpose.values()) {
+            // NOTE: must be in the same order as defaultProjection
+            val values = arrayOf(
+                p.toWalletContractConstant(),                               // WalletContractV1.IMPLEMENTATION_LIMITS_AUTH_PURPOSE
+                RequestLimitsUseCase.MAX_SIGNING_REQUESTS.toShort(),        // WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS
+                RequestLimitsUseCase.MAX_REQUESTED_SIGNATURES.toShort(),    // WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES
+                RequestLimitsUseCase.MAX_REQUESTED_PUBLIC_KEYS.toShort(),   // WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS
+            )
+
+            if ((purposeAsEnum == null || p == purposeAsEnum)
+                && queryParser?.match(*values) != false) {
+                val rowBuilder = cursor.newRow()
+                for (item in defaultProjection.zip(values)) {
+                    rowBuilder.add(item.first, item.second)
+                }
+            }
+        }
 
         return cursor
     }
@@ -527,6 +566,8 @@ class WalletContentProvider : ContentProvider() {
         private const val UNAUTHORIZED_SEEDS_ID = 4
         private const val ACCOUNTS = 5
         private const val ACCOUNTS_ID = 6
+        private const val IMPLEMENTATION_LIMITS = 7
+        private const val IMPLEMENTATION_LIMITS_ID = 8
 
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.AUTHORIZED_SEEDS_TABLE, AUTHORIZED_SEEDS)
@@ -535,6 +576,8 @@ class WalletContentProvider : ContentProvider() {
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.UNAUTHORIZED_SEEDS_TABLE + "/#", UNAUTHORIZED_SEEDS_ID)
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.ACCOUNTS_TABLE, ACCOUNTS)
             addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.ACCOUNTS_TABLE + "/#", ACCOUNTS_ID)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.IMPLEMENTATION_LIMITS_TABLE, IMPLEMENTATION_LIMITS)
+            addURI(AUTHORITY_WALLET_PROVIDER, WalletContractV1.IMPLEMENTATION_LIMITS_TABLE + "/#", IMPLEMENTATION_LIMITS_ID)
         }
     }
 }

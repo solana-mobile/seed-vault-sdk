@@ -59,14 +59,14 @@ class MainViewModel(
     }
 
     private suspend fun refreshUiState() {
-        val hasUnauthorizedSeeds = withContext(Dispatchers.Main) {
+        val hasUnauthorizedSeeds = withContext(Dispatchers.Default) {
             Wallet.hasUnauthorizedSeedsForPurpose(getApplication(),
                 WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         }
 
         val seeds = mutableListOf<Seed>()
 
-        val authorizedSeedsCursor = withContext(Dispatchers.Main) {
+        val authorizedSeedsCursor = withContext(Dispatchers.Default) {
             Wallet.getAuthorizedSeeds(getApplication(),
                 WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS)!!
         }
@@ -76,7 +76,7 @@ class MainViewModel(
             val seedName = authorizedSeedsCursor.getString(2)
             val accounts = mutableListOf<Account>()
 
-            val accountsCursor = withContext(Dispatchers.Main) {
+            val accountsCursor = withContext(Dispatchers.Default) {
                 Wallet.getAccounts(getApplication(), authToken,
                     WalletContractV1.ACCOUNTS_ALL_COLUMNS,
                     WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, "1")!!
@@ -98,8 +98,12 @@ class MainViewModel(
         }
         authorizedSeedsCursor.close()
 
+        val implementationLimits = Wallet.getImplementationLimitsForPurpose(getApplication(),
+            WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+
         _uiState.update {
-            it.copy(seeds = seeds, hasUnauthorizedSeeds = hasUnauthorizedSeeds)
+            it.copy(seeds = seeds, hasUnauthorizedSeeds = hasUnauthorizedSeeds,
+                implementationLimits = implementationLimits)
         }
     }
 
@@ -190,36 +194,63 @@ class MainViewModel(
     fun signFakeTransaction(@WalletContractV1.AuthToken authToken: Long, account: Account) {
         val fakeTransaction = byteArrayOf(0.toByte())
         viewModelScope.launch {
+            val transaction = SigningRequest(fakeTransaction, listOf(account.derivationPath))
             _viewModelEvents.emit(
-                ViewModelEvent.SignTransaction(authToken, account.derivationPath, fakeTransaction)
+                ViewModelEvent.SignTransactions(authToken, arrayListOf(transaction))
             )
         }
     }
 
-    fun onSignTransactionSuccess(signature: ByteArray) {
+    fun signTwoTransactionsWithTwoSignatures(@WalletContractV1.AuthToken authToken: Long) {
+        val fakeTransaction1 = byteArrayOf(0.toByte())
+        val fakeTransaction2 = byteArrayOf(1.toByte())
+        val derivationPath11 = Bip44DerivationPath.newBuilder().setAccount(
+            BipLevel(0, true)).build().toUri()
+        val derivationPath12 = Bip44DerivationPath.newBuilder().setAccount(
+            BipLevel(1, true)).build().toUri()
+        val derivationPath21 = Bip44DerivationPath.newBuilder().setAccount(
+            BipLevel(2, true)).build().toUri()
+        val derivationPath22 = Bip44DerivationPath.newBuilder().setAccount(
+            BipLevel(3, true)).build().toUri()
+
+        viewModelScope.launch {
+            val signingRequest1 = SigningRequest(fakeTransaction1, listOf(derivationPath11, derivationPath12))
+            val signingRequest2 = SigningRequest(fakeTransaction2, listOf(derivationPath21, derivationPath22))
+            _viewModelEvents.emit(
+                ViewModelEvent.SignTransactions(authToken, arrayListOf(signingRequest1, signingRequest2))
+            )
+        }
+    }
+
+    fun onSignTransactionsSuccess(signatures: List<SigningResponse>) {
         showMessage("Transaction signed successfully")
     }
 
-    fun onSignTransactionFailure(resultCode: Int) {
+    fun onSignTransactionsFailure(resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
-    fun requestPublicKeyForM1000H(@WalletContractV1.AuthToken authToken: Long) {
-        val derivationPath = Bip32DerivationPath.newBuilder()
-            .appendLevel(BipLevel(1000, true))
-            .build()
+    fun requestPublicKeyForM1000HAndM1001H(@WalletContractV1.AuthToken authToken: Long) {
+        val derivationPaths = arrayListOf(
+            Bip32DerivationPath.newBuilder()
+                .appendLevel(BipLevel(1000, true))
+                .build().toUri(),
+            Bip32DerivationPath.newBuilder()
+                .appendLevel(BipLevel(1001, true))
+                .build().toUri(),
+        )
         viewModelScope.launch {
             _viewModelEvents.emit(
-                ViewModelEvent.RequestPublicKey(authToken, derivationPath.toUri())
+                ViewModelEvent.RequestPublicKeys(authToken, derivationPaths)
             )
         }
     }
 
-    fun onRequestPublicKeySuccess(publicKey: ByteArray) {
-        showMessage("Public key for m/1000' retrieved")
+    fun onRequestPublicKeysSuccess(publicKeys: List<PublicKeyResponse>) {
+        showMessage("Public key for m/1000' and m/1001' retrieved")
     }
 
-    fun onRequestPublicKeyFailure(resultCode: Int) {
+    fun onRequestPublicKeysFailure(resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -267,6 +298,7 @@ typealias Message = Pair<Int, String>
 data class UiState(
     val seeds: List<Seed> = listOf(),
     val hasUnauthorizedSeeds: Boolean = false,
+    val implementationLimits: Map<String, Long> = mapOf(),
     val messages: List<Message> = listOf()
 )
 
@@ -283,14 +315,13 @@ sealed interface ViewModelEvent {
         val name: String?,
     ) : ViewModelEvent
 
-    data class SignTransaction(
+    data class SignTransactions(
         @WalletContractV1.AuthToken val authToken: Long,
-        val derivationPath: Uri,
-        val transaction: ByteArray,
+        val transactions: ArrayList<SigningRequest>,
     ) : ViewModelEvent
 
-    data class RequestPublicKey(
+    data class RequestPublicKeys(
         @WalletContractV1.AuthToken val authToken: Long,
-        val derivationPath: Uri,
+        val derivationPaths: ArrayList<Uri>,
     ) : ViewModelEvent
 }

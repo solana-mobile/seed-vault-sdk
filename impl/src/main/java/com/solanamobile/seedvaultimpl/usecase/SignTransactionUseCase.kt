@@ -23,6 +23,7 @@ object SignTransactionUseCase {
 
         return when (purpose) {
             Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS -> {
+                // TODO: validate transaction is a Solana transaction before signing
                 require(key.size == ED25519_SECRET_KEY_SIZE.toInt()) { "Invalid private key for signing Solana transactions" }
                 signEd25519(key, transaction)
             }
