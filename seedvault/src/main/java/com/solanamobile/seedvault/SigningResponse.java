@@ -21,8 +21,7 @@ import java.util.Objects;
 /**
  * The signatures generated in response to a {@link SigningRequest}
  *
- * @version 0.1
- * TODO set the version to 1.0 before shipping
+ * @version 0.2
  */
 @RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 1 to avoid errors when merging manifests; mark the actual requirements for this class
 public class SigningResponse implements Parcelable {
