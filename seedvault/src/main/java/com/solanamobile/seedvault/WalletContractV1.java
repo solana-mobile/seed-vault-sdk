@@ -18,14 +18,13 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * The programming contract for the Seed Vault Wallet API
  *
- * @version 0.1
- * TODO set the version to 1.0 before shipping
+ * @version 0.2
  */
 public final class WalletContractV1 {
     /**
      * Package name of the Seed Vault, which implements this Wallet API contract
      *
-     * TODO set to the final Seed Vault package before shipping
+     * TODO set to the final Seed Vault package before shipping, and rev class version
      */
     public static final String PACKAGE_SEED_VAULT = "com.solanamobile.seedvaultimpl";
 

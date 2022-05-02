@@ -26,8 +26,7 @@ import java.util.List;
 /**
  * Programming interfaces for {@link WalletContractV1}
  *
- * @version 0.1
- * TODO bump version to 1.0 prior to shipping
+ * @version 0.2
  */
 @RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 1 to avoid errors when merging manifests; mark the actual requirements for this class
 public final class Wallet {
