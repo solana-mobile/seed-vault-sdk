@@ -5,12 +5,11 @@
 package com.solanamobile.seedvaultimpl.ui.selectseed
 
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.ViewGroup
-import androidx.recyclerview.selection.*
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.solanamobile.seedvaultimpl.databinding.ItemSeedNameBinding
 import com.solanamobile.seedvaultimpl.model.Seed
 import com.solanamobile.seedvaultimpl.usecase.GetNameUseCase
@@ -21,17 +20,21 @@ class SeedListAdapter(
     val onSelect: (Long?) -> Unit
 ) : ListAdapter<SeedWithSelectionState, SeedListAdapter.SeedViewHolder>(SeedDiffCallback) {
     class SeedViewHolder(
-        private val binding: ItemSeedNameBinding
+        private val binding: ItemSeedNameBinding,
+        private val onSelect: (Long?) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
-        val itemDetails get() = object : ItemDetailsLookup.ItemDetails<Long>() {
-            override fun getPosition(): Int = bindingAdapterPosition
-            override fun getSelectionKey(): Long = itemId
-            override fun inSelectionHotspot(e: MotionEvent): Boolean = true
+        private lateinit var seed: Seed
+
+        init {
+            binding.root.setOnClickListener {
+                onSelect(seed.id)
+            }
         }
 
         fun bind(seed: Seed, isSelected: Boolean) {
-            binding.root.isActivated = isSelected
-            binding.textviewSeedName.text = GetNameUseCase.getName(seed)
+            this.seed = seed
+            binding.radioSeedSelected.isChecked = isSelected
+            binding.textSeedName.text = GetNameUseCase.getName(seed)
         }
     }
 
@@ -42,40 +45,17 @@ class SeedListAdapter(
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
 
-        val itemKeyProvider = object : ItemKeyProvider<Long>(SCOPE_MAPPED) {
-            override fun getKey(position: Int): Long = currentList[position].first.id
-            override fun getPosition(key: Long): Int = currentList.indexOfFirst { it.first.id == key }
+        // Item change animations causes items to flicker when they are added/removed. This
+        // ListAdapter is backed by a ViewModel, which produces new lists when the model changes.
+        val itemAnimator = recyclerView.itemAnimator
+        if (itemAnimator is SimpleItemAnimator) {
+            itemAnimator.supportsChangeAnimations = false
         }
-
-        val itemDetailsLookup = object : ItemDetailsLookup<Long>() {
-            override fun getItemDetails(e: MotionEvent): ItemDetails<Long>? {
-                return recyclerView.findChildViewUnder(e.x, e.y)?.let { view ->
-                    (recyclerView.getChildViewHolder(view) as SeedViewHolder).itemDetails
-                }
-            }
-        }
-
-        val seedListSelectionTracker = SelectionTracker.Builder(
-            "selected-seed-id",
-            recyclerView,
-            itemKeyProvider,
-            itemDetailsLookup,
-            StorageStrategy.createLongStorage()
-        ).withSelectionPredicate(
-            SelectionPredicates.createSelectSingleAnything()
-        ).build()
-
-        val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
-            override fun onSelectionChanged() {
-                onSelect(seedListSelectionTracker.selection.firstOrNull())
-            }
-        }
-        seedListSelectionTracker.addObserver(selectionObserver)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SeedViewHolder {
         val binding = ItemSeedNameBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return SeedViewHolder(binding)
+        return SeedViewHolder(binding, onSelect)
     }
 
     override fun onBindViewHolder(holder: SeedViewHolder, position: Int) {

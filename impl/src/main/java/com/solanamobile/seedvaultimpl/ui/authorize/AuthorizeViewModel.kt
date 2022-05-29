@@ -4,12 +4,18 @@
 
 package com.solanamobile.seedvaultimpl.ui.authorize
 
+import android.app.Activity
+import android.app.Application
+import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.solanamobile.seedvault.*
+import com.solanamobile.seedvaultimpl.R
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Account
 import com.solanamobile.seedvaultimpl.model.Authorization
@@ -26,8 +32,9 @@ import kotlinx.coroutines.withContext
 
 class AuthorizeViewModel private constructor(
     private val seedRepository: SeedRepository,
-    private val activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel
-) : ViewModel() {
+    private val activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(AuthorizeUiState())
     val uiState = _uiState.asStateFlow()
@@ -36,6 +43,8 @@ class AuthorizeViewModel private constructor(
     private var purpose: Authorization.Purpose? = null
     private var request: AuthorizeRequest? = null
     private var normalizedDerivationPaths: List<List<Bip32DerivationPath>>? = null
+    private var biometricsFailureCount: Int = 0
+    private var pinFailureCount: Int = 0
 
     init {
         viewModelScope.launch {
@@ -61,10 +70,17 @@ class AuthorizeViewModel private constructor(
                 when (request.type) {
                     is AuthorizeRequestType.Seed -> {
                         authorizationType = AuthorizeUiState.AuthorizationType.SEED
-                        val seedId = request.type.seedId
-                        check(seedId != null) { "Seed ID should not be null when authorizing" }
-                        seed = seedRepository.seeds.value[seedId]
-                        check(seed != null) { "Seed should be non-null for authorization" }
+                        seed = seedRepository.seeds.value.values.firstOrNull { s ->
+                            (request.type.seedId == null || s.id == request.type.seedId) &&
+                            s.authorizations.none { auth ->
+                                auth.uid == request.requestorUid && auth.purpose == request.type.purpose
+                            }
+                        }
+                        if (seed == null) {
+                            Log.e(TAG, "No non-authorized seeds remaining for ${request.requestorUid}; aborting...")
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_NO_AVAILABLE_SEEDS)
+                            return@collect
+                        }
                         this@AuthorizeViewModel.seed = seed
                         this@AuthorizeViewModel.purpose = request.type.purpose
                         normalizedDerivationPaths = null
@@ -155,30 +171,47 @@ class AuthorizeViewModel private constructor(
                     }
                 }
 
+                var requestorAppIcon: Drawable? = null
+                var requestorAppName: CharSequence? = null
+                try {
+                    val callingApplicationInfo = application.packageManager.getApplicationInfo(request.requestor?.packageName ?: "", 0)
+                    requestorAppIcon = callingApplicationInfo.loadIcon(application.packageManager)
+                    requestorAppName = callingApplicationInfo.loadLabel(application.packageManager)
+                } catch (e: PackageManager.NameNotFoundException) {
+                    Log.w(TAG, "Requestor details not found", e)
+                }
+
                 _uiState.value = AuthorizeUiState(
                     authorizationType = authorizationType,
-                    enableBiometrics = seed.details.unlockWithBiometrics
+                    requestorAppIcon = requestorAppIcon,
+                    requestorAppName = requestorAppName,
+                    seedName = seed.details.name,
+                    enableBiometrics = seed.details.unlockWithBiometrics,
+                    enablePIN = !seed.details.unlockWithBiometrics
                 )
+
+                biometricsFailureCount = 0
+                pinFailureCount = 0
             }
         }
     }
 
-    fun setPIN(pin: String) {
-        Log.d(TAG, "setPIN($pin)")
-        _uiState.update { it.copy(pin = pin, showAttemptFailedHint = false) }
+    fun cancel() {
+        activityViewModel.completeAuthorizationWithError(Activity.RESULT_CANCELED)
     }
 
-    fun checkEnteredPIN() {
+    fun checkEnteredPIN(pin: String) {
         Log.d(TAG, "checkEnteredPIN")
 
-        val curUiState = _uiState.value
-        if (curUiState.pin != seed!!.details.pin) {
-            if (curUiState.attemptsRemaining <= 1) {
+        if (pin != seed!!.details.pin) {
+            pinFailureCount++
+            if (pinFailureCount >= MAX_PIN_ATTEMPTS) {
                 Log.e(TAG, "Max PIN attempts reached; aborting...")
                 activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_AUTHENTICATION_FAILED)
             } else {
-                Log.w(TAG, "PIN attempt failed, ${curUiState.attemptsRemaining - 1} attempt(s) remaining")
-                _uiState.update { it.copy(attemptsRemaining = curUiState.attemptsRemaining - 1, showAttemptFailedHint = true) }
+                val remaining = MAX_PIN_ATTEMPTS - pinFailureCount
+                Log.w(TAG, "PIN attempt $pinFailureCount failed; $remaining attempts remaining")
+                showMessage(getApplication<Application>().getString(R.string.error_incorrect_pin, remaining))
             }
             return
         }
@@ -187,6 +220,23 @@ class AuthorizeViewModel private constructor(
     }
 
     fun biometricAuthorizationSuccess() = doAuthorizationAction()
+
+    fun biometricsAuthorizationFailed() {
+        biometricsFailureCount++
+        if (biometricsFailureCount >= SHOW_PIN_ENTRY_AFTER_NUM_BIOMETRIC_FAILURES) {
+            _uiState.update {
+                it.copy(enablePIN = true)
+            }
+        }
+    }
+
+    private fun showMessage(message: String) {
+        _uiState.update { it.copy(message = message) }
+    }
+
+    fun onMessageShown() {
+        _uiState.update { it.copy(message = null) }
+    }
 
     private fun normalizeDerivationPaths(derivationPaths: List<Uri>): List<Bip32DerivationPath> {
         require(derivationPaths.isNotEmpty()) { "At least one derivation path must be provided" }
@@ -280,14 +330,17 @@ class AuthorizeViewModel private constructor(
 
     companion object {
         private val TAG = AuthorizeViewModel::class.simpleName
+        private const val SHOW_PIN_ENTRY_AFTER_NUM_BIOMETRIC_FAILURES = 3
+        private const val MAX_PIN_ATTEMPTS = 5
 
         fun provideFactory(
             seedRepository: SeedRepository,
-            activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel
+            activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel,
+            application: Application
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return AuthorizeViewModel(seedRepository, activityViewModel) as T
+                return AuthorizeViewModel(seedRepository, activityViewModel, application) as T
             }
         }
     }
@@ -295,16 +348,14 @@ class AuthorizeViewModel private constructor(
 
 data class AuthorizeUiState(
     val authorizationType: AuthorizationType? = null,
-    val pin: String = "",
-    val attemptsRemaining: Int = MAX_ATTEMPTS,
-    val showAttemptFailedHint: Boolean = false,
-    val enableBiometrics: Boolean = false
+    val requestorAppIcon: Drawable? = null,
+    val requestorAppName: CharSequence? = null,
+    val seedName: CharSequence? = null,
+    val enablePIN: Boolean = true,
+    val enableBiometrics: Boolean = false,
+    val message: CharSequence? = null
 ) {
     enum class AuthorizationType {
         SEED, TRANSACTION, PUBLIC_KEY
-    }
-
-    companion object {
-        private const val MAX_ATTEMPTS = 5
     }
 }

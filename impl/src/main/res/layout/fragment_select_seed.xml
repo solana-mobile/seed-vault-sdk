@@ -7,36 +7,59 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="8dp"
-    tools:context=".ui.selectseed.SelectSeedFragment">
+    android:layout_height="match_parent"
+    tools:context=".ui.selectseed.SelectSeedDialogFragment">
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/label_select_seed"
-        android:layout_width="match_parent"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_back"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="8dp"
+        app:icon="@drawable/ic_baseline_arrow_back_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/label_select_seed_title"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_back"
+        app:layout_constraintBottom_toBottomOf="@id/button_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/label_select_seed_title"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/label_select_seed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="8dp"
+        android:layout_marginHorizontal="16dp"
+        app:layout_constraintTop_toBottomOf="@id/button_back"
+        app:layout_constraintStart_toStartOf="parent"
         android:text="@string/label_select_seed"
-        android:textSize="10pt"
-        android:textStyle="bold" />
+        android:textAppearance="?attr/textAppearanceLabelMedium" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview_seeds"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_height="0dp"
+        android:layout_marginVertical="8dp"
+        android:layout_marginHorizontal="16dp"
         app:layout_constraintTop_toBottomOf="@id/label_select_seed"
+        app:layout_constraintBottom_toTopOf="@id/button_ok"
+        android:scrollbars="vertical"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-    <androidx.appcompat.widget.AppCompatButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_ok"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/recyclerview_seeds"
+        android:layout_margin="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:text="@string/action_ok"
-        android:textSize="10pt" />
-
+        android:text="@string/label_save_seed" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -638,6 +638,7 @@ public final class Wallet {
         implementationLimitsMap.put(
                 WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS,
                 (long)c.getShort(3));
+        c.close();
         return implementationLimitsMap;
     }
 

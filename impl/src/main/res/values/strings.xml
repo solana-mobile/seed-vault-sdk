@@ -29,14 +29,28 @@
     <string name="error_invalid_seed_word">Word not recognized</string>
 
     <!-- Select seed fragment -->
-    <string name="label_select_seed">Select a seed</string>
+    <string name="label_select_seed_title">Seed Vault™ Seeds</string>
+    <string name="label_select_seed">Seeds</string>
+    <string name="label_save_seed">Save</string>
 
-    <!-- Authorize transaction fragment -->
-    <!-- label_pin, hint_pin, error_invalid_pin from Seed Detail fragment -->
-    <string name="label_authorize_seed">Authorize access to seed</string>
-    <string name="label_authorize_transaction">Sign transaction</string>
-    <string name="label_authorize_public_key">Get public key</string>
-    <string name="error_incorrect_pin">Incorrect PIN</string>
-    <string name="label_use_fingerprint">(simulate fingerprint)</string>
-    <string name="action_ok">OK</string>
+    <!-- Authorize fragment -->
+    <string name="label_authorize_title">Seed Vault™</string>
+    <string name="label_authorize_seed">Connection request</string>
+    <string name="label_authorize_app">From</string>
+    <string name="label_authorize_for">Connect to</string>
+    <string name="label_authorize_info">What does this connection allow?</string>
+    <string name="label_authorize_fingerprint">Confirm with fingerprint</string>
+    <string name="action_pin">Use password</string>
+    <string name="action_cancel">Don\'t allow</string>
+    <string name="label_authorize_transaction">Approve transaction</string>
+    <string name="label_authorize_public_key">Create new wallet</string>
+    <string name="error_incorrect_pin">Password not correct, please try again. You have %1$d attempt(s) remaining.</string>
+
+    <!-- Enter PIN dialog -->
+    <string name="label_enter_pin">Enter your seed password</string>
+
+    <!-- Authorize info fragment -->
+    <string name="label_authorize_info_title">Ongoing connection</string>
+    <string name="label_authorize_info_body1"><big>This app will have ongoing access with your Seed Vault™ until you decide otherwise</big>\n\n<small>You will be able to manage or revoke this access at any time in Seed Vault™ settings</small></string>
+    <string name="label_authorize_info_body2">This app <b><u>will</u></b> be able to:\n\n\u00A0✓\u2003View wallet balance and activity\n\n\u00A0✓\u2003Request approval for transactions\n\nThis app <b><u>will not</u></b> be able to:\n\n\u00A0✕\u2003Move funds without your permission</string>
 </resources>

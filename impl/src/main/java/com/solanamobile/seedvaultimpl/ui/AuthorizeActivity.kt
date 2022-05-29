@@ -5,7 +5,6 @@
 package com.solanamobile.seedvaultimpl.ui
 
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
@@ -18,7 +17,7 @@ import com.solanamobile.seedvaultimpl.R
 import com.solanamobile.seedvaultimpl.databinding.ActivityAuthorizeBinding
 import kotlinx.coroutines.launch
 
-class AuthorizeActivity : AppCompatActivity() {
+class AuthorizeActivity : BottomSheetDialogActivity() {
     private val viewModel: AuthorizeViewModel by viewModels()
     private lateinit var binding: ActivityAuthorizeBinding
 
@@ -54,11 +53,6 @@ class AuthorizeActivity : AppCompatActivity() {
                             Log.i(TAG, "Returning result=${event.resultCode}/intent=${event.data} from AuthorizeActivity")
                             setResult(event.resultCode!!, event.data)
                             finish()
-                        }
-                        AuthorizeEventType.START_SEED_SELECTION -> {
-                            Log.d(TAG, "AuthorizeActivity; navigating to seed selection")
-                            val navController = findNavController(R.id.nav_host_fragment_content_authorize)
-                            navController.navigate(AuthorizeNavGraphDirections.actionSelectSeedFragment())
                         }
                         AuthorizeEventType.START_AUTHORIZATION -> {
                             Log.d(TAG, "AuthorizeActivity; navigating to authorization")
