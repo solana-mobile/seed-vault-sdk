@@ -6,27 +6,39 @@ package com.solanamobile.seedvaultimpl.ui.authorize
 
 import android.content.Context
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
 import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.databinding.FragmentAuthorizeBinding
-import com.solanamobile.seedvaultimpl.model.SeedDetails
+import com.solanamobile.seedvaultimpl.ui.selectseed.SelectSeedDialogFragment
 import kotlinx.coroutines.launch
 
 class AuthorizeFragment : Fragment() {
     private lateinit var dependencyContainer: ApplicationDependencyContainer
     private val activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel by activityViewModels()
-    private val viewModel: AuthorizeViewModel by viewModels { AuthorizeViewModel.provideFactory(dependencyContainer.seedRepository, activityViewModel) }
+    private val viewModel: AuthorizeViewModel by viewModels {
+        AuthorizeViewModel.provideFactory(
+            dependencyContainer.seedRepository,
+            activityViewModel,
+            requireActivity().application
+        )
+    }
 
     private var _binding: FragmentAuthorizeBinding? = null
     private val binding get() = _binding!!
@@ -48,22 +60,6 @@ class AuthorizeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.buttonOk.setOnClickListener {
-            clearFocusOnNonFocusableInputEvent(it)
-            viewModel.checkEnteredPIN()
-        }
-
-        binding.buttonSimulateBiometrics.setOnClickListener {
-            clearFocusOnNonFocusableInputEvent(it)
-            viewModel.biometricAuthorizationSuccess()
-        }
-
-        binding.edittextPin.setOnFocusChangeListener { v, hasFocus ->
-            if (!hasFocus) {
-                viewModel.setPIN((v as TextView).text.toString())
-            }
-        }
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { uiState ->
@@ -73,36 +69,90 @@ class AuthorizeFragment : Fragment() {
                         AuthorizeUiState.AuthorizationType.PUBLIC_KEY -> R.string.label_authorize_public_key
                         null -> android.R.string.unknownName
                     })
-                    binding.edittextPin.setText(uiState.pin)
-                    if (uiState.showAttemptFailedHint) {
-                        binding.labelErrorIncorrectPin.visibility = View.VISIBLE
-                        binding.labelErrorInvalidPin.visibility = View.GONE
-                    } else {
-                        binding.labelErrorIncorrectPin.visibility = View.GONE
-                        binding.labelErrorInvalidPin.visibility = if (uiState.pin.isEmpty() ||
-                            uiState.pin.length in SeedDetails.PIN_MIN_LENGTH..SeedDetails.PIN_MAX_LENGTH) View.GONE else View.VISIBLE
+                    binding.imageviewAppIcon.setImageDrawable(uiState.requestorAppIcon)
+                    binding.textAppName.text = uiState.requestorAppName
+
+                    val fingerprintWidgetVisibility =
+                        if (uiState.enableBiometrics) View.VISIBLE else View.GONE
+                    binding.dividerFingerprintBelow.visibility = fingerprintWidgetVisibility
+                    binding.labelFingerprintOption.visibility = fingerprintWidgetVisibility
+                    binding.imageviewFingerprintIcon.visibility = fingerprintWidgetVisibility
+                    binding.imageviewFingerprintErrorIcon.visibility = fingerprintWidgetVisibility
+
+                    val pinWidgetVisibility = if (uiState.enablePIN) View.VISIBLE else View.GONE
+                    binding.btnPin.visibility = pinWidgetVisibility
+
+                    val authorizeSeedWidgetVisibility =
+                        if (uiState.authorizationType == AuthorizeUiState.AuthorizationType.SEED) View.VISIBLE else View.GONE
+                    binding.imageviewAuthorizeInfoIcon.visibility = authorizeSeedWidgetVisibility
+                    binding.imageviewAuthorizeInfoMore.visibility = authorizeSeedWidgetVisibility
+                    binding.labelAuthorizeInfo.visibility = authorizeSeedWidgetVisibility
+                    binding.dividerAuthorizeInfoAbove.visibility = authorizeSeedWidgetVisibility
+                    binding.labelAuthorizeFor.visibility = authorizeSeedWidgetVisibility
+                    binding.groupFor.visibility = authorizeSeedWidgetVisibility
+
+                    binding.textSeedName.text = uiState.seedName
+
+                    uiState.message?.let { message ->
+                        val toast = Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT)
+                        toast.addCallback(object : Toast.Callback() {
+                            override fun onToastHidden() {
+                                viewModel.onMessageShown()
+                            }
+                        })
+                        toast.show()
                     }
-                    binding.labelFingerprintOption.visibility = if (uiState.enableBiometrics) View.VISIBLE else View.GONE
-                    binding.buttonSimulateBiometrics.visibility = if (uiState.enableBiometrics) View.VISIBLE else View.GONE
                 }
             }
+        }
+
+        val authorizeInfoOnClickListener = { _: View ->
+            findNavController().navigate(AuthorizeFragmentDirections.actionAuthorizeFragmentToAuthorizeInfoFragment())
+        }
+        binding.imageviewAuthorizeInfoIcon.setOnClickListener(authorizeInfoOnClickListener)
+        binding.labelAuthorizeInfo.setOnClickListener(authorizeInfoOnClickListener)
+        binding.imageviewAuthorizeInfoMore.setOnClickListener(authorizeInfoOnClickListener)
+
+        binding.groupFor.setOnClickListener {
+            SelectSeedDialogFragment().show(parentFragmentManager, SelectSeedDialogFragment::class.simpleName)
+        }
+
+        binding.btnCancel.setOnClickListener {
+            viewModel.cancel()
+        }
+
+        binding.btnPin.setOnClickListener {
+            val dialog = MaterialAlertDialogBuilder(requireActivity())
+                .setTitle(R.string.label_enter_pin)
+                .setView(R.layout.dialog_enter_pin)
+                .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    dialog as AlertDialog
+                    val editText = dialog.requireViewById<AppCompatEditText>(R.id.edittext_pin)
+                    val pin = editText.text
+                    viewModel.checkEnteredPIN(pin?.toString() ?: "")
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .create()
+            dialog.show()
+        }
+
+        binding.imageviewFingerprintIcon.setOnClickListener {
+            viewModel.biometricAuthorizationSuccess()
+        }
+
+        binding.imageviewFingerprintErrorIcon.setOnClickListener {
+            viewModel.biometricsAuthorizationFailed()
+
+            @Suppress("DEPRECATION")
+            val vibrator = requireActivity().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
+            vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK))
+
+            // TODO: shake animation
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
-    }
-
-    // When in touch mode, tapping on a non-focusable element (such as a button) will not cause the
-    // EditText to lose focus. Since we only commit edited text to the ViewModel in response to a
-    // loss of focus event, we won't report any edited text to the ViewModel. This method should be
-    // invoked when handling input events to widgets that are not focusable in touch mode, to ensure
-    // that the EditText focus is cleared (and any edited text reported to the ViewModel).
-    private fun clearFocusOnNonFocusableInputEvent(v: View) {
-        if (binding.root.isInTouchMode) {
-            check(!v.isFocusableInTouchMode) { "Expected view $v to be non-focusable in touch mode" }
-            binding.root.clearFocus()
-        }
     }
 }

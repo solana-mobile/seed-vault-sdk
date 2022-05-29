@@ -49,7 +49,7 @@ class AuthorizeViewModel : ViewModel() {
                     completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_PURPOSE)
                     return
                 }
-                startSeedSelection()
+                startAuthorization()
                 val request = AuthorizeRequest(AuthorizeRequestType.Seed(purpose), callerActivity, callerUid)
                 cachedRequest = request
                 viewModelScope.launch {
@@ -107,7 +107,7 @@ class AuthorizeViewModel : ViewModel() {
         return intent.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1)
     }
 
-    fun updateSeedRequestWithSeedId(seedId: Long) {
+    fun updateAuthorizeSeedRequestWithSeedId(seedId: Long) {
         Log.d(TAG, "updateSeedRequestWithSeedId($seedId)")
         val origRequest = cachedRequest
         check(origRequest != null && origRequest.type is AuthorizeRequestType.Seed) { "Expected AuthorizeRequestType.Seed; is ${origRequest?.type}" }
@@ -118,15 +118,8 @@ class AuthorizeViewModel : ViewModel() {
         }
     }
 
-    private fun startSeedSelection() {
-        Log.d(TAG, "startSeedAuthorization")
-        viewModelScope.launch {
-            _events.emit(AuthorizeEvent(AuthorizeEventType.START_SEED_SELECTION))
-        }
-    }
-
     private fun startAuthorization() {
-        Log.d(TAG, "startTransactionAuthorization")
+        Log.d(TAG, "startAuthorization")
         viewModelScope.launch {
             _events.emit(AuthorizeEvent(AuthorizeEventType.START_AUTHORIZATION))
         }
@@ -198,7 +191,7 @@ data class AuthorizeRequest(
 )
 
 enum class AuthorizeEventType {
-    START_SEED_SELECTION, START_AUTHORIZATION, COMPLETE
+    START_AUTHORIZATION, COMPLETE
 }
 
 data class AuthorizeEvent(

@@ -38,12 +38,12 @@ class SelectSeedViewModel private constructor(
                     return@collect
                 }
 
-                setUid(request.requestorUid, request.type.purpose)
+                setUid(request.requestorUid, request.type.purpose, request.type.seedId)
             }
         }
     }
 
-    private fun setUid(uid: Int, purpose: Authorization.Purpose) {
+    private fun setUid(uid: Int, purpose: Authorization.Purpose, currentSeedId: Long?) {
         Log.d(TAG, "setUid($uid)")
 
         if (uid == Authorization.INVALID_UID) {
@@ -75,14 +75,18 @@ class SelectSeedViewModel private constructor(
                     activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_NO_AVAILABLE_SEEDS)
                     return@collect
                 }
-                _selectSeedUiState.update { it.copy(seeds = seeds) }
+                val selectedSeedId = seeds.find { seed -> seed.id == currentSeedId }?.id ?: seeds[0].id
+                _selectSeedUiState.update { it.copy(seeds = seeds, selectedSeedId = selectedSeedId) }
             }
         }
     }
 
     fun setSelectedSeed(seedId: Long?) {
         Log.d(TAG, "setSelectedSeed($seedId)")
-        _selectSeedUiState.update { it.copy(selectedSeedId = seedId) }
+        _selectSeedUiState.update {
+            val selectedSeedId = it.seeds.find { seed -> seed.id == seedId }?.id ?: it.seeds[0].id
+            it.copy(selectedSeedId = selectedSeedId)
+        }
     }
 
     fun selectSeedForAuthorization() {
@@ -94,7 +98,7 @@ class SelectSeedViewModel private constructor(
 
         Log.d(TAG, "setSelectedSeed for seedId=$selectedSeedId/uid=$uid")
 
-        activityViewModel.updateSeedRequestWithSeedId(selectedSeedId)
+        activityViewModel.updateAuthorizeSeedRequestWithSeedId(selectedSeedId)
     }
 
     companion object {
