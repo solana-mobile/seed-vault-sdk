@@ -16,6 +16,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
@@ -24,7 +25,7 @@ import com.solanamobile.seedvaultimpl.databinding.FragmentSelectSeedBinding
 import com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel
 import kotlinx.coroutines.launch
 
-class SelectSeedDialogFragment() : DialogFragment() {
+class SelectSeedDialogFragment : DialogFragment() {
     private lateinit var dependencyContainer: ApplicationDependencyContainer
     private val activityViewModel: AuthorizeViewModel by activityViewModels()
     private val viewModel: SelectSeedViewModel by viewModels { SelectSeedViewModel.provideFactory(dependencyContainer.seedRepository, activityViewModel) }
@@ -57,8 +58,10 @@ class SelectSeedDialogFragment() : DialogFragment() {
             viewModel.setSelectedSeed(seedId)
         })
         binding.recyclerviewSeeds.adapter = seedListAdapter
+        binding.recyclerviewSeeds.addItemDecoration(
+            DividerItemDecoration(binding.recyclerviewSeeds.context, DividerItemDecoration.VERTICAL))
 
-        binding.buttonOk.setOnClickListener {
+        binding.buttonBack.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
                     viewModel.selectSeedForAuthorization()
@@ -70,14 +73,10 @@ class SelectSeedDialogFragment() : DialogFragment() {
             }
         }
 
-        binding.buttonBack.setOnClickListener {
-            dismiss()
-        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.selectSeedUiState.collect { uiState ->
-                    binding.buttonOk.isEnabled = (uiState.selectedSeedId != null)
                     seedListAdapter.submitList(uiState.seeds.map { seed ->
                         SeedWithSelectionState(seed, uiState.selectedSeedId == seed.id)
                     })

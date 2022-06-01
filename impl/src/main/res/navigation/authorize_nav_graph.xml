@@ -12,17 +12,9 @@
     <fragment
         android:id="@+id/destination_AuthorizeFragment"
         android:name="com.solanamobile.seedvaultimpl.ui.authorize.AuthorizeFragment"
-        tools:layout="@layout/fragment_authorize">
-        <action
-            android:id="@+id/action_AuthorizeFragment_to_AuthorizeInfoFragment"
-            app:destination="@id/destination_AuthorizeInfoFragment" />
-    </fragment>
+        tools:layout="@layout/fragment_authorize" />
 
-    <fragment
-        android:id="@+id/destination_AuthorizeInfoFragment"
-        android:name="com.solanamobile.seedvaultimpl.ui.authorizeinfo.AuthorizeInfoFragment"
-        tools:layout="@layout/fragment_authorize_info" />
-
+    <!-- Unqualified entry to AuthorizeFragment -->
     <action
         android:id="@+id/action_AuthorizeFragment"
         app:destination="@id/destination_AuthorizeFragment"

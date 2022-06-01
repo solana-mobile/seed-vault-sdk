@@ -5,15 +5,19 @@
 package com.solanamobile.seedvaultimpl.ui.authorizeinfo
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.fragment.findNavController
+import androidx.fragment.app.DialogFragment
+import com.solanamobile.seedvaultimpl.R
 import com.solanamobile.seedvaultimpl.databinding.FragmentAuthorizeInfoBinding
 
-class AuthorizeInfoFragment : Fragment() {
+class AuthorizeInfoDialogFragment : DialogFragment() {
     private lateinit var viewBinding: FragmentAuthorizeInfoBinding
+
+    init {
+        setStyle(STYLE_NO_FRAME, R.style.Theme_SeedVaultImpl_FullScreenDialog)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,7 +32,7 @@ class AuthorizeInfoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         viewBinding.buttonBack.setOnClickListener {
-            findNavController().navigateUp()
+            dismiss()
         }
     }
 }
