@@ -33,7 +33,7 @@ class SeedListAdapter(
 
         fun bind(seed: Seed, isSelected: Boolean) {
             this.seed = seed
-            binding.radioSeedSelected.isChecked = isSelected
+            binding.root.isSelected = isSelected
             binding.textSeedName.text = GetNameUseCase.getName(seed)
         }
     }

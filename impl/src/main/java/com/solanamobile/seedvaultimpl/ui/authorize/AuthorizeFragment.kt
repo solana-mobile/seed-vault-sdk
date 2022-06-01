@@ -20,12 +20,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
 import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.databinding.FragmentAuthorizeBinding
+import com.solanamobile.seedvaultimpl.ui.authorizeinfo.AuthorizeInfoDialogFragment
 import com.solanamobile.seedvaultimpl.ui.selectseed.SelectSeedDialogFragment
 import kotlinx.coroutines.launch
 
@@ -84,12 +84,12 @@ class AuthorizeFragment : Fragment() {
 
                     val authorizeSeedWidgetVisibility =
                         if (uiState.authorizationType == AuthorizeUiState.AuthorizationType.SEED) View.VISIBLE else View.GONE
-                    binding.imageviewAuthorizeInfoIcon.visibility = authorizeSeedWidgetVisibility
-                    binding.imageviewAuthorizeInfoMore.visibility = authorizeSeedWidgetVisibility
+                    binding.imageviewAuthorizeInfo.visibility = authorizeSeedWidgetVisibility
                     binding.labelAuthorizeInfo.visibility = authorizeSeedWidgetVisibility
-                    binding.dividerAuthorizeInfoAbove.visibility = authorizeSeedWidgetVisibility
                     binding.labelAuthorizeFor.visibility = authorizeSeedWidgetVisibility
                     binding.groupFor.visibility = authorizeSeedWidgetVisibility
+
+                    binding.groupAuthorizeApp.isEnabled = (uiState.authorizationType == AuthorizeUiState.AuthorizationType.SEED)
 
                     binding.textSeedName.text = uiState.seedName
 
@@ -106,12 +106,9 @@ class AuthorizeFragment : Fragment() {
             }
         }
 
-        val authorizeInfoOnClickListener = { _: View ->
-            findNavController().navigate(AuthorizeFragmentDirections.actionAuthorizeFragmentToAuthorizeInfoFragment())
+        binding.groupAuthorizeApp.setOnClickListener {
+            AuthorizeInfoDialogFragment().show(parentFragmentManager, AuthorizeInfoDialogFragment::class.simpleName)
         }
-        binding.imageviewAuthorizeInfoIcon.setOnClickListener(authorizeInfoOnClickListener)
-        binding.labelAuthorizeInfo.setOnClickListener(authorizeInfoOnClickListener)
-        binding.imageviewAuthorizeInfoMore.setOnClickListener(authorizeInfoOnClickListener)
 
         binding.groupFor.setOnClickListener {
             SelectSeedDialogFragment().show(parentFragmentManager, SelectSeedDialogFragment::class.simpleName)

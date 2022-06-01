@@ -29,7 +29,7 @@
     <string name="error_invalid_seed_word">Word not recognized</string>
 
     <!-- Select seed fragment -->
-    <string name="label_select_seed_title">Seed Vault™ Seeds</string>
+    <string name="label_select_seed_title">Choose a seed to establish a connection with:</string>
     <string name="label_select_seed">Seeds</string>
     <string name="label_save_seed">Save</string>
 
@@ -38,8 +38,8 @@
     <string name="label_authorize_seed">Connection request</string>
     <string name="label_authorize_app">From</string>
     <string name="label_authorize_for">Connect to</string>
-    <string name="label_authorize_info">What does this connection allow?</string>
-    <string name="label_authorize_fingerprint">Confirm with fingerprint</string>
+    <string name="label_authorize_info">See connection details</string>
+    <string name="label_authorize_fingerprint">Confirm with Fingerprint</string>
     <string name="action_pin">Use password</string>
     <string name="action_cancel">Don\'t allow</string>
     <string name="label_authorize_transaction">Approve transaction</string>
@@ -52,5 +52,5 @@
     <!-- Authorize info fragment -->
     <string name="label_authorize_info_title">Ongoing connection</string>
     <string name="label_authorize_info_body1"><big>This app will have ongoing access with your Seed Vault™ until you decide otherwise</big>\n\n<small>You will be able to manage or revoke this access at any time in Seed Vault™ settings</small></string>
-    <string name="label_authorize_info_body2">This app <b><u>will</u></b> be able to:\n\n\u00A0✓\u2003View wallet balance and activity\n\n\u00A0✓\u2003Request approval for transactions\n\nThis app <b><u>will not</u></b> be able to:\n\n\u00A0✕\u2003Move funds without your permission</string>
+    <string name="label_authorize_info_body2"><b>This app <u>will</u> be able to:</b>\n\n\u00A0✓\u2003View wallet balance and activity\n\n\u00A0✓\u2003Request approval for transactions\n\n<b>This app <u>will not</u> be able to:</b>\n\n\u00A0✕\u2003Move funds without your permission</string>
 </resources>
