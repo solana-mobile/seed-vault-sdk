@@ -5,6 +5,7 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.dokka'
 }
 
 android {
@@ -33,6 +34,15 @@ android {
     }
 }
 
+dokkaJekyll.configure {
+    dokkaSourceSets {
+        named("main") {
+            noAndroidSdkLink.set(false)
+        }
+    }
+}
+
 dependencies {
     implementation 'androidx.annotation:annotation:1.3.0'
+    dokkaJekyllPlugin 'org.jetbrains.dokka:kotlin-as-java-plugin:1.6.21'
 }
