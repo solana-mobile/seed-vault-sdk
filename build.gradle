@@ -24,21 +24,10 @@ buildscript {
     }
 }
 
-// Add dokka support: https://github.com/Kotlin/dokka
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.6.21'
-    }
-}
-
 plugins {
     id 'com.android.application' version '7.2.1' apply false
     id 'com.android.library' version '7.2.1' apply false
     id 'org.jetbrains.kotlin.android' version '1.6.21' apply false
-    id 'org.jetbrains.dokka' version '1.6.21' apply false
 }
 
 task clean(type: Delete) {

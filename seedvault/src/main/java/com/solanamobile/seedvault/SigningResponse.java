@@ -20,7 +20,7 @@ import java.util.Objects;
  * The signatures generated in response to a {@link SigningRequest}
  *
  * @version 0.1
- * @todo set the version to 1.0 before shipping
+ * TODO set the version to 1.0 before shipping
  */
 public class SigningResponse implements Parcelable {
     @NonNull
