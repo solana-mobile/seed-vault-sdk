@@ -25,7 +25,7 @@ import java.util.List;
  * Programming interfaces for {@link WalletContractV1}
  *
  * @version 0.1
- * @todo bump version to 1.0 prior to shipping
+ * TODO bump version to 1.0 prior to shipping
  */
 public final class Wallet {
     /**

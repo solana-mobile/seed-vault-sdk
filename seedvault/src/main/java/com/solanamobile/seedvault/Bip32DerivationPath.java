@@ -9,8 +9,6 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 
-import org.jetbrains.annotations.Contract;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -167,7 +165,6 @@ public class Bip32DerivationPath extends BipDerivationPath {
      * @return a new {@link Builder}
      */
     @NonNull
-    @Contract(" -> new")
     public static Builder newBuilder() {
         return new Builder();
     }

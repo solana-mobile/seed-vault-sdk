@@ -19,13 +19,13 @@ import java.lang.annotation.RetentionPolicy;
  * The programming contract for the Seed Vault Wallet API
  *
  * @version 0.1
- * @todo set the version to 1.0 before shipping
+ * TODO set the version to 1.0 before shipping
  */
 public final class WalletContractV1 {
     /**
      * Package name of the Seed Vault, which implements this Wallet API contract
      *
-     * @todo set to the final Seed Vault package before shipping
+     * TODO set to the final Seed Vault package before shipping
      */
     public static final String PACKAGE_SEED_VAULT = "com.solanamobile.seedvaultimpl";
 
@@ -38,15 +38,15 @@ public final class WalletContractV1 {
      * Intent action to request that a new seed be authorized for usage by the calling app. The
      * Intent should also contain an {@link #EXTRA_PURPOSE} extra, specifying the purpose for which
      * the seed should be authorized.
-     * <p/>On {@link android.app.Activity#RESULT_OK}, the resulting
+     * <p>On {@link android.app.Activity#RESULT_OK}, the resulting
      * Intent will contain an {@link #EXTRA_AUTH_TOKEN} extra with the authorization token for the
-     * newly authorized seed.
-     * <p/>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
+     * newly authorized seed.</p>
+     * <p>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
      * will be returned. If the specified purpose is not one of the {@code PURPOSE_*} values,
      * {@link #RESULT_INVALID_PURPOSE} will be returned. If there are no seeds available to be
      * authorized with the specified purpose, {@link #RESULT_NO_AVAILABLE_SEEDS} will be returned.
      * If the user failed to authorize the transaction, {@link #RESULT_AUTHENTICATION_FAILED} will
-     * be returned.
+     * be returned.</p>
      */
     public static final String ACTION_AUTHORIZE_SEED_ACCESS = AUTHORITY_WALLET + ".ACTION_AUTHORIZE_SEED_ACCESS";
 
@@ -57,10 +57,10 @@ public final class WalletContractV1 {
      * paths. These derivation paths should be {@link Uri}s with a scheme of either
      * {@link #BIP32_URI_SCHEME} or {@link #BIP44_URI_SCHEME}. The Intent should also contain an
      * {@link #EXTRA_AUTH_TOKEN} extra specifying the authorized seed with which to sign.
-     * <p/>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
+     * <p>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
      * {@link #EXTRA_SIGNING_RESPONSE} extra with {@link SigningResponse}s, one per
-     * {@link SigningRequest}. Each {@link SigningResponse} contains the requested signatures.
-     * <p/>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
+     * {@link SigningRequest}. Each {@link SigningResponse} contains the requested signatures.</p>
+     * <p>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
      * will be returned. If the specified auth token is not valid,
      * {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If any transaction is not valid for
      * signing with this auth token, {@link #RESULT_INVALID_TRANSACTION} will be returned. If any
@@ -69,7 +69,7 @@ public final class WalletContractV1 {
      * signing the set of transactions, {@link #RESULT_AUTHENTICATION_FAILED} will be returned. If
      * the number of {@link SigningRequest}s or the number of BIP derivation paths in a
      * {@link SigningRequest} is more than the quantity supported by the Seed Vault implementation,
-     * {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED} will be returned.
+     * {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED} will be returned.</p>
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
@@ -84,17 +84,17 @@ public final class WalletContractV1 {
      * derive the account public keys. If all of these accounts are present in
      * {@link #ACCOUNTS_TABLE}, the public keys will be returned without requiring user
      * authentication.
-     * <p/>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
+     * <p>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
      * {@link #EXTRA_PUBLIC_KEY} extra with {@link PublicKeyResponse}s, one per BIP derivation path
-     * URI.
-     * <p/>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
+     * URI.</p>
+     * <p>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
      * will be returned. If any requested account derivation path is not a valid BIP32 or BIP44
      * derivation path Uri, {@link #RESULT_INVALID_DERIVATION_PATH} will be returned. If the
      * specified auth token is not valid, {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If
      * the user failed to authorize the transaction, {@link #RESULT_AUTHENTICATION_FAILED} will be
      * returned. If the number of account BIP derivation path URIs is more than the quantity
      * supported by the Seed Vault implementation, {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED}
-     * will be returned.
+     * will be returned.</p>
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
@@ -158,7 +158,7 @@ public final class WalletContractV1 {
     /**
      * Purpose of this action, query, etc. It should be one of the {@code PURPOSE_*} constants
      * defined in this class.
-     * <p/>Type: {@code int}
+     * <p>Type: {@code int}</p>
      */
     public static final String EXTRA_PURPOSE = "Purpose";
 
@@ -166,31 +166,31 @@ public final class WalletContractV1 {
      * Auth token for this action, query, etc, as previously returned in response to
      * {@link #ACTION_AUTHORIZE_SEED_ACCESS}. All auth tokens for the current app can be enumerated
      * with {@link #AUTHORIZED_SEEDS_TABLE}.
-     * <p/>Type: {@code long}
+     * <p>Type: {@code long}</p>
      */
     public static final String EXTRA_AUTH_TOKEN = "AuthToken";
 
     /**
      * A set of {@link SigningRequest}s for {@link #ACTION_SIGN_TRANSACTION}
-     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link SigningRequest}{@code >}
+     * <p>Type: {@link java.util.ArrayList}{@code <}{@link SigningRequest}{@code >}</p>
      */
     public static final String EXTRA_SIGNING_REQUEST = "SigningRequest";
 
     /**
      * A set of {@link SigningResponse}s for response to {@link #ACTION_SIGN_TRANSACTION}
-     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link SigningResponse}{@code >}
+     * <p>Type: {@link java.util.ArrayList}{@code <}{@link SigningResponse}{@code >}</p>
      */
     public static final String EXTRA_SIGNING_RESPONSE = "SigningResponse";
 
     /**
      * A set of BIP derivation path URIs for {@link #ACTION_GET_PUBLIC_KEY}
-     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link Uri}{@code >}
+     * <p>Type: {@link java.util.ArrayList}{@code <}{@link Uri}{@code >}</p>
      */
     public static final String EXTRA_DERIVATION_PATH = "DerivationPath";
 
     /**
      * A set of account public keys for response to {@link #ACTION_GET_PUBLIC_KEY}
-     * <p/>Type: {@link java.util.ArrayList}{@code <}{@link PublicKeyResponse}{@code >}
+     * <p>Type: {@link java.util.ArrayList}{@code <}{@link PublicKeyResponse}{@code >}</p>
      */
     public static final String EXTRA_PUBLIC_KEY = "PublicKey";
 
@@ -367,7 +367,7 @@ public final class WalletContractV1 {
 
     /**
      * The resolved {@link #BIP32_URI_SCHEME} derivation path URI
-     * <p/>Type: {@code Uri} (a {@link #BIP32_URI_SCHEME} Uri)
+     * <p>Type: {@code Uri} (a {@link #BIP32_URI_SCHEME} Uri)</p>
      * */
     public static final String EXTRA_RESOLVED_BIP32_DERIVATION_PATH = "ResolveBipDerivationPath_ResolvedBip32DerivationPath";
 

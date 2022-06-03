@@ -19,7 +19,7 @@ import java.util.Objects;
  * request.
  *
  * @version 0.1
- * @todo set the version to 1.0 before shipping
+ * TODO set the version to 1.0 before shipping
  */
 public class PublicKeyResponse implements Parcelable {
     /**
