@@ -12,11 +12,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ import java.util.List;
  * @version 0.1
  * TODO bump version to 1.0 prior to shipping
  */
+@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 1 to avoid errors when merging manifests; mark the actual requirements for this class
 public final class Wallet {
     /**
      * Thrown by methods that modify the state of the Seed Vault Wallet if the target of the

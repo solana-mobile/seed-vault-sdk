@@ -4,13 +4,18 @@
 
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 
 android {
+    namespace = 'com.solanamobile.seedvault'
+
     compileSdk 32
 
     defaultConfig {
-        minSdk 30
+        // Note: 'minSdk 1' ensures that the library can be used with apps targeting any Android
+        // version. It's only useful on devices which expose the Seed Vault API.
+        minSdk 1
         targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -27,6 +32,35 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    publishing {
+        multipleVariants {
+            allVariants()
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+publishing {
+    publications {
+        allVariants(MavenPublication) {
+            groupId = 'com.solanamobile'
+            artifactId = 'seedvault-wallet-sdk'
+            version = releaseVersion // see gradle.properties
+
+            afterEvaluate {
+                from components.default
+            }
+        }
+    }
+    // TODO: publish to Maven Central
+    repositories {
+        maven {
+            name = 'local_repo'
+            url = "${project.buildDir}/repo"
+        }
     }
 }
 
