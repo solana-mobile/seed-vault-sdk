@@ -5,10 +5,12 @@
 package com.solanamobile.seedvault;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +24,7 @@ import java.util.Objects;
  * @version 0.1
  * TODO set the version to 1.0 before shipping
  */
+@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 1 to avoid errors when merging manifests; mark the actual requirements for this class
 public class SigningResponse implements Parcelable {
     @NonNull
     private final ArrayList<byte[]> mSignatures;
