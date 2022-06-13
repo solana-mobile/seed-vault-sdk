@@ -5,20 +5,20 @@
 package com.solanamobile.fakewallet.ui
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import com.solanamobile.fakewallet.databinding.ActivityMainBinding
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -107,6 +107,7 @@ class MainActivity : AppCompatActivity() {
                     when (event) {
                         is ViewModelEvent.AuthorizeNewSeed -> {
                             val i = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+                            @Suppress("deprecation")
                             startActivityForResult(i, REQUEST_AUTHORIZE_SEED_ACCESS)
                         }
                         is ViewModelEvent.DeauthorizeSeed -> {
@@ -133,11 +134,13 @@ class MainActivity : AppCompatActivity() {
                         is ViewModelEvent.SignTransactions -> {
                             val i = Wallet.signTransactions(
                                 event.authToken, event.transactions)
+                            @Suppress("deprecation")
                             startActivityForResult(i, REQUEST_SIGN_TRANSACTIONS)
                         }
                         is ViewModelEvent.RequestPublicKeys ->  {
                             val i = Wallet.requestPublicKeys(
                                 event.authToken, event.derivationPaths)
+                            @Suppress("deprecation")
                             startActivityForResult(i, REQUEST_GET_PUBLIC_KEYS)
                         }
                     }
@@ -147,6 +150,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("deprecation")
         super.onActivityResult(requestCode, resultCode, data)
 
         when (requestCode) {
