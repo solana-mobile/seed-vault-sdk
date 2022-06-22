@@ -35,4 +35,4 @@ _Check back soon! We plan to publish the [seedvault](seedvault) library on Maven
 
 ## Get involved
 
-Contributions are welcome! Go ahead and file Issues, open Pull Requests, or join us on our [Discord](TODO) to discuss this SDK.
+Contributions are welcome! Go ahead and file Issues, open Pull Requests, or join us on our [Discord](https://discord.gg/UGmCGJhvAr) to discuss this SDK.
