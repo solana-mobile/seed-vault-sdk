@@ -31,7 +31,7 @@ _Check back soon! We plan to publish the [seedvault](seedvault) library on Maven
 
 ## Developer documentation
 
-`seedvault`: [JavaDoc](TODO)
+`seedvault`: [JavaDoc](https://solana-mobile.github.io/seed-vault-sdk/seedvault/javadoc/index.html)
 
 ## Get involved
 

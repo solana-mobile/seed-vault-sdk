@@ -57,7 +57,7 @@ The Seed Vault provides several different user interfaces in response to request
 
 `Wallet helper classes`: [source](../seedvault/src/main/java/com/solanamobile/seedvault/)
 
-[WalletContractV1.java](../seedvault/src/main/java/com/solanamobile/seedvault/WalletContractV1.java) is the low-level programming contract for the Wallet SDK. It defines the actions, parameter names, Content Provider authority name, etc for the Seed Vault Wallet API. While wallets are free to use these interfaces, it is recommended that they instead make use of [Wallet.java](../seedvault/src/main/java/com/solanamobile/seedvault/Wallet.java), which provides a higher level of abstraction to the Wallet SDK interface. The [seedvault JavaDoc](TODO) fully documents these programming interfaces.
+[WalletContractV1.java](../seedvault/src/main/java/com/solanamobile/seedvault/WalletContractV1.java) is the low-level programming contract for the Wallet SDK. It defines the actions, parameter names, Content Provider authority name, etc for the Seed Vault Wallet API. While wallets are free to use these interfaces, it is recommended that they instead make use of [Wallet.java](../seedvault/src/main/java/com/solanamobile/seedvault/Wallet.java), which provides a higher level of abstraction to the Wallet SDK interface. The [seedvault JavaDoc](https://solana-mobile.github.io/seed-vault-sdk/seedvault/javadoc/index.html) fully documents these programming interfaces.
 
 ### Intents
 
@@ -101,7 +101,7 @@ When the wallet has a candidate transaction (or a set of transactions) for signi
 
 **IMPORTANT: the simulator is for development and testing purposes only, and makes zero guarantees about security. It should never be used with any Solana accounts other than test accounts.**
 
-The Seed Vault simulator provides a simple UI for creating seeds via BIP-0039 phrases, and provides a reference implementation of the Wallet API. During wallet integration with Seed Vault (and particularly before the availability of [Saga](TODO)), it can be used provide an implementation of the Wallet API on any Android device with API version 31 or higher. 
+The Seed Vault simulator provides a simple UI for creating seeds via BIP-0039 phrases, and provides a reference implementation of the Wallet API. During wallet integration with Seed Vault (and particularly before the availability of [Saga](https://solanamobile.com)), it can be used provide an implementation of the Wallet API on any Android device with API version 31 or higher.
 
 ## Fake Wallet
 
