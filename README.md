@@ -2,7 +2,7 @@
 
 _Part of the [Solana Mobile Stack](https://github.com/solana-mobile/solana-mobile-stack-sdk)_
 
-Join us on [Discord](TODO)
+Join us on [Discord](https://discord.gg/UGmCGJhvAr)
 
 ## Summary
 
