@@ -4,7 +4,6 @@
 
 package com.solanamobile.seedvaultimpl.ui.selectseed
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,28 +17,28 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.solanamobile.seedvault.WalletContractV1
-import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
-import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
+import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.databinding.FragmentSelectSeedBinding
 import com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class SelectSeedDialogFragment : DialogFragment() {
-    private lateinit var dependencyContainer: ApplicationDependencyContainer
     private val activityViewModel: AuthorizeViewModel by activityViewModels()
-    private val viewModel: SelectSeedViewModel by viewModels { SelectSeedViewModel.provideFactory(dependencyContainer.seedRepository, activityViewModel) }
+    private val seedRepository: SeedRepository by inject()
+    private val viewModel: SelectSeedViewModel by viewModels {
+        SelectSeedViewModel.provideFactory(
+            seedRepository,
+            activityViewModel
+        )
+    }
 
     private var _binding: FragmentSelectSeedBinding? = null
     private val binding get() = _binding!!
 
     init {
         setStyle(STYLE_NO_FRAME, R.style.Theme_SeedVaultImpl_FullScreenDialog)
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        dependencyContainer = (requireActivity().application as SeedVaultImplApplication).dependencyContainer
     }
 
     override fun onCreateView(
@@ -59,7 +58,8 @@ class SelectSeedDialogFragment : DialogFragment() {
         })
         binding.recyclerviewSeeds.adapter = seedListAdapter
         binding.recyclerviewSeeds.addItemDecoration(
-            DividerItemDecoration(binding.recyclerviewSeeds.context, DividerItemDecoration.VERTICAL))
+            DividerItemDecoration(binding.recyclerviewSeeds.context, DividerItemDecoration.VERTICAL)
+        )
 
         binding.buttonBack.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {

@@ -4,7 +4,6 @@
 
 package com.solanamobile.seedvaultimpl.ui.seeddetail
 
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
@@ -16,26 +15,26 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
-import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
+import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.databinding.FragmentSeedDetailBinding
 import com.solanamobile.seedvaultimpl.model.SeedDetails
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class SeedDetailFragment : Fragment() {
-    private lateinit var dependencyContainer: ApplicationDependencyContainer
-    private val viewModel: SeedDetailViewModel by viewModels { SeedDetailViewModel.provideFactory(dependencyContainer.seedRepository, args.seedId) }
+    private val seedRepository: SeedRepository by inject()
+    private val viewModel: SeedDetailViewModel by viewModels {
+        SeedDetailViewModel.provideFactory(
+            seedRepository,
+            args.seedId
+        )
+    }
 
     private val args: SeedDetailFragmentArgs by navArgs()
 
     private var _binding: FragmentSeedDetailBinding? = null
     private val binding get() = _binding!! // Only valid between onViewCreated and onViewDestroyed
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        dependencyContainer = (requireActivity().application as SeedVaultImplApplication).dependencyContainer
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,22 +67,25 @@ class SeedDetailFragment : Fragment() {
                     binding.edittextSeedName.setTextKeepState(it.name)
                     binding.edittextPin.setTextKeepState(it.pin)
                     binding.labelErrorInvalidPin.visibility = if (it.pin.isEmpty() ||
-                        it.pin.length in SeedDetails.PIN_MIN_LENGTH..SeedDetails.PIN_MAX_LENGTH) View.GONE else View.VISIBLE
+                        it.pin.length in SeedDetails.PIN_MIN_LENGTH..SeedDetails.PIN_MAX_LENGTH
+                    ) View.GONE else View.VISIBLE
                     binding.switchEnableBiometrics.isChecked = it.enableBiometrics
                     binding.chipgroupPhraseLength.visibility = if (it.isCreateMode) {
                         View.VISIBLE
                     } else {
                         View.GONE
                     }
-                    val longPhrase = it.phraseLength == SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS
+                    val longPhrase =
+                        it.phraseLength == SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS
                     if (longPhrase) {
                         binding.chipPhraseLength24.isChecked = true
                     } else {
                         binding.chipPhraseLength12.isChecked = true
                     }
-                    seedPhraseAdapter.submitList(it.phrase.take(it.phraseLength.length).mapIndexed { i, s ->
-                        SeedPhraseAdapter.Word(i, s, !it.isCreateMode)
-                    })
+                    seedPhraseAdapter.submitList(
+                        it.phrase.take(it.phraseLength.length).mapIndexed { i, s ->
+                            SeedPhraseAdapter.Word(i, s, !it.isCreateMode)
+                        })
                     if (!it.isCreateMode && it.authorizedApps.isNotEmpty()) {
                         binding.labelAuthorizedApps.visibility = View.VISIBLE
                         binding.recyclerviewAuthorizedApps.visibility = View.VISIBLE
@@ -121,7 +123,12 @@ class SeedDetailFragment : Fragment() {
             }
             recyclerviewSeedPhrase.adapter = seedPhraseAdapter
             recyclerviewAuthorizedApps.adapter = authorizedAppsAdapter
-            recyclerviewAuthorizedApps.addItemDecoration(DividerItemDecoration(recyclerviewAuthorizedApps.context, DividerItemDecoration.VERTICAL))
+            recyclerviewAuthorizedApps.addItemDecoration(
+                DividerItemDecoration(
+                    recyclerviewAuthorizedApps.context,
+                    DividerItemDecoration.VERTICAL
+                )
+            )
         }
     }
 

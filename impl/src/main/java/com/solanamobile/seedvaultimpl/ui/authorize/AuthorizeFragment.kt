@@ -21,32 +21,36 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
-import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
+import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.databinding.FragmentAuthorizeBinding
 import com.solanamobile.seedvaultimpl.ui.authorizeinfo.AuthorizeInfoDialogFragment
 import com.solanamobile.seedvaultimpl.ui.selectseed.SelectSeedDialogFragment
+import com.solanamobile.seedvaultimpl.usecase.BipDerivationUseCase
+import com.solanamobile.seedvaultimpl.usecase.PrepopulateKnownAccountsUseCase
+import com.solanamobile.seedvaultimpl.usecase.SignTransactionUseCase
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class AuthorizeFragment : Fragment() {
-    private lateinit var dependencyContainer: ApplicationDependencyContainer
     private val activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel by activityViewModels()
+    private val seedRepository: SeedRepository by inject()
+    private val signTransactionUseCase: SignTransactionUseCase by inject()
+    private val bipDerivationUseCase: BipDerivationUseCase by inject()
+    private val prepopulateKnownAccountsUseCase: PrepopulateKnownAccountsUseCase by inject()
     private val viewModel: AuthorizeViewModel by viewModels {
         AuthorizeViewModel.provideFactory(
-            dependencyContainer.seedRepository,
+            seedRepository,
             activityViewModel,
-            requireActivity().application
+            requireActivity().application,
+            signTransactionUseCase = signTransactionUseCase,
+            bipDerivationUseCase = bipDerivationUseCase,
+            prepopulateKnownAccountsUseCase = prepopulateKnownAccountsUseCase
         )
     }
 
     private var _binding: FragmentAuthorizeBinding? = null
     private val binding get() = _binding!!
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        dependencyContainer = (requireActivity().application as SeedVaultImplApplication).dependencyContainer
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,12 +67,14 @@ class AuthorizeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { uiState ->
-                    binding.labelAuthorizationType.setText(when (uiState.authorizationType) {
-                        AuthorizeUiState.AuthorizationType.SEED -> R.string.label_authorize_seed
-                        AuthorizeUiState.AuthorizationType.TRANSACTION -> R.string.label_authorize_transaction
-                        AuthorizeUiState.AuthorizationType.PUBLIC_KEY -> R.string.label_authorize_public_key
-                        null -> android.R.string.unknownName
-                    })
+                    binding.labelAuthorizationType.setText(
+                        when (uiState.authorizationType) {
+                            AuthorizeUiState.AuthorizationType.SEED -> R.string.label_authorize_seed
+                            AuthorizeUiState.AuthorizationType.TRANSACTION -> R.string.label_authorize_transaction
+                            AuthorizeUiState.AuthorizationType.PUBLIC_KEY -> R.string.label_authorize_public_key
+                            null -> android.R.string.unknownName
+                        }
+                    )
                     binding.imageviewAppIcon.setImageDrawable(uiState.requestorAppIcon)
                     binding.textAppName.text = uiState.requestorAppName
 
@@ -89,7 +95,8 @@ class AuthorizeFragment : Fragment() {
                     binding.labelAuthorizeFor.visibility = authorizeSeedWidgetVisibility
                     binding.groupFor.visibility = authorizeSeedWidgetVisibility
 
-                    binding.groupAuthorizeApp.isEnabled = (uiState.authorizationType == AuthorizeUiState.AuthorizationType.SEED)
+                    binding.groupAuthorizeApp.isEnabled =
+                        (uiState.authorizationType == AuthorizeUiState.AuthorizationType.SEED)
 
                     binding.textSeedName.text = uiState.seedName
 
@@ -107,11 +114,17 @@ class AuthorizeFragment : Fragment() {
         }
 
         binding.groupAuthorizeApp.setOnClickListener {
-            AuthorizeInfoDialogFragment().show(parentFragmentManager, AuthorizeInfoDialogFragment::class.simpleName)
+            AuthorizeInfoDialogFragment().show(
+                parentFragmentManager,
+                AuthorizeInfoDialogFragment::class.simpleName
+            )
         }
 
         binding.groupFor.setOnClickListener {
-            SelectSeedDialogFragment().show(parentFragmentManager, SelectSeedDialogFragment::class.simpleName)
+            SelectSeedDialogFragment().show(
+                parentFragmentManager,
+                SelectSeedDialogFragment::class.simpleName
+            )
         }
 
         binding.btnCancel.setOnClickListener {

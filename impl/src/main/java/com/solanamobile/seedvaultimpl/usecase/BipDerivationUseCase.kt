@@ -8,11 +8,10 @@ import com.solanamobile.seedvault.Bip32DerivationPath
 import com.solanamobile.seedvault.BipLevel
 import com.solanamobile.seedvault.Bip44DerivationPath
 import com.solanamobile.seedvault.BipDerivationPath
-import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.Seed
 
-class BipDerivationUseCase(private val seedRepository: SeedRepository) {
+interface BipDerivationUseCase {
     // TODO: also support Ed25519Bip32 derivations
 
     // Opaque object representing a partial derivation from a BIP32 path. Further derivations can
@@ -21,39 +20,68 @@ class BipDerivationUseCase(private val seedRepository: SeedRepository) {
     interface PartialPublicDerivation
 
     // In some key derivation schemes (such as BIP32-Ed25519), not every key exists.
-    class KeyDoesNotExistException(message: String? = null, cause: Throwable? = null) : Exception(message, cause)
+    class KeyDoesNotExistException(message: String? = null, cause: Throwable? = null) :
+        Exception(message, cause)
 
     fun derivePrivateKey(
         purpose: Authorization.Purpose,
         seed: Seed,
         derivationPath: Bip32DerivationPath
-    ): ByteArray {
-        return when (purpose) {
-            Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS -> Ed25519Slip10UseCase.derivePrivateKey(
-                seed.details, derivationPath)
-        }
-    }
+    ): ByteArray
 
     fun derivePublicKey(
         purpose: Authorization.Purpose,
         seed: Seed,
         derivationPath: Bip32DerivationPath,
         partialPublicDerivation: PartialPublicDerivation? = null
-    ): ByteArray {
-        return when (purpose) {
-            Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS ->
-                Ed25519Slip10UseCase.derivePublicKey(seed.details, derivationPath, partialPublicDerivation)
-        }
-    }
+    ): ByteArray
 
     fun derivePublicKeyPartial(
         purpose: Authorization.Purpose,
         seed: Seed,
         derivationPath: Bip32DerivationPath
-    ): PartialPublicDerivation {
+    ): PartialPublicDerivation
+}
+
+internal class BipDerivationUseCaseImpl(
+    private val ed25519Slip10UseCase: Ed25519Slip10UseCase
+) : BipDerivationUseCase {
+
+    override fun derivePrivateKey(
+        purpose: Authorization.Purpose,
+        seed: Seed,
+        derivationPath: Bip32DerivationPath
+    ): ByteArray {
         return when (purpose) {
             Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS ->
-                Ed25519Slip10UseCase.derivePublicKeyPartialDerivation(seed.details, derivationPath)
+                ed25519Slip10UseCase.derivePrivateKey(seed.details, derivationPath)
+        }
+    }
+
+    override fun derivePublicKey(
+        purpose: Authorization.Purpose,
+        seed: Seed,
+        derivationPath: Bip32DerivationPath,
+        partialPublicDerivation: BipDerivationUseCase.PartialPublicDerivation?
+    ): ByteArray {
+        return when (purpose) {
+            Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS ->
+                ed25519Slip10UseCase.derivePublicKey(
+                    seed.details,
+                    derivationPath,
+                    partialPublicDerivation
+                )
+        }
+    }
+
+    override fun derivePublicKeyPartial(
+        purpose: Authorization.Purpose,
+        seed: Seed,
+        derivationPath: Bip32DerivationPath
+    ): BipDerivationUseCase.PartialPublicDerivation {
+        return when (purpose) {
+            Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS ->
+                ed25519Slip10UseCase.derivePublicKeyPartialDerivation(seed.details, derivationPath)
         }
     }
 }

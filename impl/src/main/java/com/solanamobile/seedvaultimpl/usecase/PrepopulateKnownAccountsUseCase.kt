@@ -12,8 +12,20 @@ import com.solanamobile.seedvaultimpl.model.Account
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.Seed
 
-class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository) {
+interface PrepopulateKnownAccountsUseCase {
+
     suspend fun populateKnownAccounts(
+        seed: Seed,
+        purpose: Authorization.Purpose
+    )
+}
+
+class PrepopulateKnownAccountsUseCaseImpl(
+    private val seedRepository: SeedRepository,
+    private val ed25519Slip10UseCase: Ed25519Slip10UseCase
+) : PrepopulateKnownAccountsUseCase {
+
+    override suspend fun populateKnownAccounts(
         seed: Seed,
         purpose: Authorization.Purpose
     ) {
@@ -23,7 +35,7 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                     .appendLevel(BipLevel(BIP44_PURPOSE, true))
                     .appendLevel(BipLevel(BIP44_COIN_TYPE_SOLANA, true))
                     .build().normalize(purpose)
-                val derivationRoot = Ed25519Slip10UseCase.derivePublicKeyPartialDerivation(
+                val derivationRoot = ed25519Slip10UseCase.derivePublicKeyPartialDerivation(
                     seed.details, derivationRootPath
                 )
                 val knownAccounts = mutableListOf<Account>()
@@ -39,7 +51,7 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                         .toUri()
                     if (seed.accounts.firstOrNull { account ->
                             account.purpose == purpose && account.bip32DerivationPathUri == type1Uri
-                    } == null
+                        } == null
                     ) {
                         val partialPath = Bip32DerivationPath.newBuilder()
                             .appendLevels(type1Levels)
@@ -47,19 +59,29 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                             .normalize(purpose)
 
                         try {
-                            val publicKey = Ed25519Slip10UseCase.derivePublicKey(
+                            val publicKey = ed25519Slip10UseCase.derivePublicKey(
                                 seed.details,
                                 partialPath,
                                 derivationRoot
                             )
-                            val account = Account(Account.INVALID_ACCOUNT_ID, purpose, type1Uri, publicKey)
+                            val account =
+                                Account(Account.INVALID_ACCOUNT_ID, purpose, type1Uri, publicKey)
                             knownAccounts.add(account)
-                            Log.d(TAG, "Added account ${GetNameUseCase.getName(account)} for $type1Uri with purpose $purpose")
+                            Log.d(
+                                TAG,
+                                "Added account ${GetNameUseCase.getName(account)} for $type1Uri with purpose $purpose"
+                            )
                         } catch (e: BipDerivationUseCase.KeyDoesNotExistException) {
-                            Log.w(TAG, "Key for derivation path $type1Uri with purpose $purpose does not exist; skipping...")
+                            Log.w(
+                                TAG,
+                                "Key for derivation path $type1Uri with purpose $purpose does not exist; skipping..."
+                            )
                         }
                     } else {
-                        Log.d(TAG, "Account for $type1Uri with purpose $purpose already exists; skipping...")
+                        Log.d(
+                            TAG,
+                            "Account for $type1Uri with purpose $purpose already exists; skipping..."
+                        )
                     }
 
                     // Type 2 paths: m/44'/501'/X'/0'
@@ -78,19 +100,29 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                             .appendLevels(type2Levels)
                             .build()
                         try {
-                            val publicKey = Ed25519Slip10UseCase.derivePublicKey(
+                            val publicKey = ed25519Slip10UseCase.derivePublicKey(
                                 seed.details,
                                 partialPath,
                                 derivationRoot
                             )
-                            val account = Account(Account.INVALID_ACCOUNT_ID, purpose, type2Uri, publicKey)
+                            val account =
+                                Account(Account.INVALID_ACCOUNT_ID, purpose, type2Uri, publicKey)
                             knownAccounts.add(account)
-                            Log.d(TAG, "Added account ${GetNameUseCase.getName(account)} for $type2Uri with purpose $purpose")
+                            Log.d(
+                                TAG,
+                                "Added account ${GetNameUseCase.getName(account)} for $type2Uri with purpose $purpose"
+                            )
                         } catch (e: BipDerivationUseCase.KeyDoesNotExistException) {
-                            Log.w(TAG, "Key for derivation path $type2Uri  with purpose $purpose does not exist; skipping...")
+                            Log.w(
+                                TAG,
+                                "Key for derivation path $type2Uri  with purpose $purpose does not exist; skipping..."
+                            )
                         }
                     } else {
-                        Log.d(TAG, "Account for $type2Uri with purpose $purpose already exists; skipping...")
+                        Log.d(
+                            TAG,
+                            "Account for $type2Uri with purpose $purpose already exists; skipping..."
+                        )
                     }
                 }
 

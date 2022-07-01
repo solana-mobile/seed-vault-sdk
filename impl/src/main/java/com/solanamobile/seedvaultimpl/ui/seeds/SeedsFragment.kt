@@ -4,7 +4,6 @@
 
 package com.solanamobile.seedvaultimpl.ui.seeds
 
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
@@ -14,23 +13,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
-import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
+import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.databinding.FragmentSeedsBinding
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class SeedsFragment : Fragment() {
-    private lateinit var dependencyContainer: ApplicationDependencyContainer
-    private val viewModel: SeedsViewModel by viewModels { SeedsViewModel.provideFactory(dependencyContainer.seedRepository) }
+    private val seedRepository: SeedRepository by inject()
+    private val viewModel: SeedsViewModel by viewModels {
+        SeedsViewModel.provideFactory(
+            seedRepository
+        )
+    }
 
     private var _binding: FragmentSeedsBinding? = null
     private val binding get() = _binding!! // Only valid between onViewCreated and onViewDestroyed
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        dependencyContainer = (requireActivity().application as SeedVaultImplApplication).dependencyContainer
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,11 +47,20 @@ class SeedsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.seedsList.addItemDecoration(DividerItemDecoration(binding.seedsList.context, DividerItemDecoration.VERTICAL))
+        binding.seedsList.addItemDecoration(
+            DividerItemDecoration(
+                binding.seedsList.context,
+                DividerItemDecoration.VERTICAL
+            )
+        )
 
         val seedListAdapter = SeedListAdapter(
             onClick = {
-                findNavController().navigate(SeedsFragmentDirections.actionSeedsFragmentToSeedDetailFragmentForUpdate(it.id))
+                findNavController().navigate(
+                    SeedsFragmentDirections.actionSeedsFragmentToSeedDetailFragmentForUpdate(
+                        it.id
+                    )
+                )
             },
             onDelete = {
                 viewModel.deleteSeed(it.id)

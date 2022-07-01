@@ -5,16 +5,21 @@
 package com.solanamobile.seedvaultimpl
 
 import android.app.Application
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import com.solanamobile.seedvaultimpl.di.SeedVaultImplModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
 class SeedVaultImplApplication : Application() {
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    lateinit var dependencyContainer: ApplicationDependencyContainer
 
     override fun onCreate() {
         super.onCreate()
-        dependencyContainer = ApplicationDependencyContainer(this, applicationScope)
+
+        startKoin {
+            androidLogger(level = Level.DEBUG)
+            androidContext(this@SeedVaultImplApplication)
+            modules(SeedVaultImplModule)
+        }
     }
 }

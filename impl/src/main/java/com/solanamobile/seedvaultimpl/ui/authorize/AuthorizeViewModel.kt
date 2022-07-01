@@ -33,7 +33,10 @@ import kotlinx.coroutines.withContext
 class AuthorizeViewModel private constructor(
     private val seedRepository: SeedRepository,
     private val activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel,
-    application: Application
+    application: Application,
+    private val signTransactionUseCase: SignTransactionUseCase,
+    private val bipDerivationUseCase: BipDerivationUseCase,
+    private val prepopulateKnownAccountsUseCase: PrepopulateKnownAccountsUseCase
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(AuthorizeUiState())
@@ -50,8 +53,9 @@ class AuthorizeViewModel private constructor(
         viewModelScope.launch {
             activityViewModel.requests.collect { request ->
                 if (request.type !is AuthorizeRequestType.Seed &&
-                        request.type !is AuthorizeRequestType.Transaction &&
-                        request.type !is AuthorizeRequestType.PublicKey) {
+                    request.type !is AuthorizeRequestType.Transaction &&
+                    request.type !is AuthorizeRequestType.PublicKey
+                ) {
                     // Any other request types should only be observed transiently, whilst the
                     // activity state is being updated.
                     _uiState.value = AuthorizeUiState()
@@ -72,12 +76,15 @@ class AuthorizeViewModel private constructor(
                         authorizationType = AuthorizeUiState.AuthorizationType.SEED
                         seed = seedRepository.seeds.value.values.firstOrNull { s ->
                             (request.type.seedId == null || s.id == request.type.seedId) &&
-                            s.authorizations.none { auth ->
-                                auth.uid == request.requestorUid && auth.purpose == request.type.purpose
-                            }
+                                    s.authorizations.none { auth ->
+                                        auth.uid == request.requestorUid && auth.purpose == request.type.purpose
+                                    }
                         }
                         if (seed == null) {
-                            Log.e(TAG, "No non-authorized seeds remaining for ${request.requestorUid}; aborting...")
+                            Log.e(
+                                TAG,
+                                "No non-authorized seeds remaining for ${request.requestorUid}; aborting..."
+                            )
                             activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_NO_AVAILABLE_SEEDS)
                             return@collect
                         }
@@ -94,7 +101,10 @@ class AuthorizeViewModel private constructor(
                         )
                         seed = seedRepository.authorizations.value[authKey]
                         if (seed == null) {
-                            Log.e(TAG, "No seed found for ${authKey.authToken}/${authKey.uid}; aborting...")
+                            Log.e(
+                                TAG,
+                                "No seed found for ${authKey.authToken}/${authKey.uid}; aborting..."
+                            )
                             activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                             return@collect
                         }
@@ -110,13 +120,20 @@ class AuthorizeViewModel private constructor(
                         }
                         val numTransactions = request.type.transactions.size
                         if (numTransactions > RequestLimitsUseCase.MAX_SIGNING_REQUESTS) {
-                            Log.e(TAG, "Too many transactions provided: actual=$numTransactions, max=${RequestLimitsUseCase.MAX_SIGNING_REQUESTS}")
+                            Log.e(
+                                TAG,
+                                "Too many transactions provided: actual=$numTransactions, max=${RequestLimitsUseCase.MAX_SIGNING_REQUESTS}"
+                            )
                             activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED)
                             return@collect
                         }
-                        val maxRequestedSignatures = request.type.transactions.maxOf { t -> t.requestedSignatures.size }
+                        val maxRequestedSignatures =
+                            request.type.transactions.maxOf { t -> t.requestedSignatures.size }
                         if (maxRequestedSignatures > RequestLimitsUseCase.MAX_REQUESTED_SIGNATURES) {
-                            Log.e(TAG, "Too many signatures requested: actual=$maxRequestedSignatures, max=${RequestLimitsUseCase.MAX_REQUESTED_SIGNATURES}")
+                            Log.e(
+                                TAG,
+                                "Too many signatures requested: actual=$maxRequestedSignatures, max=${RequestLimitsUseCase.MAX_REQUESTED_SIGNATURES}"
+                            )
                             activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED)
                             return@collect
                         }
@@ -139,7 +156,10 @@ class AuthorizeViewModel private constructor(
                         )
                         seed = seedRepository.authorizations.value[authKey]
                         if (seed == null) {
-                            Log.e(TAG, "No seed found for ${authKey.authToken}/${authKey.uid}; aborting...")
+                            Log.e(
+                                TAG,
+                                "No seed found for ${authKey.authToken}/${authKey.uid}; aborting..."
+                            )
                             activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
                             return@collect
                         }
@@ -150,7 +170,10 @@ class AuthorizeViewModel private constructor(
                         this@AuthorizeViewModel.purpose = purpose
                         val numDerivationPaths = request.type.derivationPaths.size
                         if (numDerivationPaths > RequestLimitsUseCase.MAX_REQUESTED_PUBLIC_KEYS) {
-                            Log.e(TAG, "Too many public keys requested: actual=$numDerivationPaths, max=${RequestLimitsUseCase.MAX_REQUESTED_PUBLIC_KEYS}")
+                            Log.e(
+                                TAG,
+                                "Too many public keys requested: actual=$numDerivationPaths, max=${RequestLimitsUseCase.MAX_REQUESTED_PUBLIC_KEYS}"
+                            )
                             activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED)
                             return@collect
                         }
@@ -161,7 +184,8 @@ class AuthorizeViewModel private constructor(
                             activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_DERIVATION_PATH)
                             return@collect
                         }
-                        this@AuthorizeViewModel.normalizedDerivationPaths = normalizedDerivationPaths
+                        this@AuthorizeViewModel.normalizedDerivationPaths =
+                            normalizedDerivationPaths
 
                         // Check if we already have cached public keys for these addresses
                         if (normalizedDerivationPaths[0].all { path -> publicKeyForPath(path.toUri()) != null }) {
@@ -174,7 +198,9 @@ class AuthorizeViewModel private constructor(
                 var requestorAppIcon: Drawable? = null
                 var requestorAppName: CharSequence? = null
                 try {
-                    val callingApplicationInfo = application.packageManager.getApplicationInfo(request.requestor?.packageName ?: "", 0)
+                    val callingApplicationInfo = application.packageManager.getApplicationInfo(
+                        request.requestor?.packageName ?: "", 0
+                    )
                     requestorAppIcon = callingApplicationInfo.loadIcon(application.packageManager)
                     requestorAppName = callingApplicationInfo.loadLabel(application.packageManager)
                 } catch (e: PackageManager.NameNotFoundException) {
@@ -211,7 +237,12 @@ class AuthorizeViewModel private constructor(
             } else {
                 val remaining = MAX_PIN_ATTEMPTS - pinFailureCount
                 Log.w(TAG, "PIN attempt $pinFailureCount failed; $remaining attempts remaining")
-                showMessage(getApplication<Application>().getString(R.string.error_incorrect_pin, remaining))
+                showMessage(
+                    getApplication<Application>().getString(
+                        R.string.error_incorrect_pin,
+                        remaining
+                    )
+                )
             }
             return
         }
@@ -260,10 +291,11 @@ class AuthorizeViewModel private constructor(
         when (request.type) {
             is AuthorizeRequestType.Seed -> {
                 viewModelScope.launch {
-                    val authToken = seedRepository.authorizeSeedForUid(seed.id, request.requestorUid, purpose)
+                    val authToken =
+                        seedRepository.authorizeSeedForUid(seed.id, request.requestorUid, purpose)
 
                     // Ensure that the seed vault contains appropriate known accounts for this authorization purpose
-                    PrepopulateKnownAccountsUseCase(seedRepository).populateKnownAccounts(seed, purpose)
+                    prepopulateKnownAccountsUseCase.populateKnownAccounts(seed, purpose)
 
                     activityViewModel.completeAuthorizationWithAuthToken(authToken)
                 }
@@ -274,14 +306,14 @@ class AuthorizeViewModel private constructor(
 
                 viewModelScope.launch {
                     val signatures = ArrayList<SigningResponse>(request.type.transactions.size)
-                    val bipDerivationUseCase = BipDerivationUseCase(seedRepository)
                     request.type.transactions.mapIndexedTo(signatures) { i, sr ->
                         val requestNormalizedDerivationPaths = normalizedDerivationPaths[i]
                         val sigs = requestNormalizedDerivationPaths.map { path ->
                             try {
                                 withContext(Dispatchers.Default) {
-                                    val privateKey = bipDerivationUseCase.derivePrivateKey(purpose, seed, path)
-                                    SignTransactionUseCase(purpose, privateKey, sr.payload)
+                                    val privateKey =
+                                        bipDerivationUseCase.derivePrivateKey(purpose, seed, path)
+                                    signTransactionUseCase.sign(purpose, privateKey, sr.payload)
                                 }
                             } catch (_: BipDerivationUseCase.KeyDoesNotExistException) {
                                 Log.e(TAG, "Key does not exist for $purpose:$path")
@@ -293,7 +325,9 @@ class AuthorizeViewModel private constructor(
                                 return@launch
                             }
                         }
-                        SigningResponse(sigs, requestNormalizedDerivationPaths.map { path -> path.toUri() })
+                        SigningResponse(
+                            sigs,
+                            requestNormalizedDerivationPaths.map { path -> path.toUri() })
                     }
                     activityViewModel.completeAuthorizationWithSignatures(signatures)
                 }
@@ -304,15 +338,17 @@ class AuthorizeViewModel private constructor(
 
                 viewModelScope.launch {
                     val publicKeys = ArrayList<PublicKeyResponse>(normalizedDerivationPaths.size)
-                    val bipDerivationUseCase = BipDerivationUseCase(seedRepository)
                     normalizedDerivationPaths.mapTo(publicKeys) { path ->
                         val pathUri = path.toUri()
                         val publicKey = publicKeyForPath(pathUri) ?: run {
                             try {
                                 withContext(Dispatchers.Default) {
                                     bipDerivationUseCase.derivePublicKey(purpose, seed, path).also {
-                                        seedRepository.addKnownAccountForSeed(seed.id, Account(
-                                            Account.INVALID_ACCOUNT_ID, purpose, pathUri, it))
+                                        seedRepository.addKnownAccountForSeed(
+                                            seed.id, Account(
+                                                Account.INVALID_ACCOUNT_ID, purpose, pathUri, it
+                                            )
+                                        )
                                     }
                                 }
                             } catch (_: BipDerivationUseCase.KeyDoesNotExistException) {
@@ -320,7 +356,11 @@ class AuthorizeViewModel private constructor(
                                 null
                             }
                         }
-                        PublicKeyResponse(publicKey, publicKey?.let { Base58EncodeUseCase(it) }, pathUri)
+                        PublicKeyResponse(
+                            publicKey,
+                            publicKey?.let { Base58EncodeUseCase(it) },
+                            pathUri
+                        )
                     }
                     activityViewModel.completeAuthorizationWithPublicKeys(publicKeys)
                 }
@@ -336,11 +376,21 @@ class AuthorizeViewModel private constructor(
         fun provideFactory(
             seedRepository: SeedRepository,
             activityViewModel: com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel,
-            application: Application
+            application: Application,
+            signTransactionUseCase: SignTransactionUseCase,
+            bipDerivationUseCase: BipDerivationUseCase,
+            prepopulateKnownAccountsUseCase: PrepopulateKnownAccountsUseCase
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return AuthorizeViewModel(seedRepository, activityViewModel, application) as T
+                return AuthorizeViewModel(
+                    seedRepository,
+                    activityViewModel,
+                    application,
+                    signTransactionUseCase,
+                    bipDerivationUseCase,
+                    prepopulateKnownAccountsUseCase
+                ) as T
             }
         }
     }

@@ -15,11 +15,10 @@ import com.solanamobile.seedvaultimpl.model.Seed
 import com.google.protobuf.ByteString
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.data.proto.seedCollectionDataStore
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import java.io.IOException
 
 typealias SeedIdMap = Map<Long, Seed> // maps from seed ID to Seed
@@ -27,7 +26,8 @@ typealias SeedAuthorizationMap = Map<SeedRepository.AuthorizationKey, Seed> // m
 
 class SeedRepository(
     private val context: Context,
-    private val repositoryOwnerScope: CoroutineScope) {
+    defaultDispatcher: CoroutineDispatcher
+) {
 
     companion object {
         private val TAG = SeedRepository::class.simpleName
@@ -57,30 +57,33 @@ class SeedRepository(
     private var nextAuthToken = FIRST_AUTH_TOKEN
     private var nextAccountId = FIRST_ACCOUNT_ID
 
-    private val seedCollection: SharedFlow<SeedCollection> = context.seedCollectionDataStore.data.catch { e ->
-        if (e is IOException) {
-            Log.e(TAG, "Error reading seed collection; using defaults", e)
-            emit(SeedCollection.getDefaultInstance())
-        } else {
-            throw e
-        }
-    }.onStart {
-        Log.d(TAG, "seedCollection flow opened")
-    }.onCompletion {
-        Log.d(TAG, "seedCollection flow closed")
-    }.onEach { sc ->
-        mutex.withLock {
-            if (sc.nextId > nextSeedId) {
-                nextSeedId = sc.nextId
+    private val repositoryOwnerScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
+
+    private val seedCollection: SharedFlow<SeedCollection> =
+        context.seedCollectionDataStore.data.catch { e ->
+            if (e is IOException) {
+                Log.e(TAG, "Error reading seed collection; using defaults", e)
+                emit(SeedCollection.getDefaultInstance())
+            } else {
+                throw e
             }
-            if (sc.nextAuthToken > nextAuthToken) {
-                nextAuthToken = sc.nextAuthToken
+        }.onStart {
+            Log.d(TAG, "seedCollection flow opened")
+        }.onCompletion {
+            Log.d(TAG, "seedCollection flow closed")
+        }.onEach { sc ->
+            mutex.withLock {
+                if (sc.nextId > nextSeedId) {
+                    nextSeedId = sc.nextId
+                }
+                if (sc.nextAuthToken > nextAuthToken) {
+                    nextAuthToken = sc.nextAuthToken
+                }
+                if (sc.nextAccountId > nextAccountId) {
+                    nextAccountId = sc.nextAccountId
+                }
             }
-            if (sc.nextAccountId > nextAccountId) {
-                nextAccountId = sc.nextAccountId
-            }
-        }
-    }.shareIn(repositoryOwnerScope, SharingStarted.Eagerly, 1)
+        }.shareIn(repositoryOwnerScope, SharingStarted.Eagerly, 1)
 
     val seeds: StateFlow<SeedIdMap> = seedCollection.map { sc ->
         sc.seedsList.associate { sr ->
@@ -95,9 +98,11 @@ class SeedRepository(
                 Authorization(ae.uid, ae.authToken, Authorization.Purpose.values()[ae.purpose])
             }
             val accounts = sr.knownAccountsList.map { kae ->
-                Account(kae.accountId, Authorization.Purpose.values()[kae.purpose],
+                Account(
+                    kae.accountId, Authorization.Purpose.values()[kae.purpose],
                     Uri.parse(kae.bip32Uri), kae.publicKey.toByteArray(), kae.name.ifEmpty { null },
-                    kae.isUserWallet, kae.isValid)
+                    kae.isUserWallet, kae.isValid
+                )
             }
             sr.seedId to Seed(sr.seedId, details, authorizations, accounts)
         }
@@ -110,14 +115,15 @@ class SeedRepository(
     val authorizations: StateFlow<SeedAuthorizationMap> = seeds.map { sim ->
         val map = mutableMapOf<AuthorizationKey, Seed>()
         sim.values.forEach { seed ->
-            seed.authorizations.map {
-                    auth -> AuthorizationKey(auth.uid, auth.authToken)
+            seed.authorizations.map { auth ->
+                AuthorizationKey(auth.uid, auth.authToken)
             }.associateWithTo(map) { seed }
         }
         map
     }.stateIn(repositoryOwnerScope, SharingStarted.Eagerly, mapOf())
 
-    private val _changes: MutableSharedFlow<ChangeNotification> = MutableSharedFlow(extraBufferCapacity = 1)
+    private val _changes: MutableSharedFlow<ChangeNotification> =
+        MutableSharedFlow(extraBufferCapacity = 1)
     val changes = _changes.asSharedFlow()
 
     suspend fun delayUntilDataValid() {
@@ -178,7 +184,8 @@ class SeedRepository(
                 context.seedCollectionDataStore.updateData {
                     val i = it.seedsList.indexOfFirst { seed -> seed.seedId == id }
                     check(i != -1) { "Seed repository does not contain an entry for seed $id" }
-                    val newSeedRecordBuilder = it.seedsList[i].toBuilder().setSeed(newSeedEntryBuilder)
+                    val newSeedRecordBuilder =
+                        it.seedsList[i].toBuilder().setSeed(newSeedEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).build()
                 }
             }
@@ -273,13 +280,15 @@ class SeedRepository(
                 context.seedCollectionDataStore.updateData {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
-                    val existingAuthRecord = it.seedsList[i].authorizationsList.firstOrNull { ae -> ae.uid == uid }
+                    val existingAuthRecord =
+                        it.seedsList[i].authorizationsList.firstOrNull { ae -> ae.uid == uid }
                     if (existingAuthRecord != null) {
                         // UID is already authorized for this seed; don't change anything
                         assignedAuthToken = existingAuthRecord.authToken
                         return@updateData it
                     }
-                    val newSeedRecordBuilder = it.seedsList[i].toBuilder().addAuthorizations(newAuthorizationEntryBuilder)
+                    val newSeedRecordBuilder =
+                        it.seedsList[i].toBuilder().addAuthorizations(newAuthorizationEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).apply {
                         nextAuthToken = ++this@SeedRepository.nextAuthToken
                     }.build()
@@ -314,7 +323,8 @@ class SeedRepository(
                 context.seedCollectionDataStore.updateData {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
-                    val j = it.seedsList[i].authorizationsList.indexOfFirst { ae -> ae.authToken == authToken }
+                    val j =
+                        it.seedsList[i].authorizationsList.indexOfFirst { ae -> ae.authToken == authToken }
                     require(j != -1) { "AuthToken $authToken not found for seed $id" }
                     val newSeedRecordBuilder = it.seedsList[i].toBuilder().removeAuthorizations(j)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).build()
@@ -364,15 +374,17 @@ class SeedRepository(
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     val bip32Uri = account.bip32DerivationPathUri.toString()
-                    val existingKnownAccountEntry = it.seedsList[i].knownAccountsList.firstOrNull { kae ->
-                        kae.bip32Uri == bip32Uri && kae.purpose == account.purpose.ordinal
-                    }
+                    val existingKnownAccountEntry =
+                        it.seedsList[i].knownAccountsList.firstOrNull { kae ->
+                            kae.bip32Uri == bip32Uri && kae.purpose == account.purpose.ordinal
+                        }
                     if (existingKnownAccountEntry != null) {
                         // Bip32 path is already known for this seed; don't change anything
                         assignedAccountId = existingKnownAccountEntry.accountId
                         return@updateData it
                     }
-                    val newSeedRecordBuilder = it.seedsList[i].toBuilder().addKnownAccounts(newKnownAccountEntryBuilder)
+                    val newSeedRecordBuilder =
+                        it.seedsList[i].toBuilder().addKnownAccounts(newKnownAccountEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).apply {
                         nextAccountId = ++this@SeedRepository.nextAccountId
                     }.build()
@@ -420,9 +432,11 @@ class SeedRepository(
                 context.seedCollectionDataStore.updateData {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
-                    val j = it.seedsList[i].knownAccountsList.indexOfFirst { kae -> kae.accountId == account.id }
+                    val j =
+                        it.seedsList[i].knownAccountsList.indexOfFirst { kae -> kae.accountId == account.id }
                     require(j != -1) { "Seed repository does not contain an entry for account ${account.id} in seed $id" }
-                    val newSeedRecordBuilder = it.seedsList[i].toBuilder().setKnownAccounts(j, newKnownAccountEntryBuilder)
+                    val newSeedRecordBuilder =
+                        it.seedsList[i].toBuilder().setKnownAccounts(j, newKnownAccountEntryBuilder)
                     it.toBuilder().setSeeds(i, newSeedRecordBuilder).build()
                 }
             }
