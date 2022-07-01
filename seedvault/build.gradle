@@ -5,6 +5,7 @@
 plugins {
     id 'com.android.library'
     id 'maven-publish'
+    id 'signing'
 }
 
 android {
@@ -35,8 +36,7 @@ android {
     }
 
     publishing {
-        multipleVariants {
-            allVariants()
+        singleVariant('release') {
             withSourcesJar()
             withJavadocJar()
         }
@@ -45,23 +45,52 @@ android {
 
 publishing {
     publications {
-        allVariants(MavenPublication) {
-            groupId = 'com.solanamobile'
+        release(MavenPublication) {
+            groupId = group
             artifactId = 'seedvault-wallet-sdk'
-            version = releaseVersion // see gradle.properties
+            pom {
+                name = 'Seed Vault - Wallet SDK'
+                description = 'Android programming interfaces for the Solana Mobile Stack Seed Vault'
+                url = 'https://github.com/solana-mobile/seed-vault-sdk'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Solana Mobile Engineering'
+                        email = 'eng@solanamobile.com'
+                        organization = 'Solana Mobile Inc.'
+                        organizationUrl = 'https://solanamobile.com'
+                    }
+                }
+                organization {
+                    name = 'Solana Mobile Inc.'
+                    url = 'https://solanamobile.com'
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/solana-mobile/seed-vault-sdk.git'
+                    developerConnection = 'scm:git:ssh://github.com/solana-mobile/seed-vault-sdk.git'
+                    url = 'https://github.com/solana-mobile/seed-vault-sdk/tree/main'
+                }
+            }
 
             afterEvaluate {
-                from components.default
+                from components.release
             }
         }
     }
-    // TODO: publish to Maven Central
-    repositories {
-        maven {
-            name = 'local_repo'
-            url = "${project.buildDir}/repo"
-        }
-    }
+}
+
+signing {
+    // Signing private key and password provided by ORG_GRADLE_PROJECT_signingKey and
+    // ORG_GRADLE_PROJECT_signingPassword, respectively
+    def signingKey = findProperty('signingKey')
+    def signingPassword = findProperty('signingPassword')
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.release
 }
 
 // Define JavaDoc build task for all variants
