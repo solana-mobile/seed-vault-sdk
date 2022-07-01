@@ -1,5 +1,8 @@
 # Seed Vault - Wallet SDK
 
+[![Release (latest by date)](https://img.shields.io/github/v/release/solana-mobile/seed-vault-sdk)](https://github.com/solana-mobile/seed-vault-sdk/releases/latest)
+[![Android CI](https://github.com/solana-mobile/seed-vault-sdk/actions/workflows/android.yml/badge.svg)](https://github.com/solana-mobile/seed-vault-sdk/actions/workflows/android.yml)
+
 _Part of the [Solana Mobile Stack](https://github.com/solana-mobile/solana-mobile-stack-sdk)_
 
 Join us on [Discord](https://discord.gg/solanamobile)
@@ -27,7 +30,13 @@ All Android projects within this repository can be built using [Android Studio](
 
 ### How to reference these libraries in your project
 
-_Check back soon! We plan to publish the [seedvault](seedvault) library on Maven Central._
+#### Gradle
+
+```
+dependencies {
+    implementation 'com.solanamobile:seedvault-wallet-sdk:0.2.0'
+}
+```
 
 ## Developer documentation
 
