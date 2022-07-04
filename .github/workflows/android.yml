@@ -12,9 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write # needed for uploading files to releases
-
     steps:
       # Setup
       - uses: actions/checkout@v3
@@ -31,8 +28,18 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
+      # Upload libraries to workflow artifacts
+      - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          name: libraries
+          path: seedvault/build/outputs/aar/*.aar
+          if-no-files-found: error
+          retention-days: 5
+
       # Upload javadoc to workflow artifacts
       - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           name: seedvault-javadoc
           path: |
@@ -52,20 +59,7 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
         run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -P version=${TAG:1}
 
-      # Upload artifacts to GitHub release
-      - name: Compress seedvault javadoc (release only)
-        if: ${{ github.event_name == 'release' }}
-        run: tar -cvzf seedvault/build/docs/seedvault-javadoc.tgz -C seedvault/build/docs javadoc
-      - name: Upload files to release (release only)
-        if: ${{ github.event_name == 'release' }}
-        run: gh release upload ${TAG} ${FILES}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.release.tag_name }}
-          FILES: |
-            seedvault/build/docs/seedvault-javadoc.tgz
-            seedvault/build/outputs/aar/*.aar
-
+  # Note: only runs on 'push' events
   publish-to-gh-pages:
     runs-on: ubuntu-latest
     needs: build
@@ -81,3 +75,31 @@ jobs:
           artifact-name: seedvault-javadoc
           dest: seedvault
           commit-message: 'Update seedvault javadoc'
+
+  # Note: only runs on 'release' events
+  upload-to-release:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write # needed for uploading files to releases
+    if: ${{ github.event_name == 'release' }}
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: libraries
+          path: libraries
+      - uses: actions/download-artifact@v3
+        with:
+          name: seedvault-javadoc
+          path: seedvault-javadoc
+      - name: Compress seedvault javadoc
+        run: tar -cvzf seedvault-javadoc/seedvault-javadoc.tgz -C seedvault-javadoc javadoc
+      - name: Upload files to release
+        run: gh release -R ${GITHUB_REPOSITORY} upload ${TAG} ${FILES}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          FILES: |
+            libraries/*.aar
+            seedvault-javadoc/seedvault-javadoc.tgz
