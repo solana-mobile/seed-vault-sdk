@@ -14,9 +14,9 @@ android {
     compileSdk 32
 
     defaultConfig {
-        // Note: 'minSdk 1' ensures that the library can be used with apps targeting any Android
-        // version. It's only useful on devices which expose the Seed Vault API.
-        minSdk 1
+        // Note: 'minSdk 17' ensures that the library can be used with apps targeting much older
+        // Android versions. It's only useful on devices which expose the Seed Vault API.
+        minSdk 17
         targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

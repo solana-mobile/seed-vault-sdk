@@ -22,7 +22,7 @@ import java.util.Objects;
  *
  * @version 0.2
  */
-@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 1 to avoid errors when merging manifests; mark the actual requirements for this class
+@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 17; mark the actual requirements for this class
 public class PublicKeyResponse implements Parcelable {
     /**
      * This exception indicates that an account does not exist for this
