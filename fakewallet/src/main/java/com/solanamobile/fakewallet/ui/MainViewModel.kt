@@ -29,6 +29,10 @@ class MainViewModel(
     private var nextMessageIndex = 0
 
     init {
+        if (!SeedVault.isAvailable(application, true)) {
+            throw UnsupportedOperationException("Seed Vault is not available; please install the Seed Vault simulator")
+        }
+
         viewModelScope.launch {
             observeSeedVaultContentChanges()
             refreshUiState()

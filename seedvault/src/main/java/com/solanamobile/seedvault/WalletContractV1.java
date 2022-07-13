@@ -29,6 +29,13 @@ public final class WalletContractV1 {
     public static final String PACKAGE_SEED_VAULT = "com.solanamobile.seedvaultimpl";
 
     /**
+     * Permission name of the Seed Vault permission. This will be a privileged permission when
+     * running with a real implementation of Seed Vault (where it must be provided as part of the
+     * system, for security purposes).
+     */
+    public static final String PERMISSION_SEED_VAULT_IMPL = "com.solanamobile.seedvault.SEED_VAULT_IMPL";
+
+    /**
      * Authority of all Wallet API Android interfaces (e.g. Intent actions, content providers, etc)
      */
     public static final String AUTHORITY_WALLET = "com.solanamobile.seedvault.wallet.v1";
