@@ -19,7 +19,7 @@ import java.util.Objects;
 /**
  * A request to sign a payload with the specified BIP derivation paths
  *
- * @version 0.2
+ * @version 0.2.2
  */
 public class SigningRequest implements Parcelable {
     /** The payload to sign */

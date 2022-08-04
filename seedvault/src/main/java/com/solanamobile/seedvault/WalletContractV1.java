@@ -18,7 +18,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * The programming contract for the Seed Vault Wallet API
  *
- * @version 0.2
+ * @version 0.2.2
  */
 public final class WalletContractV1 {
     /**
@@ -29,9 +29,15 @@ public final class WalletContractV1 {
     public static final String PACKAGE_SEED_VAULT = "com.solanamobile.seedvaultimpl";
 
     /**
-     * Permission name of the Seed Vault permission. This will be a privileged permission when
-     * running with a real implementation of Seed Vault (where it must be provided as part of the
-     * system, for security purposes).
+     * Permission name of the Seed Vault access permission. This will be a runtime permission for
+     * which all consumers of the Seed Vault must request access.
+     */
+    public static final String PERMISSION_ACCESS_SEED_VAULT = "com.solanamobile.seedvault.ACCESS_SEED_VAULT";
+
+    /**
+     * Permission name of the Seed Vault service permission. This will be a privileged permission
+     * when running with a real implementation of Seed Vault (where it must be provided as part of
+     * the system, for security purposes).
      */
     public static final String PERMISSION_SEED_VAULT_IMPL = "com.solanamobile.seedvault.SEED_VAULT_IMPL";
 

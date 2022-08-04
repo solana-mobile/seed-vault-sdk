@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 /**
  * Programming interfaces for interacting with the Seed Vault (non-Wallet interfaces)
  *
- * @version 0.2
+ * @version 0.2.2
  */
 public class SeedVault {
     private SeedVault() {}

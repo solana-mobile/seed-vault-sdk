@@ -120,7 +120,7 @@ class MainViewModel(
     }
 
     fun onAuthorizeNewSeedSuccess(authToken: Long) {
-        // Mark two accounts as user wallets. This similates a real wallet app exploring each
+        // Mark two accounts as user wallets. This simulates a real wallet app exploring each
         // account and marking them as containing user funds.
         viewModelScope.launch {
             for (i in 0..1) {
