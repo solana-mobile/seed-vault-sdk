@@ -5,6 +5,10 @@
 <resources>
     <string name="app_name">SeedVaultImpl</string>
 
+    <!-- Permissions strings -->
+    <string name="permission_group_seed_vault">Seed Vault</string>
+    <string name="permission_access_seed_vault">access your Seed Vault</string>
+
     <!-- Strings used for fragments for navigation -->
     <string name="fragment_label_seeds">Seeds</string>
     <string name="fragment_label_seed_detail">Seed Details</string>
