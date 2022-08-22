@@ -5,13 +5,11 @@
 package com.solanamobile.seedvault;
 
 import android.net.Uri;
-import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -22,7 +20,6 @@ import java.util.Objects;
  *
  * @version 0.2
  */
-@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 17; mark the actual requirements for this class
 public class PublicKeyResponse implements Parcelable {
     /**
      * This exception indicates that an account does not exist for this
@@ -72,14 +69,14 @@ public class PublicKeyResponse implements Parcelable {
     protected PublicKeyResponse(Parcel in) {
         mPublicKey = in.createByteArray();
         mPublicKeyEncoded = in.readString();
-        resolvedDerivationPath = in.readTypedObject(Uri.CREATOR);
+        resolvedDerivationPath = in.readParcelable(Uri.class.getClassLoader());
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByteArray(mPublicKey);
         dest.writeString(mPublicKeyEncoded);
-        dest.writeTypedObject(resolvedDerivationPath, 0);
+        dest.writeParcelable(resolvedDerivationPath, 0);
     }
 
     @Override
