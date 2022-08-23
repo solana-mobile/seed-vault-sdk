@@ -21,9 +21,9 @@ import java.util.Objects;
 /**
  * The signatures generated in response to a {@link SigningRequest}
  *
- * @version 0.2.2
+ * @version 0.2.4
  */
-@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 17; mark the actual requirements for this class
+@RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class SigningResponse implements Parcelable {
     @NonNull
     private final ArrayList<byte[]> mSignatures;
@@ -112,9 +112,15 @@ public class SigningResponse implements Parcelable {
     @NonNull
     @Override
     public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < mSignatures.size(); i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            sb.append(Arrays.toString(mSignatures.get(i)));
+        }
         return "SigningResponse{" +
-                "mSignatures=[" + mSignatures.stream().map(Arrays::toString).reduce(
-                        (l, r) -> l + ", " + r).orElse("") +
+                "mSignatures=[" + sb +
                 "], mResolvedDerivationPaths=" + mResolvedDerivationPaths +
                 '}';
     }

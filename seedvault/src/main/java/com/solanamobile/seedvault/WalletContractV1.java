@@ -7,10 +7,12 @@ package com.solanamobile.seedvault;
 import static android.app.Activity.RESULT_FIRST_USER;
 
 import android.net.Uri;
+import android.os.Build;
 import android.provider.BaseColumns;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.IntRange;
+import androidx.annotation.RequiresApi;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,8 +20,9 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * The programming contract for the Seed Vault Wallet API
  *
- * @version 0.2.2
+ * @version 0.2.4
  */
+@RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public final class WalletContractV1 {
     /**
      * Package name of the Seed Vault, which implements this Wallet API contract

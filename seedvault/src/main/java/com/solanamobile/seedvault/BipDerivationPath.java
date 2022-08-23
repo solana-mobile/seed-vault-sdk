@@ -5,10 +5,13 @@
 package com.solanamobile.seedvault;
 
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 /** Base class for BIP derivation {@link Uri}s */
+@RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public abstract class BipDerivationPath {
     protected BipDerivationPath() {}
 

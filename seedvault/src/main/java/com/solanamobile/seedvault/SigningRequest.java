@@ -5,10 +5,12 @@
 package com.solanamobile.seedvault;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,8 +21,9 @@ import java.util.Objects;
 /**
  * A request to sign a payload with the specified BIP derivation paths
  *
- * @version 0.2.2
+ * @version 0.2.4
  */
+@RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class SigningRequest implements Parcelable {
     /** The payload to sign */
     @NonNull

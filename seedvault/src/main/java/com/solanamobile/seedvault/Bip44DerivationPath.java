@@ -5,9 +5,11 @@
 package com.solanamobile.seedvault;
 
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +20,7 @@ import java.util.Objects;
  * An immutable BIP44 derivation path (see
  * <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP-0044</a>)
  */
+@RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class Bip44DerivationPath extends BipDerivationPath {
     /** Builder pattern for {@link Bip44DerivationPath} */
     public static class Builder {
