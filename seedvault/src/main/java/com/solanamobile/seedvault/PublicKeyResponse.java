@@ -20,9 +20,9 @@ import java.util.Objects;
  * The account public key generated in response to an {@link WalletContractV1#ACTION_GET_PUBLIC_KEY}
  * request.
  *
- * @version 0.2.2
+ * @version 0.2.4
  */
-@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 17; mark the actual requirements for this class
+@RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class PublicKeyResponse implements Parcelable {
     /**
      * This exception indicates that an account does not exist for this

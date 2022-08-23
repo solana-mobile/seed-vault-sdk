@@ -4,11 +4,15 @@
 
 package com.solanamobile.seedvault;
 
+import android.os.Build;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.util.Objects;
 
 /** An immutable data class encoding a level in a {@link BipDerivationPath} */
+@RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class BipLevel {
     /** Index of this {@link BipLevel} */
     @WalletContractV1.BipIndex

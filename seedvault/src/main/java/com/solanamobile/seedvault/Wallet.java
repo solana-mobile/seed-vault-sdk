@@ -26,9 +26,9 @@ import java.util.List;
 /**
  * Programming interfaces for {@link WalletContractV1}
  *
- * @version 0.2.2
+ * @version 0.2.4
  */
-@RequiresApi(api = Build.VERSION_CODES.S) // library minSdk is 17; mark the actual requirements for this class
+@RequiresApi(api = Build.VERSION_CODES.R) // library minSdk is 17
 public final class Wallet {
     /**
      * Thrown by methods that modify the state of the Seed Vault Wallet if the target of the
