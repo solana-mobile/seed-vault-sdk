@@ -265,6 +265,48 @@ class MainViewModel(
         showErrorMessage(resultCode)
     }
 
+    fun signFakeMessage(@WalletContractV1.AuthToken authToken: Long, account: Account) {
+        val fakeMessage = byteArrayOf(1.toByte())
+        viewModelScope.launch {
+            val message = SigningRequest(fakeMessage, listOf(account.derivationPath))
+            _viewModelEvents.emit(
+                ViewModelEvent.SignMessages(authToken, arrayListOf(message))
+            )
+        }
+    }
+
+    fun signMaxMessagesWithMaxSignatures(@WalletContractV1.AuthToken authToken: Long) {
+        signMMessagesWithNSignatures(authToken, maxSigningRequests, maxRequestedSignatures)
+    }
+
+    private fun signMMessagesWithNSignatures(
+        @WalletContractV1.AuthToken authToken: Long,
+        m: Int,
+        n: Int
+    ) {
+        val signingRequests = (0 until m).map { i ->
+            val derivationPaths = (0 until n).map { j ->
+                Bip44DerivationPath.newBuilder()
+                    .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
+            }
+            SigningRequest(byteArrayOf(i.toByte()), derivationPaths)
+        }
+
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.SignMessages(authToken, ArrayList(signingRequests))
+            )
+        }
+    }
+
+    fun onSignMessagesSuccess(signatures: List<SigningResponse>) {
+        showMessage("Messages signed successfully")
+    }
+
+    fun onSignMessagesFailure(resultCode: Int) {
+        showErrorMessage(resultCode)
+    }
+
     fun requestPublicKeys(@WalletContractV1.AuthToken authToken: Long) {
         requestMPublicKeys(authToken, maxRequestedPublicKeys)
     }
@@ -395,6 +437,11 @@ sealed interface ViewModelEvent {
     data class SignTransactions(
         @WalletContractV1.AuthToken val authToken: Long,
         val transactions: ArrayList<SigningRequest>,
+    ) : ViewModelEvent
+
+    data class SignMessages(
+        @WalletContractV1.AuthToken val authToken: Long,
+        val messages: ArrayList<SigningRequest>,
     ) : ViewModelEvent
 
     data class RequestPublicKeys(

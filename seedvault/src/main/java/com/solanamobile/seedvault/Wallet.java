@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Programming interfaces for {@link WalletContractV1}
  *
- * @version 0.2.4
+ * @version 0.2.5
  */
 @RequiresApi(api = Build.VERSION_CODES.R) // library minSdk is 17
 public final class Wallet {
@@ -171,6 +171,86 @@ public final class Wallet {
                 WalletContractV1.EXTRA_SIGNING_RESPONSE);
         if (signingResponses == null) {
             throw new ActionFailedException("signTransactions returned no results");
+        }
+
+        return signingResponses;
+    }
+
+    /**
+     * Request that the provided message be signed (with whatever method is appropriate for the
+     * purpose originally specified for this auth token). The returned {@link Intent} should be used
+     * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
+     * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
+     * {@link #onSignMessagesResult(int, Intent)}.
+     * @param authToken the auth token for the seed with which to perform message signing
+     * @param derivationPath a {@link BipDerivationPath} representing the account with which to
+     *      sign this message
+     * @param message a {@code byte[]} containing the message to be signed
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     */
+    @NonNull
+    public static Intent signMessage(
+            @WalletContractV1.AuthToken long authToken,
+            @NonNull Uri derivationPath,
+            @NonNull byte[] message) {
+        final ArrayList<Uri> paths = new ArrayList<>(1);
+        paths.add(derivationPath);
+        final ArrayList<SigningRequest> req = new ArrayList<>(1);
+        req.add(new SigningRequest(message, paths));
+        return signMessages(authToken, req);
+    }
+
+    /**
+     * Request that the provided messages be signed (with whatever method is appropriate for the
+     * purpose originally specified for this auth token). The returned {@link Intent} should be used
+     * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
+     * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
+     * {@link #onSignMessagesResult(int, Intent)}.
+     * @param authToken the auth token for the seed with which to perform message signing
+     * @param signingRequests the set of messages to be signed
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalArgumentException if signingRequests is empty
+     */
+    @NonNull
+    public static Intent signMessages(
+            @WalletContractV1.AuthToken long authToken,
+            @NonNull ArrayList<SigningRequest> signingRequests) {
+        if (signingRequests.isEmpty()) {
+            throw new IllegalArgumentException("signingRequests must not be empty");
+        }
+        return new Intent()
+                .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
+                .setAction(WalletContractV1.ACTION_SIGN_MESSAGE)
+                .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
+                .putParcelableArrayListExtra(WalletContractV1.EXTRA_SIGNING_REQUEST,
+                        signingRequests);
+    }
+
+    /**
+     * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
+     * invocation of {@link #signMessage(long, Uri, byte[])} or
+     * {@link #signMessages(long, ArrayList)})
+     * @param resultCode resultCode from {@code onActivityResult}
+     * @param result intent from {@code onActivityResult}
+     * @return a {@link List} of {@link SigningResponse}s with the message signatures
+     * @throws ActionFailedException if message signing failed
+     */
+    @NonNull
+    public static ArrayList<SigningResponse> onSignMessagesResult(
+            int resultCode,
+            @Nullable Intent result) throws ActionFailedException {
+        if (resultCode != Activity.RESULT_OK) {
+            throw new ActionFailedException("signMessages failed with result=" + resultCode);
+        } else if (result == null) {
+            throw new ActionFailedException("signMessages failed to return a result");
+        }
+
+        final ArrayList<SigningResponse> signingResponses = result.getParcelableArrayListExtra(
+                WalletContractV1.EXTRA_SIGNING_RESPONSE);
+        if (signingResponses == null) {
+            throw new ActionFailedException("signMessages returned no results");
         }
 
         return signingResponses;

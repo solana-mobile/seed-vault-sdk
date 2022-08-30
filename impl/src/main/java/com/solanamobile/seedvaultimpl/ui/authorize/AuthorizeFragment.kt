@@ -66,6 +66,7 @@ class AuthorizeFragment : Fragment() {
                     binding.labelAuthorizationType.setText(when (uiState.authorizationType) {
                         AuthorizeUiState.AuthorizationType.SEED -> R.string.label_authorize_seed
                         AuthorizeUiState.AuthorizationType.TRANSACTION -> R.string.label_authorize_transaction
+                        AuthorizeUiState.AuthorizationType.MESSAGE -> R.string.label_authorize_message
                         AuthorizeUiState.AuthorizationType.PUBLIC_KEY -> R.string.label_authorize_public_key
                         null -> android.R.string.unknownName
                     })

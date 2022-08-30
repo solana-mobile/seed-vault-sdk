@@ -47,6 +47,9 @@ class MainActivity : AppCompatActivity() {
             onSignTransaction = { seed, account ->
                 viewModel.signFakeTransaction(seed.authToken, account)
             },
+            onSignMessage = { seed, account ->
+                viewModel.signFakeMessage(seed.authToken, account)
+            },
             onAccountNameUpdated = { seed, account, name ->
                 viewModel.updateAccountName(
                     seed.authToken,
@@ -62,6 +65,9 @@ class MainActivity : AppCompatActivity() {
             },
             onSignMaxTransactionsWithMaxSignatures = { seed ->
                 viewModel.signMaxTransactionsWithMaxSignatures(seed.authToken)
+            },
+            onSignMaxMessagesWithMaxSignatures = { seed ->
+                viewModel.signMaxMessagesWithMaxSignatures(seed.authToken)
             }
         )
         val remainingSeedsAdapter = HasUnauthorizedSeedsAdapter(
@@ -152,6 +158,12 @@ class MainActivity : AppCompatActivity() {
                             @Suppress("deprecation")
                             startActivityForResult(i, REQUEST_SIGN_TRANSACTIONS)
                         }
+                        is ViewModelEvent.SignMessages -> {
+                            val i = Wallet.signMessages(
+                                event.authToken, event.messages)
+                            @Suppress("deprecation")
+                            startActivityForResult(i, REQUEST_SIGN_MESSAGES)
+                        }
                         is ViewModelEvent.RequestPublicKeys ->  {
                             val i = Wallet.requestPublicKeys(
                                 event.authToken, event.derivationPaths)
@@ -189,6 +201,16 @@ class MainActivity : AppCompatActivity() {
                     viewModel.onSignTransactionsFailure(resultCode)
                 }
             }
+            REQUEST_SIGN_MESSAGES -> {
+                try {
+                    val result = Wallet.onSignMessagesResult(resultCode, data)
+                    Log.d(TAG, "Message signed: signatures=$result")
+                    viewModel.onSignMessagesSuccess(result)
+                } catch (e: Wallet.ActionFailedException) {
+                    Log.e(TAG, "Message signing failed", e)
+                    viewModel.onSignMessagesFailure(resultCode)
+                }
+            }
             REQUEST_GET_PUBLIC_KEYS -> {
                 try {
                     val result = Wallet.onRequestPublicKeysResult(resultCode, data)
@@ -206,6 +228,7 @@ class MainActivity : AppCompatActivity() {
         private val TAG = MainActivity::class.simpleName
         private const val REQUEST_AUTHORIZE_SEED_ACCESS = 0
         private const val REQUEST_SIGN_TRANSACTIONS = 1
-        private const val REQUEST_GET_PUBLIC_KEYS = 2
+        private const val REQUEST_SIGN_MESSAGES = 2
+        private const val REQUEST_GET_PUBLIC_KEYS = 3
     }
 }

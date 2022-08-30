@@ -20,7 +20,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * The programming contract for the Seed Vault Wallet API
  *
- * @version 0.2.4
+ * @version 0.2.5
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public final class WalletContractV1 {
@@ -78,7 +78,7 @@ public final class WalletContractV1 {
      * <p>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
      * will be returned. If the specified auth token is not valid,
      * {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If any transaction is not valid for
-     * signing with this auth token, {@link #RESULT_INVALID_TRANSACTION} will be returned. If any
+     * signing with this auth token, {@link #RESULT_INVALID_PAYLOAD} will be returned. If any
      * requested signature derivation path is not a valid BIP32 or BIP44 derivation path Uri,
      * {@link #RESULT_INVALID_DERIVATION_PATH} will be returned. If the user failed to authorize
      * signing the set of transactions, {@link #RESULT_AUTHENTICATION_FAILED} will be returned. If
@@ -90,6 +90,32 @@ public final class WalletContractV1 {
      * @see Bip44DerivationPath
      */
     public static final String ACTION_SIGN_TRANSACTION = AUTHORITY_WALLET + ".ACTION_SIGN_TRANSACTION";
+
+    /**
+     * Intent action to request that a set of messages be signed. The Intent should contain an
+     * {@link #EXTRA_SIGNING_REQUEST} extra {@link SigningRequest}s, one per message to be
+     * signed. Each {@link SigningRequest} may contain multiple requested signature BIP derivation
+     * paths. These derivation paths should be {@link Uri}s with a scheme of either
+     * {@link #BIP32_URI_SCHEME} or {@link #BIP44_URI_SCHEME}. The Intent should also contain an
+     * {@link #EXTRA_AUTH_TOKEN} extra specifying the authorized seed with which to sign.
+     * <p>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
+     * {@link #EXTRA_SIGNING_RESPONSE} extra with {@link SigningResponse}s, one per
+     * {@link SigningRequest}. Each {@link SigningResponse} contains the requested signatures.</p>
+     * <p>If the Activity is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
+     * will be returned. If the specified auth token is not valid,
+     * {@link #RESULT_INVALID_AUTH_TOKEN} will be returned. If any message is not valid for
+     * signing with this auth token, {@link #RESULT_INVALID_PAYLOAD} will be returned. If any
+     * requested signature derivation path is not a valid BIP32 or BIP44 derivation path Uri,
+     * {@link #RESULT_INVALID_DERIVATION_PATH} will be returned. If the user failed to authorize
+     * signing the set of messages, {@link #RESULT_AUTHENTICATION_FAILED} will be returned. If
+     * the number of {@link SigningRequest}s or the number of BIP derivation paths in a
+     * {@link SigningRequest} is more than the quantity supported by the Seed Vault implementation,
+     * {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED} will be returned.</p>
+     *
+     * @see Bip32DerivationPath
+     * @see Bip44DerivationPath
+     */
+    public static final String ACTION_SIGN_MESSAGE = AUTHORITY_WALLET + ".ACTION_SIGN_MESSAGE";
 
     /**
      * Intent action to request the public key for a set of accounts. The Intent should contain an
@@ -130,7 +156,8 @@ public final class WalletContractV1 {
      * A transaction payload provided to {@link #ACTION_SIGN_TRANSACTION} was not valid for the
      * signing purpose associated with the corresponding {@link #EXTRA_AUTH_TOKEN}
      */
-    public static final int RESULT_INVALID_TRANSACTION = RESULT_FIRST_USER + 1002;
+    public static final int RESULT_INVALID_PAYLOAD = RESULT_FIRST_USER + 1002;
+    public static final int RESULT_INVALID_TRANSACTION = RESULT_INVALID_PAYLOAD; // Legacy alias
 
     /**
      * The user declined to authenticate, or failed authentication, in response to an
