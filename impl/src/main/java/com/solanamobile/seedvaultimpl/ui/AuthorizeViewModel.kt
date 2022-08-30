@@ -56,7 +56,8 @@ class AuthorizeViewModel : ViewModel() {
                     _requests.emit(request)
                 }
             }
-            WalletContractV1.ACTION_SIGN_TRANSACTION -> {
+            WalletContractV1.ACTION_SIGN_TRANSACTION,
+            WalletContractV1.ACTION_SIGN_MESSAGE -> {
                 val authToken = getAuthTokenFromIntent(callerIntent)
                 if (authToken == -1L) {
                     Log.e(TAG, "No or invalid auth token provided; aborting...")
@@ -66,11 +67,15 @@ class AuthorizeViewModel : ViewModel() {
                 val signingRequests = callerIntent.getParcelableArrayListExtra<SigningRequest>(WalletContractV1.EXTRA_SIGNING_REQUEST)
                 if (signingRequests == null || signingRequests.isEmpty()) {
                     Log.e(TAG, "No or empty signing requests provided; aborting...")
-                    completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_TRANSACTION)
+                    completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_PAYLOAD)
                     return
                 }
+                val type = if (callerIntent.action == WalletContractV1.ACTION_SIGN_TRANSACTION)
+                    AuthorizeRequestType.Signature.Type.Transaction
+                else
+                    AuthorizeRequestType.Signature.Type.Message
                 startAuthorization()
-                val request = AuthorizeRequest(AuthorizeRequestType.Transaction(authToken, signingRequests), callerActivity, callerUid)
+                val request = AuthorizeRequest(AuthorizeRequestType.Signature(type, authToken, signingRequests), callerActivity, callerUid)
                 cachedRequest = request
                 viewModelScope.launch {
                     _requests.emit(request)
@@ -173,10 +178,13 @@ sealed interface AuthorizeRequestType {
         val seedId: Long? = null
     ) : AuthorizeRequestType
 
-    data class Transaction(
+    data class Signature(
+        val type: Type,
         @WalletContractV1.AuthToken val authToken: Long,
         val transactions: List<SigningRequest>,
-    ) : AuthorizeRequestType
+    ) : AuthorizeRequestType {
+        enum class Type { Transaction, Message }
+    }
 
     data class PublicKey(
         @WalletContractV1.AuthToken val authToken: Long,

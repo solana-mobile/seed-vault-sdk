@@ -12,7 +12,7 @@ import androidx.annotation.RequiresApi;
 /**
  * Programming interfaces for interacting with the Seed Vault (non-Wallet interfaces)
  *
- * @version 0.2.4
+ * @version 0.2.5
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class SeedVault {

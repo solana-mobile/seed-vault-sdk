@@ -16,9 +16,8 @@ import com.solanamobile.fakewallet.databinding.ItemHasUnauthorizedSeedsBinding
 class HasUnauthorizedSeedsAdapter(
     private val onAuthorizeNewSeed: () -> Unit
 ) : ListAdapter<Boolean, HasUnauthorizedSeedsAdapter.HasUnauthorizedSeedsViewHolder>(HasUnauthorizedSeedsDiffCallback) {
-    class HasUnauthorizedSeedsViewHolder(
+    inner class HasUnauthorizedSeedsViewHolder(
         private val binding: ItemHasUnauthorizedSeedsBinding,
-        private val onAuthorizeNewSeed: () -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.buttonAuthorizeSeed.setOnClickListener {
@@ -39,7 +38,7 @@ class HasUnauthorizedSeedsAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HasUnauthorizedSeedsViewHolder {
         val binding = ItemHasUnauthorizedSeedsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return HasUnauthorizedSeedsViewHolder(binding, onAuthorizeNewSeed)
+        return HasUnauthorizedSeedsViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: HasUnauthorizedSeedsViewHolder, position: Int) {

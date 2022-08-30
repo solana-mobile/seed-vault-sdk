@@ -15,12 +15,11 @@ import com.solanamobile.fakewallet.ui.setaccountname.SetAccountNameDialogFragmen
 
 class AccountListAdapter(
     private val onSignTransaction: (Account) -> Unit,
+    private val onSignMessage: (Account) -> Unit,
     private val onAccountNameUpdated: (Account, String) -> Unit
 ) : ListAdapter<Account, AccountListAdapter.AccountViewHolder>(AccountDiffCallback) {
-    class AccountViewHolder(
+    inner class AccountViewHolder(
         private val binding: ItemAccountBinding,
-        private val onSignTransaction: (Account) -> Unit,
-        private val onAccountNameUpdated: (Account, String) -> Unit
     ) : ViewHolder(binding.root) {
         private var account: Account? = null
 
@@ -28,6 +27,11 @@ class AccountListAdapter(
             binding.buttonSignTransaction.setOnClickListener {
                 account?.let { a ->
                     onSignTransaction(a)
+                }
+            }
+            binding.buttonSignMessage.setOnClickListener {
+                account?.let { a ->
+                    onSignMessage(a)
                 }
             }
             val activity = binding.root.context as FragmentActivity
@@ -58,7 +62,7 @@ class AccountListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AccountViewHolder {
         val binding = ItemAccountBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return AccountViewHolder(binding, onSignTransaction, onAccountNameUpdated)
+        return AccountViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: AccountViewHolder, position: Int) {

@@ -63,7 +63,7 @@ object Ed25519Bip32UseCase {
             0x5C.toByte(), 0xF5.toByte(), 0xD3.toByte(), 0xED.toByte()))
     }
 
-    @Size(SignTransactionUseCase.ED25519_SECRET_KEY_SIZE)
+    @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE)
     fun derivePrivateKey(
         seed: SeedDetails,
         bip32DerivationPath: Bip32DerivationPath
@@ -82,7 +82,7 @@ object Ed25519Bip32UseCase {
         return privateKey
     }
 
-    @Size(SignTransactionUseCase.ED25519_PUBLIC_KEY_SIZE)
+    @Size(SignPayloadUseCase.ED25519_PUBLIC_KEY_SIZE)
     fun derivePublicKey(
         seed: SeedDetails,
         bip32DerivationPath: Bip32DerivationPath
@@ -211,7 +211,7 @@ object Ed25519Bip32UseCase {
     // that it assumes the point is fully normalized, as the output of
     // scalarMultiplyByEd25519BasePoint is guaranteed to be.
     private fun isEd25519IdentityPointEncoded(
-        @Size(SignTransactionUseCase.ED25519_SECRET_KEY_SIZE) encodedPoint: ByteArray
+        @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE) encodedPoint: ByteArray
     ): Boolean {
         if (encodedPoint[0] != 1.toByte()) return false
         for (i in 1..31) {

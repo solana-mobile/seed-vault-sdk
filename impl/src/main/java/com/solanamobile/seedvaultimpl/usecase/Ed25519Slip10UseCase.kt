@@ -16,8 +16,8 @@ import javax.crypto.spec.SecretKeySpec
 
 object Ed25519Slip10UseCase {
     private data class KeyDerivationMaterial(
-        @Size(SignTransactionUseCase.ED25519_SECRET_KEY_SIZE) val k: ByteArray,
-        @Size(SignTransactionUseCase.ED25519_SECRET_KEY_SIZE) val c: ByteArray,
+        @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE) val k: ByteArray,
+        @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE) val c: ByteArray,
     ) : BipDerivationUseCase.PartialPublicDerivation {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -43,7 +43,7 @@ object Ed25519Slip10UseCase {
     private const val MASTER_SECRET_MAC_KEY = "ed25519 seed"
     private const val MAC = "HmacSHA512"
 
-    @Size(SignTransactionUseCase.ED25519_SECRET_KEY_SIZE)
+    @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE)
     fun derivePrivateKey(
         seed: SeedDetails,
         bip32DerivationPath: Bip32DerivationPath
@@ -58,7 +58,7 @@ object Ed25519Slip10UseCase {
         return keyPair.secretKey.asBytes
     }
 
-    @Size(SignTransactionUseCase.ED25519_PUBLIC_KEY_SIZE)
+    @Size(SignPayloadUseCase.ED25519_PUBLIC_KEY_SIZE)
     fun derivePublicKey(
         seed: SeedDetails,
         bip32DerivationPath: Bip32DerivationPath,
@@ -74,7 +74,7 @@ object Ed25519Slip10UseCase {
         return keyPair.publicKey.asBytes
     }
 
-    @Size(SignTransactionUseCase.ED25519_PUBLIC_KEY_SIZE)
+    @Size(SignPayloadUseCase.ED25519_PUBLIC_KEY_SIZE)
     fun derivePublicKeyPartialDerivation(
         seed: SeedDetails,
         bip32DerivationPath: Bip32DerivationPath

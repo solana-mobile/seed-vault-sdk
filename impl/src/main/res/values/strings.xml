@@ -47,6 +47,7 @@
     <string name="action_pin">Use password</string>
     <string name="action_cancel">Don\'t allow</string>
     <string name="label_authorize_transaction">Approve transaction</string>
+    <string name="label_authorize_message">Apply signature</string>
     <string name="label_authorize_public_key">Create new wallet</string>
     <string name="error_incorrect_pin">Password not correct, please try again. You have %1$d attempt(s) remaining.</string>
 

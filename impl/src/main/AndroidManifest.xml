@@ -62,6 +62,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_GET_PUBLIC_KEY" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

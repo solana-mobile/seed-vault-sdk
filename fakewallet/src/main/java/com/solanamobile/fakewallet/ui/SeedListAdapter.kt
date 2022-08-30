@@ -20,10 +20,12 @@ class SeedListAdapter(
     private val lifecycleScope: CoroutineScope,
     private val implementationLimits: Flow<ImplementationLimits>,
     private val onSignTransaction: (Seed, Account) -> Unit,
+    private val onSignMessage: (Seed, Account) -> Unit,
     private val onAccountNameUpdated: (Seed, Account, String) -> Unit,
     private val onDeauthorizeSeed: (Seed) -> Unit,
     private val onRequestPublicKeys: (Seed) -> Unit,
-    private val onSignMaxTransactionsWithMaxSignatures: (Seed) -> Unit
+    private val onSignMaxTransactionsWithMaxSignatures: (Seed) -> Unit,
+    private val onSignMaxMessagesWithMaxSignatures: (Seed) -> Unit
 ) : ListAdapter<Seed, SeedListAdapter.SeedViewHolder>(SeedDiffCallback) {
     data class ImplementationLimits(
         val maxSigningRequests: Int,
@@ -42,6 +44,11 @@ class SeedListAdapter(
                     onSignTransaction(s, account)
                 }
             },
+            onSignMessage = { account ->
+                seed?.let { s ->
+                    onSignMessage(s, account)
+                }
+            },
             onAccountNameUpdated = { account, name ->
                 seed?.let { s ->
                     onAccountNameUpdated(s, account, name)
@@ -55,6 +62,12 @@ class SeedListAdapter(
                     binding.buttonSignMaxTransactionsWithMaxSignatures.text =
                         binding.root.context.getString(
                             R.string.action_sign_max_transactions_with_max_signatures,
+                            it.maxSigningRequests,
+                            it.maxRequestedSignatures
+                        )
+                    binding.buttonSignMaxMessagesWithMaxSignatures.text =
+                        binding.root.context.getString(
+                            R.string.action_sign_max_messages_with_max_signatures,
                             it.maxSigningRequests,
                             it.maxRequestedSignatures
                         )
@@ -79,6 +92,11 @@ class SeedListAdapter(
             binding.buttonSignMaxTransactionsWithMaxSignatures.setOnClickListener {
                 seed?.let { s ->
                     onSignMaxTransactionsWithMaxSignatures(s)
+                }
+            }
+            binding.buttonSignMaxMessagesWithMaxSignatures.setOnClickListener {
+                seed?.let { s ->
+                    onSignMaxMessagesWithMaxSignatures(s)
                 }
             }
             binding.recyclerviewAccounts.adapter = adapter

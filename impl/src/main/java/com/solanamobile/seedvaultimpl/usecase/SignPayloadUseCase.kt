@@ -9,12 +9,12 @@ import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.goterl.lazysodium.interfaces.Sign
 
-object SignTransactionUseCase {
+object SignPayloadUseCase {
     const val ED25519_SECRET_KEY_SIZE = Sign.ED25519_SECRETKEYBYTES.toLong()
     const val ED25519_PUBLIC_KEY_SIZE = Sign.ED25519_PUBLICKEYBYTES.toLong()
     const val ED25519_SIGNATURE_SIZE = Sign.ED25519_BYTES.toLong()
 
-    operator fun invoke(
+    fun signTransaction(
         purpose: Authorization.Purpose,
         key: ByteArray,
         @Size(min=1) transaction: ByteArray
@@ -26,6 +26,22 @@ object SignTransactionUseCase {
                 // TODO: validate transaction is a Solana transaction before signing
                 require(key.size == ED25519_SECRET_KEY_SIZE.toInt()) { "Invalid private key for signing Solana transactions" }
                 signEd25519(key, transaction)
+            }
+        }
+    }
+
+    fun signMessage(
+        purpose: Authorization.Purpose,
+        key: ByteArray,
+        @Size(min=1) message: ByteArray
+    ): ByteArray {
+        require(message.isNotEmpty()) { "Message cannot be empty" }
+
+        return when (purpose) {
+            Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS -> {
+                // TODO: validate message is a Solana-compatible message before signing
+                require(key.size == ED25519_SECRET_KEY_SIZE.toInt()) { "Invalid private key for signing Solana messages" }
+                signEd25519(key, message)
             }
         }
     }

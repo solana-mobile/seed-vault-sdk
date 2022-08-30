@@ -50,7 +50,7 @@ class AuthorizeViewModel private constructor(
         viewModelScope.launch {
             activityViewModel.requests.collect { request ->
                 if (request.type !is AuthorizeRequestType.Seed &&
-                        request.type !is AuthorizeRequestType.Transaction &&
+                        request.type !is AuthorizeRequestType.Signature &&
                         request.type !is AuthorizeRequestType.PublicKey) {
                     // Any other request types should only be observed transiently, whilst the
                     // activity state is being updated.
@@ -86,8 +86,12 @@ class AuthorizeViewModel private constructor(
                         normalizedDerivationPaths = null
                     }
 
-                    is AuthorizeRequestType.Transaction -> {
-                        authorizationType = AuthorizeUiState.AuthorizationType.TRANSACTION
+                    is AuthorizeRequestType.Signature -> {
+                        authorizationType =
+                            if (request.type.type == AuthorizeRequestType.Signature.Type.Transaction)
+                                AuthorizeUiState.AuthorizationType.TRANSACTION
+                            else
+                                AuthorizeUiState.AuthorizationType.MESSAGE
                         val authKey = SeedRepository.AuthorizationKey(
                             request.requestorUid,
                             request.type.authToken
@@ -105,7 +109,7 @@ class AuthorizeViewModel private constructor(
                         this@AuthorizeViewModel.purpose = purpose
                         if (request.type.transactions.any { t -> t.payload.isEmpty() }) {
                             Log.e(TAG, "Only non-empty transaction payloads can be signed")
-                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_TRANSACTION)
+                            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_PAYLOAD)
                             return@collect
                         }
                         val numTransactions = request.type.transactions.size
@@ -269,7 +273,7 @@ class AuthorizeViewModel private constructor(
                 }
             }
 
-            is AuthorizeRequestType.Transaction -> {
+            is AuthorizeRequestType.Signature -> {
                 val normalizedDerivationPaths = normalizedDerivationPaths!!
 
                 viewModelScope.launch {
@@ -281,7 +285,18 @@ class AuthorizeViewModel private constructor(
                             try {
                                 withContext(Dispatchers.Default) {
                                     val privateKey = bipDerivationUseCase.derivePrivateKey(purpose, seed, path)
-                                    SignTransactionUseCase(purpose, privateKey, sr.payload)
+                                    if (request.type.type == AuthorizeRequestType.Signature.Type.Transaction)
+                                        SignPayloadUseCase.signTransaction(
+                                            purpose,
+                                            privateKey,
+                                            sr.payload
+                                        )
+                                    else
+                                        SignPayloadUseCase.signMessage(
+                                            purpose,
+                                            privateKey,
+                                            sr.payload
+                                        )
                                 }
                             } catch (_: BipDerivationUseCase.KeyDoesNotExistException) {
                                 Log.e(TAG, "Key does not exist for $purpose:$path")
@@ -356,6 +371,6 @@ data class AuthorizeUiState(
     val message: CharSequence? = null
 ) {
     enum class AuthorizationType {
-        SEED, TRANSACTION, PUBLIC_KEY
+        SEED, TRANSACTION, MESSAGE, PUBLIC_KEY
     }
 }
