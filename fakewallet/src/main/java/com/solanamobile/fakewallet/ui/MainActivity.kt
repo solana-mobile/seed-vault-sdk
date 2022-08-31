@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -19,6 +20,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.solanamobile.fakewallet.databinding.ActivityMainBinding
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -33,6 +35,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val seedListadapter = SeedListAdapter(
+            lifecycleScope = lifecycleScope,
+            implementationLimits = viewModel.uiState.map { uiState ->
+                SeedListAdapter.ImplementationLimits(
+                    uiState.maxSigningRequests,
+                    uiState.maxRequestedSignatures,
+                    uiState.firstRequestedPublicKey,
+                    uiState.lastRequestedPublicKey
+                )
+            },
             onSignTransaction = { seed, account ->
                 viewModel.signFakeTransaction(seed.authToken, account)
             },
@@ -46,11 +57,11 @@ class MainActivity : AppCompatActivity() {
             onDeauthorizeSeed = { seed ->
                 viewModel.deauthorizeSeed(seed.authToken)
             },
-            onRequestPublicKeyForM1000HAndM1001H = { seed ->
-                viewModel.requestPublicKeyForM1000HAndM1001H(seed.authToken)
+            onRequestPublicKeys = { seed ->
+                viewModel.requestPublicKeys(seed.authToken)
             },
-            onSignTwoTransactionsWithTwoSignatures = { seed ->
-                viewModel.signTwoTransactionsWithTwoSignatures(seed.authToken)
+            onSignMaxTransactionsWithMaxSignatures = { seed ->
+                viewModel.signMaxTransactionsWithMaxSignatures(seed.authToken)
             }
         )
         val remainingSeedsAdapter = HasUnauthorizedSeedsAdapter(
@@ -58,7 +69,11 @@ class MainActivity : AppCompatActivity() {
                 viewModel.authorizeNewSeed()
             }
         )
-        val implementationLimitsAdapter = ImplementationLimitsAdapter()
+        val implementationLimitsAdapter = ImplementationLimitsAdapter(
+            onTestExceedLimit = {
+                viewModel.exceedImplementationLimit(it)
+            }
+        )
         val concatAdapter = ConcatAdapter(
             ConcatAdapter.Config.Builder().setStableIdMode(
                 ConcatAdapter.Config.StableIdMode.ISOLATED_STABLE_IDS

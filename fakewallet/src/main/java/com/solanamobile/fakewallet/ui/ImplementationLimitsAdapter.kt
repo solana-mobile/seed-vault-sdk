@@ -13,12 +13,20 @@ import com.solanamobile.fakewallet.databinding.ItemImplementationLimitBinding
 
 typealias ImplementationLimit = Pair<String, Long>
 
-class ImplementationLimitsAdapter : ListAdapter<ImplementationLimit, ImplementationLimitsAdapter.ImplementationLimitViewHolder>(ImplementationLimitDiffCallback) {
-    class ImplementationLimitViewHolder(
+class ImplementationLimitsAdapter(private val onTestExceedLimit: (String) -> Unit) :
+    ListAdapter<ImplementationLimit, ImplementationLimitsAdapter.ImplementationLimitViewHolder>(
+        ImplementationLimitDiffCallback
+    ) {
+    inner class ImplementationLimitViewHolder(
         private val binding: ItemImplementationLimitBinding
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(implementationLimit: ImplementationLimit) {
             binding.textviewImplementationLimit.text = implementationLimit.first + "=" + implementationLimit.second.toString()
+            binding.buttonExceedImplementationLimit.setOnClickListener {
+                onTestExceedLimit(
+                    implementationLimit.first
+                )
+            }
         }
     }
 

@@ -28,6 +28,10 @@ class MainViewModel(
 
     private var nextMessageIndex = 0
 
+    private var maxSigningRequests: Int = 0
+    private var maxRequestedSignatures: Int = 0
+    private var maxRequestedPublicKeys: Int = 0
+
     init {
         if (!SeedVault.isAvailable(application, true)) {
             throw UnsupportedOperationException("Seed Vault is not available; please install the Seed Vault simulator")
@@ -102,12 +106,36 @@ class MainViewModel(
         }
         authorizedSeedsCursor.close()
 
-        val implementationLimits = Wallet.getImplementationLimitsForPurpose(getApplication(),
-            WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        // Note: Add a synthetic entry to the implementation limits, to display and test the BIP32
+        // path length limits (which are not a normal implementation limit)
+        val implementationLimits = Wallet.getImplementationLimitsForPurpose(
+            getApplication(),
+            WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+        ).plus(IMPLEMENTATION_LIMITS_MAX_BIP32_PATH_DEPTH to WalletContractV1.BIP32_URI_MAX_DEPTH.toLong())
+        maxSigningRequests =
+            implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS]!!.toInt()
+        maxRequestedSignatures =
+            implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES]!!.toInt()
+        maxRequestedPublicKeys =
+            implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS]!!.toInt()
+        val firstRequestedPublicKey = Bip32DerivationPath.newBuilder()
+            .appendLevel(BipLevel(FIRST_REQUESTED_PUBLIC_KEY_INDEX, true)).build().toUri()
+            .toString()
+        val lastRequestedPublicKey = Bip32DerivationPath.newBuilder()
+            .appendLevel(
+                BipLevel(
+                    FIRST_REQUESTED_PUBLIC_KEY_INDEX + maxRequestedPublicKeys - 1,
+                    true
+                )
+            ).build().toUri().toString()
 
         _uiState.update {
             it.copy(seeds = seeds, hasUnauthorizedSeeds = hasUnauthorizedSeeds,
-                implementationLimits = implementationLimits)
+                implementationLimits = implementationLimits,
+                maxSigningRequests = maxSigningRequests,
+                maxRequestedSignatures = maxRequestedSignatures,
+                firstRequestedPublicKey = firstRequestedPublicKey,
+                lastRequestedPublicKey = lastRequestedPublicKey)
         }
     }
 
@@ -205,57 +233,96 @@ class MainViewModel(
         }
     }
 
-    fun signTwoTransactionsWithTwoSignatures(@WalletContractV1.AuthToken authToken: Long) {
-        val fakeTransaction1 = byteArrayOf(0.toByte())
-        val fakeTransaction2 = byteArrayOf(1.toByte())
-        val derivationPath11 = Bip44DerivationPath.newBuilder().setAccount(
-            BipLevel(0, true)).build().toUri()
-        val derivationPath12 = Bip44DerivationPath.newBuilder().setAccount(
-            BipLevel(1, true)).build().toUri()
-        val derivationPath21 = Bip44DerivationPath.newBuilder().setAccount(
-            BipLevel(2, true)).build().toUri()
-        val derivationPath22 = Bip44DerivationPath.newBuilder().setAccount(
-            BipLevel(3, true)).build().toUri()
+    fun signMaxTransactionsWithMaxSignatures(@WalletContractV1.AuthToken authToken: Long) {
+        signMTransactionsWithNSignatures(authToken, maxSigningRequests, maxRequestedSignatures)
+    }
+
+    private fun signMTransactionsWithNSignatures(
+        @WalletContractV1.AuthToken authToken: Long,
+        m: Int,
+        n: Int
+    ) {
+        val signingRequests = (0 until m).map { i ->
+            val derivationPaths = (0 until n).map { j ->
+                Bip44DerivationPath.newBuilder()
+                    .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
+            }
+            SigningRequest(byteArrayOf(i.toByte()), derivationPaths)
+        }
 
         viewModelScope.launch {
-            val signingRequest1 = SigningRequest(fakeTransaction1, listOf(derivationPath11, derivationPath12))
-            val signingRequest2 = SigningRequest(fakeTransaction2, listOf(derivationPath21, derivationPath22))
             _viewModelEvents.emit(
-                ViewModelEvent.SignTransactions(authToken, arrayListOf(signingRequest1, signingRequest2))
+                ViewModelEvent.SignTransactions(authToken, ArrayList(signingRequests))
             )
         }
     }
 
     fun onSignTransactionsSuccess(signatures: List<SigningResponse>) {
-        showMessage("Transaction signed successfully")
+        showMessage("Transactions signed successfully")
     }
 
     fun onSignTransactionsFailure(resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
-    fun requestPublicKeyForM1000HAndM1001H(@WalletContractV1.AuthToken authToken: Long) {
-        val derivationPaths = arrayListOf(
+    fun requestPublicKeys(@WalletContractV1.AuthToken authToken: Long) {
+        requestMPublicKeys(authToken, maxRequestedPublicKeys)
+    }
+
+    private fun requestMPublicKeys(@WalletContractV1.AuthToken authToken: Long, m: Int) {
+        val derivationPaths = (0 until m).map { i ->
             Bip32DerivationPath.newBuilder()
-                .appendLevel(BipLevel(1000, true))
-                .build().toUri(),
-            Bip32DerivationPath.newBuilder()
-                .appendLevel(BipLevel(1001, true))
-                .build().toUri(),
-        )
+                .appendLevel(BipLevel(FIRST_REQUESTED_PUBLIC_KEY_INDEX + i, true))
+                .build().toUri()
+        }
+
         viewModelScope.launch {
             _viewModelEvents.emit(
-                ViewModelEvent.RequestPublicKeys(authToken, derivationPaths)
+                ViewModelEvent.RequestPublicKeys(authToken, ArrayList(derivationPaths))
             )
         }
     }
 
     fun onRequestPublicKeysSuccess(publicKeys: List<PublicKeyResponse>) {
-        showMessage("Public key for m/1000' and m/1001' retrieved")
+        showMessage("Public key(s) retrieved")
     }
 
     fun onRequestPublicKeysFailure(resultCode: Int) {
         showErrorMessage(resultCode)
+    }
+
+    fun exceedImplementationLimit(implementationLimit: String) {
+        val seed = _uiState.value.seeds.getOrNull(0)
+        if (seed == null) {
+            showMessage("Cannot test implementation limit without an authorized seed")
+            return
+        }
+
+        when (implementationLimit) {
+            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS ->
+                signMTransactionsWithNSignatures(seed.authToken, maxSigningRequests + 1, 1)
+            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES ->
+                signMTransactionsWithNSignatures(seed.authToken, 1, maxRequestedSignatures + 1)
+            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS ->
+                requestMPublicKeys(seed.authToken, maxRequestedPublicKeys + 1)
+            IMPLEMENTATION_LIMITS_MAX_BIP32_PATH_DEPTH ->
+                exceedBip32PathMaxDepth(seed.authToken)
+            else -> showMessage("Cannot test unknown implementation limit")
+        }
+    }
+
+    private fun exceedBip32PathMaxDepth(@WalletContractV1.AuthToken authToken: Long) {
+        val derivationPathBuilder = Uri.Builder().scheme(WalletContractV1.BIP32_URI_SCHEME)
+            .appendPath(WalletContractV1.BIP32_URI_MASTER_KEY_INDICATOR)
+        for (i in 0..WalletContractV1.BIP32_URI_MAX_DEPTH) {
+            derivationPathBuilder.appendPath(i.toString() + WalletContractV1.BIP_URI_HARDENED_INDEX_IDENTIFIER)
+        }
+
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.RequestPublicKeys(authToken, arrayListOf(derivationPathBuilder.build()))
+            )
+        }
     }
 
     private fun showErrorMessage(resultCode: Int) {
@@ -280,6 +347,8 @@ class MainViewModel(
 
     companion object {
         private val TAG = MainViewModel::class.simpleName
+        private const val FIRST_REQUESTED_PUBLIC_KEY_INDEX = 1000
+        private const val IMPLEMENTATION_LIMITS_MAX_BIP32_PATH_DEPTH = "MaxBip32PathDepth"
     }
 }
 
@@ -303,6 +372,10 @@ data class UiState(
     val seeds: List<Seed> = listOf(),
     val hasUnauthorizedSeeds: Boolean = false,
     val implementationLimits: Map<String, Long> = mapOf(),
+    val maxSigningRequests: Int = -1,
+    val maxRequestedSignatures: Int = -1,
+    val firstRequestedPublicKey: String = "",
+    val lastRequestedPublicKey: String = "",
     val messages: List<Message> = listOf()
 )
 
