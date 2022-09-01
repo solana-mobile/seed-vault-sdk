@@ -11,10 +11,7 @@ import kotlinx.coroutines.SupervisorJob
 
 class SeedVaultImplApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    lateinit var dependencyContainer: ApplicationDependencyContainer
-
-    override fun onCreate() {
-        super.onCreate()
-        dependencyContainer = ApplicationDependencyContainer(this, applicationScope)
+    val dependencyContainer: ApplicationDependencyContainer by lazy {
+        ApplicationDependencyContainer(this, applicationScope)
     }
 }
