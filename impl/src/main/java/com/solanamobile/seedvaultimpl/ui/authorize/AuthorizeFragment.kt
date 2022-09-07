@@ -4,13 +4,13 @@
 
 package com.solanamobile.seedvaultimpl.ui.authorize
 
+import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatEditText
@@ -119,18 +119,7 @@ class AuthorizeFragment : Fragment() {
         }
 
         binding.btnPin.setOnClickListener {
-            val dialog = MaterialAlertDialogBuilder(requireActivity())
-                .setTitle(R.string.label_enter_pin)
-                .setView(R.layout.dialog_enter_pin)
-                .setPositiveButton(android.R.string.ok) { dialog, _ ->
-                    dialog as AlertDialog
-                    val editText = dialog.requireViewById<AppCompatEditText>(R.id.edittext_pin)
-                    val pin = editText.text
-                    viewModel.checkEnteredPIN(pin?.toString() ?: "")
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .create()
-            dialog.show()
+            showPinEntryDialog()
         }
 
         binding.imageviewFingerprintIcon.setOnClickListener {
@@ -146,6 +135,37 @@ class AuthorizeFragment : Fragment() {
 
             // TODO: shake animation
         }
+    }
+
+    private fun showPinEntryDialog() {
+        val dialog = MaterialAlertDialogBuilder(requireActivity())
+            .setTitle(R.string.label_enter_pin)
+            .setView(R.layout.dialog_enter_pin)
+            .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                dialog as AlertDialog
+                val editText = dialog.requireViewById<AppCompatEditText>(R.id.edittext_pin)
+                val pin = editText.text
+                viewModel.checkEnteredPIN(pin?.toString() ?: "")
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+        dialog.show()
+        dialog.requireViewById<AppCompatEditText>(R.id.edittext_pin)
+            .setOnEditorActionListener { _, actionId, event ->
+                // If either the IME is dismissed (IME_ACTION_DONE), or the ENTER key is pressed
+                // on a physical keyboard (for convenience when using the emulator), treat this
+                // as having clicked the positive button.
+                if (actionId == EditorInfo.IME_ACTION_DONE ||
+                    (actionId == EditorInfo.IME_ACTION_UNSPECIFIED &&
+                            event.action == KeyEvent.ACTION_DOWN &&
+                            event.keyCode == KeyEvent.KEYCODE_ENTER)
+                ) {
+                    dialog.getButton(Dialog.BUTTON_POSITIVE).callOnClick()
+                    true
+                } else {
+                    false
+                }
+            }
     }
 
     override fun onDestroy() {
