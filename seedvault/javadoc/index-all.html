@@ -148,6 +148,10 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">Intent action to request the public key for a set of accounts.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_SIGN_MESSAGE">ACTION_SIGN_MESSAGE</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
+<dd>
+<div class="block">Intent action to request that a set of messages be signed.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_SIGN_TRANSACTION">ACTION_SIGN_TRANSACTION</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
 <dd>
 <div class="block">Intent action to request that a set of transactions be signed.</div>
@@ -617,6 +621,12 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
  invocation of <a href="com/solanamobile/seedvault/Wallet.html#requestPublicKeys(long,java.util.ArrayList)"><code>Wallet.requestPublicKeys(long, ArrayList)</code></a>)</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#onSignMessagesResult(int,android.content.Intent)">onSignMessagesResult(int, Intent)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
+<dd>
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="com/solanamobile/seedvault/Wallet.html#signMessage(long,android.net.Uri,byte%5B%5D)"><code>Wallet.signMessage(long, Uri, byte[])</code></a> or
+ <a href="com/solanamobile/seedvault/Wallet.html#signMessages(long,java.util.ArrayList)"><code>Wallet.signMessages(long, ArrayList)</code></a>)</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#onSignTransactionsResult(int,android.content.Intent)">onSignTransactionsResult(int, Intent)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
 <dd>
 <div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
@@ -718,16 +728,18 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <div class="block">A BIP derivation path URI provided to <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_SIGN_TRANSACTION"><code>WalletContractV1.ACTION_SIGN_TRANSACTION</code></a> or
  <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_GET_PUBLIC_KEY"><code>WalletContractV1.ACTION_GET_PUBLIC_KEY</code></a> is not a valid BIP32 or BIP44 Uri</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#RESULT_INVALID_PAYLOAD">RESULT_INVALID_PAYLOAD</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
+<dd>
+<div class="block">A transaction payload provided to <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_SIGN_TRANSACTION"><code>WalletContractV1.ACTION_SIGN_TRANSACTION</code></a> was not valid for the
+ signing purpose associated with the corresponding <a href="com/solanamobile/seedvault/WalletContractV1.html#EXTRA_AUTH_TOKEN"><code>WalletContractV1.EXTRA_AUTH_TOKEN</code></a></div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#RESULT_INVALID_PURPOSE">RESULT_INVALID_PURPOSE</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
 <dd>
 <div class="block">The <a href="com/solanamobile/seedvault/WalletContractV1.html#EXTRA_PURPOSE"><code>WalletContractV1.EXTRA_PURPOSE</code></a> value provided to <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_AUTHORIZE_SEED_ACCESS"><code>WalletContractV1.ACTION_AUTHORIZE_SEED_ACCESS</code></a> is not a
  known <code>PURPOSE_*</code></div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#RESULT_INVALID_TRANSACTION">RESULT_INVALID_TRANSACTION</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
-<dd>
-<div class="block">A transaction payload provided to <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_SIGN_TRANSACTION"><code>WalletContractV1.ACTION_SIGN_TRANSACTION</code></a> was not valid for the
- signing purpose associated with the corresponding <a href="com/solanamobile/seedvault/WalletContractV1.html#EXTRA_AUTH_TOKEN"><code>WalletContractV1.EXTRA_AUTH_TOKEN</code></a></div>
-</dd>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#RESULT_NO_AVAILABLE_SEEDS">RESULT_NO_AVAILABLE_SEEDS</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
 <dd>
 <div class="block">There are no seeds available to authorize in response to
@@ -778,6 +790,16 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/SigningResponse.html#%3Cinit%3E(java.util.List,java.util.List)">SigningResponse(List&lt;byte[]&gt;, List&lt;Uri&gt;)</a></span> - Constructor for class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/SigningResponse.html" title="class in com.solanamobile.seedvault">SigningResponse</a></dt>
 <dd>
 <div class="block">Construct a new <a href="com/solanamobile/seedvault/SigningResponse.html" title="class in com.solanamobile.seedvault"><code>SigningResponse</code></a></div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#signMessage(long,android.net.Uri,byte%5B%5D)">signMessage(long, Uri, byte[])</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
+<dd>
+<div class="block">Request that the provided message be signed (with whatever method is appropriate for the
+ purpose originally specified for this auth token).</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#signMessages(long,java.util.ArrayList)">signMessages(long, ArrayList&lt;SigningRequest&gt;)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
+<dd>
+<div class="block">Request that the provided messages be signed (with whatever method is appropriate for the
+ purpose originally specified for this auth token).</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#signTransaction(long,android.net.Uri,byte%5B%5D)">signTransaction(long, Uri, byte[])</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
 <dd>

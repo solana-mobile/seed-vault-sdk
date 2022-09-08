@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9};
+var data = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9,"i27":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -339,6 +339,16 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 </tr>
 <tr id="i16" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningResponse.html" title="class in com.solanamobile.seedvault">SigningResponse</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignMessagesResult(int,android.content.Intent)">onSignMessagesResult</a></span>&#8203;(int&nbsp;resultCode,
+                    <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
+<td class="colLast">
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="#signMessage(long,android.net.Uri,byte%5B%5D)"><code>signMessage(long, Uri, byte[])</code></a> or
+ <a href="#signMessages(long,java.util.ArrayList)"><code>signMessages(long, ArrayList)</code></a>)</div>
+</td>
+</tr>
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningResponse.html" title="class in com.solanamobile.seedvault">SigningResponse</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignTransactionsResult(int,android.content.Intent)">onSignTransactionsResult</a></span>&#8203;(int&nbsp;resultCode,
                         <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
 <td class="colLast">
@@ -347,7 +357,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  <a href="#signTransactions(long,java.util.ArrayList)"><code>signTransactions(long, ArrayList)</code></a>)</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#requestPublicKey(long,android.net.Uri)">requestPublicKey</a></span>&#8203;(long&nbsp;authToken,
                 <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath)</code></th>
@@ -355,7 +365,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Request the public key for a given <a href="BipDerivationPath.html" title="class in com.solanamobile.seedvault"><code>BipDerivationPath</code></a> of a seed.</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#requestPublicKeys(long,java.util.ArrayList)">requestPublicKeys</a></span>&#8203;(long&nbsp;authToken,
                  <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&gt;&nbsp;derivationPaths)</code></th>
@@ -363,7 +373,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Request the public keys for a set of <a href="BipDerivationPath.html" title="class in com.solanamobile.seedvault"><code>BipDerivationPath</code></a>s of a seed.</div>
 </td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#resolveDerivationPath(android.content.Context,android.net.Uri,int)">resolveDerivationPath</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                      <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath,
@@ -374,7 +384,26 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  the provided <code>WalletContractV1.PURPOSE_*</code> purpose to a BIP32 derivation path.</div>
 </td>
 </tr>
-<tr id="i20" class="altColor">
+<tr id="i21" class="rowColor">
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessage(long,android.net.Uri,byte%5B%5D)">signMessage</a></span>&#8203;(long&nbsp;authToken,
+           <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath,
+           byte[]&nbsp;message)</code></th>
+<td class="colLast">
+<div class="block">Request that the provided message be signed (with whatever method is appropriate for the
+ purpose originally specified for this auth token).</div>
+</td>
+</tr>
+<tr id="i22" class="altColor">
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(long,java.util.ArrayList)">signMessages</a></span>&#8203;(long&nbsp;authToken,
+            <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningRequest.html" title="class in com.solanamobile.seedvault">SigningRequest</a>&gt;&nbsp;signingRequests)</code></th>
+<td class="colLast">
+<div class="block">Request that the provided messages be signed (with whatever method is appropriate for the
+ purpose originally specified for this auth token).</div>
+</td>
+</tr>
+<tr id="i23" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransaction(long,android.net.Uri,byte%5B%5D)">signTransaction</a></span>&#8203;(long&nbsp;authToken,
                <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath,
@@ -384,7 +413,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  purpose originally specified for this auth token).</div>
 </td>
 </tr>
-<tr id="i21" class="rowColor">
+<tr id="i24" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransactions(long,java.util.ArrayList)">signTransactions</a></span>&#8203;(long&nbsp;authToken,
                 <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningRequest.html" title="class in com.solanamobile.seedvault">SigningRequest</a>&gt;&nbsp;signingRequests)</code></th>
@@ -393,7 +422,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  purpose originally specified for this auth token).</div>
 </td>
 </tr>
-<tr id="i22" class="altColor">
+<tr id="i25" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#updateAccountIsUserWallet(android.content.Context,long,long,boolean)">updateAccountIsUserWallet</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                          long&nbsp;authToken,
@@ -403,7 +432,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Update the user wallet flag for the specified known account for the given auth token.</div>
 </td>
 </tr>
-<tr id="i23" class="rowColor">
+<tr id="i26" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#updateAccountIsValid(android.content.Context,long,long,boolean)">updateAccountIsValid</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                     long&nbsp;authToken,
@@ -413,7 +442,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Update the valid flag for the specified known account for the given auth token.</div>
 </td>
 </tr>
-<tr id="i24" class="altColor">
+<tr id="i27" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#updateAccountName(android.content.Context,long,long,java.lang.String)">updateAccountName</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                  long&nbsp;authToken,
@@ -570,6 +599,87 @@ public static&nbsp;<a href="https://d.android.com/reference/java/util/ArrayList.
 <dd>a <a href="https://d.android.com/reference/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink"><code>List</code></a> of <a href="SigningResponse.html" title="class in com.solanamobile.seedvault"><code>SigningResponse</code></a>s with the transaction signatures</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></code> - if transaction signing failed</dd>
+</dl>
+</li>
+</ul>
+<a id="signMessage(long,android.net.Uri,byte[])">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>signMessage</h4>
+<pre class="methodSignature">@NonNull
+public static&nbsp;<a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;signMessage&#8203;(long&nbsp;authToken,
+                                 @NonNull
+                                 <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath,
+                                 @NonNull
+                                 byte[]&nbsp;message)</pre>
+<div class="block">Request that the provided message be signed (with whatever method is appropriate for the
+ purpose originally specified for this auth token). The returned <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a> should be used
+ with <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a>, and the result (as returned to
+ <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a>) should be used as parameters to
+ <a href="#onSignMessagesResult(int,android.content.Intent)"><code>onSignMessagesResult(int, Intent)</code></a>.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>authToken</code> - the auth token for the seed with which to perform message signing</dd>
+<dd><code>derivationPath</code> - a <a href="BipDerivationPath.html" title="class in com.solanamobile.seedvault"><code>BipDerivationPath</code></a> representing the account with which to
+      sign this message</dd>
+<dd><code>message</code> - a <code>byte[]</code> containing the message to be signed</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>an <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a> suitable for usage with
+      <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a></dd>
+</dl>
+</li>
+</ul>
+<a id="signMessages(long,java.util.ArrayList)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>signMessages</h4>
+<pre class="methodSignature">@NonNull
+public static&nbsp;<a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;signMessages&#8203;(long&nbsp;authToken,
+                                  @NonNull
+                                  <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningRequest.html" title="class in com.solanamobile.seedvault">SigningRequest</a>&gt;&nbsp;signingRequests)</pre>
+<div class="block">Request that the provided messages be signed (with whatever method is appropriate for the
+ purpose originally specified for this auth token). The returned <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a> should be used
+ with <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a>, and the result (as returned to
+ <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a>) should be used as parameters to
+ <a href="#onSignMessagesResult(int,android.content.Intent)"><code>onSignMessagesResult(int, Intent)</code></a>.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>authToken</code> - the auth token for the seed with which to perform message signing</dd>
+<dd><code>signingRequests</code> - the set of messages to be signed</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>an <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a> suitable for usage with
+      <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a></dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="https://d.android.com/reference/java/lang/IllegalArgumentException.html?is-external=true" title="class or interface in java.lang" class="externalLink">IllegalArgumentException</a></code> - if signingRequests is empty</dd>
+</dl>
+</li>
+</ul>
+<a id="onSignMessagesResult(int,android.content.Intent)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>onSignMessagesResult</h4>
+<pre class="methodSignature">@NonNull
+public static&nbsp;<a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningResponse.html" title="class in com.solanamobile.seedvault">SigningResponse</a>&gt;&nbsp;onSignMessagesResult&#8203;(int&nbsp;resultCode,
+                                                              @Nullable
+                                                              <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)
+                                                       throws <a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></pre>
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="#signMessage(long,android.net.Uri,byte%5B%5D)"><code>signMessage(long, Uri, byte[])</code></a> or
+ <a href="#signMessages(long,java.util.ArrayList)"><code>signMessages(long, ArrayList)</code></a>)</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>resultCode</code> - resultCode from <code>onActivityResult</code></dd>
+<dd><code>result</code> - intent from <code>onActivityResult</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>a <a href="https://d.android.com/reference/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink"><code>List</code></a> of <a href="SigningResponse.html" title="class in com.solanamobile.seedvault"><code>SigningResponse</code></a>s with the message signatures</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></code> - if message signing failed</dd>
 </dl>
 </li>
 </ul>
