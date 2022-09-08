@@ -11,13 +11,13 @@ plugins {
 android {
     namespace = 'com.solanamobile.seedvault'
 
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         // Note: 'minSdk 17' ensures that the library can be used with apps targeting much older
         // Android versions. It's only useful on devices which expose the Seed Vault API.
         minSdk 17
-        targetSdk 32
+        targetSdk 33
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
