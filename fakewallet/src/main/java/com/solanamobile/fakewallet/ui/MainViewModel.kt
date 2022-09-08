@@ -8,9 +8,12 @@ import android.app.Application
 import android.database.ContentObserver
 import android.net.Uri
 import android.os.Handler
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.solanamobile.fakewallet.usecase.VerifyEd25519SignatureUseCase
 import com.solanamobile.seedvault.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -147,7 +150,7 @@ class MainViewModel(
         }
     }
 
-    fun onAuthorizeNewSeedSuccess(authToken: Long) {
+    fun onAuthorizeNewSeedSuccess(event: ViewModelEvent.AuthorizeNewSeed, authToken: Long) {
         // Mark two accounts as user wallets. This simulates a real wallet app exploring each
         // account and marking them as containing user funds.
         viewModelScope.launch {
@@ -185,7 +188,7 @@ class MainViewModel(
         }
     }
 
-    fun onAuthorizeNewSeedFailure(resultCode: Int) {
+    fun onAuthorizeNewSeedFailure(event: ViewModelEvent.AuthorizeNewSeed, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -197,10 +200,10 @@ class MainViewModel(
         }
     }
 
-    fun onDeauthorizeSeedSuccess() {
+    fun onDeauthorizeSeedSuccess(event: ViewModelEvent.DeauthorizeSeed) {
     }
 
-    fun onDeauthorizeSeedFailure(resultCode: Int) {
+    fun onDeauthorizeSeedFailure(event: ViewModelEvent.DeauthorizeSeed, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -216,15 +219,15 @@ class MainViewModel(
         }
     }
 
-    fun onUpdateAccountNameSuccess() {
+    fun onUpdateAccountNameSuccess(event: ViewModelEvent.UpdateAccountName) {
     }
 
-    fun onUpdateAccountNameFailure(resultCode: Int) {
+    fun onUpdateAccountNameFailure(event: ViewModelEvent.UpdateAccountName, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
     fun signFakeTransaction(@WalletContractV1.AuthToken authToken: Long, account: Account) {
-        val fakeTransaction = byteArrayOf(0.toByte())
+        val fakeTransaction = createFakeTransaction(0)
         viewModelScope.launch {
             val transaction = SigningRequest(fakeTransaction, listOf(account.derivationPath))
             _viewModelEvents.emit(
@@ -247,7 +250,7 @@ class MainViewModel(
                 Bip44DerivationPath.newBuilder()
                     .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
             }
-            SigningRequest(byteArrayOf(i.toByte()), derivationPaths)
+            SigningRequest(createFakeTransaction(i), derivationPaths)
         }
 
         viewModelScope.launch {
@@ -257,16 +260,28 @@ class MainViewModel(
         }
     }
 
-    fun onSignTransactionsSuccess(signatures: List<SigningResponse>) {
-        showMessage("Transactions signed successfully")
+    private fun createFakeTransaction(i: Int): ByteArray {
+        return ByteArray(TRANSACTION_SIZE) { i.toByte() }
     }
 
-    fun onSignTransactionsFailure(resultCode: Int) {
+    fun onSignTransactionsSuccess(
+        event: ViewModelEvent.SignTransactions,
+        signatures: List<SigningResponse>
+    ) {
+        verifySignatures(
+            event.authToken,
+            event.transactions,
+            signatures,
+            "Transactions signed successfully"
+        )
+    }
+
+    fun onSignTransactionsFailure(event: ViewModelEvent.SignTransactions, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
     fun signFakeMessage(@WalletContractV1.AuthToken authToken: Long, account: Account) {
-        val fakeMessage = byteArrayOf(1.toByte())
+        val fakeMessage = createFakeMessage(0)
         viewModelScope.launch {
             val message = SigningRequest(fakeMessage, listOf(account.derivationPath))
             _viewModelEvents.emit(
@@ -289,7 +304,7 @@ class MainViewModel(
                 Bip44DerivationPath.newBuilder()
                     .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
             }
-            SigningRequest(byteArrayOf(i.toByte()), derivationPaths)
+            SigningRequest(createFakeMessage(i), derivationPaths)
         }
 
         viewModelScope.launch {
@@ -299,11 +314,23 @@ class MainViewModel(
         }
     }
 
-    fun onSignMessagesSuccess(signatures: List<SigningResponse>) {
-        showMessage("Messages signed successfully")
+    private fun createFakeMessage(i: Int): ByteArray {
+        return ByteArray(MESSAGE_SIZE) { i.toByte() }
     }
 
-    fun onSignMessagesFailure(resultCode: Int) {
+    fun onSignMessagesSuccess(
+        event: ViewModelEvent.SignMessages,
+        signatures: List<SigningResponse>
+    ) {
+        verifySignatures(
+            event.authToken,
+            event.messages,
+            signatures,
+            "Messages signed successfully"
+        )
+    }
+
+    fun onSignMessagesFailure(event: ViewModelEvent.SignMessages, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -325,11 +352,11 @@ class MainViewModel(
         }
     }
 
-    fun onRequestPublicKeysSuccess(publicKeys: List<PublicKeyResponse>) {
+    fun onRequestPublicKeysSuccess(event: ViewModelEvent.RequestPublicKeys, publicKeys: List<PublicKeyResponse>) {
         showMessage("Public key(s) retrieved")
     }
 
-    fun onRequestPublicKeysFailure(resultCode: Int) {
+    fun onRequestPublicKeysFailure(event: ViewModelEvent.RequestPublicKeys, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -367,6 +394,44 @@ class MainViewModel(
         }
     }
 
+    private fun verifySignatures(
+        @WalletContractV1.AuthToken authToken: Long,
+        signingRequests: List<SigningRequest>,
+        signingResponses: List<SigningResponse>,
+        successMessage: String
+    ) {
+        check(signingRequests.size == signingResponses.size) { "Mismatch between number of requested and provided signatures" }
+        viewModelScope.launch {
+            val signaturesVerified = signingRequests.zip(signingResponses) { request, response ->
+                val publicKeys = response.resolvedDerivationPaths.map { resolvedDerivationPath ->
+                    val c = Wallet.getAccounts(
+                        getApplication(),
+                        authToken,
+                        arrayOf(WalletContractV1.ACCOUNTS_PUBLIC_KEY_RAW),
+                        WalletContractV1.ACCOUNTS_BIP32_DERIVATION_PATH,
+                        resolvedDerivationPath.toString()
+                    )
+                    if (c?.moveToNext() != true) {
+                        showMessage("Error: one or more public keys not found")
+                        return@launch
+                    }
+                    c.getBlob(0)
+                }
+
+                response.signatures.zip(publicKeys) { payloadSignature, publicKey ->
+                    VerifyEd25519SignatureUseCase(publicKey, request.payload, payloadSignature)
+                }.all { it }
+            }.all { it }
+
+            if (!signaturesVerified) {
+                showMessage("ERROR: One or more signatures not valid")
+                return@launch
+            }
+
+            showMessage(successMessage)
+        }
+    }
+
     private fun showErrorMessage(resultCode: Int) {
         showMessage("Action failed, error=$resultCode")
     }
@@ -391,6 +456,8 @@ class MainViewModel(
         private val TAG = MainViewModel::class.simpleName
         private const val FIRST_REQUESTED_PUBLIC_KEY_INDEX = 1000
         private const val IMPLEMENTATION_LIMITS_MAX_BIP32_PATH_DEPTH = "MaxBip32PathDepth"
+        private const val TRANSACTION_SIZE = 512
+        private const val MESSAGE_SIZE = 512
     }
 }
 
@@ -421,31 +488,110 @@ data class UiState(
     val messages: List<Message> = listOf()
 )
 
-sealed interface ViewModelEvent {
-    object AuthorizeNewSeed : ViewModelEvent
+sealed interface ViewModelEvent : Parcelable {
+    object AuthorizeNewSeed : ViewModelEvent {
+        override fun writeToParcel(parcel: Parcel, flags: Int) = Unit
+        override fun describeContents(): Int = 0
+
+        @JvmField
+        val CREATOR = object : Parcelable.Creator<AuthorizeNewSeed> {
+            override fun createFromParcel(parcel: Parcel) = AuthorizeNewSeed
+            override fun newArray(size: Int): Array<AuthorizeNewSeed?> = arrayOfNulls(size)
+        }
+    }
 
     data class DeauthorizeSeed(
         @WalletContractV1.AuthToken val authToken: Long
-    ) : ViewModelEvent
+    ) : ViewModelEvent {
+        constructor(p: Parcel) : this(p.readLong())
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeLong(authToken)
+        }
+
+        override fun describeContents(): Int = 0
+
+        companion object CREATOR : Parcelable.Creator<DeauthorizeSeed> {
+            override fun createFromParcel(parcel: Parcel) = DeauthorizeSeed(parcel)
+            override fun newArray(size: Int): Array<DeauthorizeSeed?> = arrayOfNulls(size)
+        }
+    }
 
     data class UpdateAccountName(
         @WalletContractV1.AuthToken val authToken: Long,
         @WalletContractV1.AccountId val accountId: Long,
         val name: String?,
-    ) : ViewModelEvent
+    ) : ViewModelEvent {
+        constructor(p: Parcel) : this(p.readLong(), p.readLong(), p.readString())
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeLong(authToken)
+            parcel.writeLong(accountId)
+            parcel.writeString(name)
+        }
+
+        override fun describeContents(): Int = 0
+
+        companion object CREATOR : Parcelable.Creator<UpdateAccountName> {
+            override fun createFromParcel(parcel: Parcel) = UpdateAccountName(parcel)
+            override fun newArray(size: Int): Array<UpdateAccountName?> = arrayOfNulls(size)
+        }
+    }
 
     data class SignTransactions(
         @WalletContractV1.AuthToken val authToken: Long,
         val transactions: ArrayList<SigningRequest>,
-    ) : ViewModelEvent
+    ) : ViewModelEvent {
+        constructor(p: Parcel) : this(p.readLong(), p.createTypedArrayList(SigningRequest.CREATOR)!!)
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeLong(authToken)
+            parcel.writeParcelableList(transactions, 0)
+        }
+
+        override fun describeContents(): Int = 0
+
+        companion object CREATOR : Parcelable.Creator<SignTransactions> {
+            override fun createFromParcel(parcel: Parcel) = SignTransactions(parcel)
+            override fun newArray(size: Int): Array<SignTransactions?> = arrayOfNulls(size)
+        }
+    }
 
     data class SignMessages(
         @WalletContractV1.AuthToken val authToken: Long,
         val messages: ArrayList<SigningRequest>,
-    ) : ViewModelEvent
+    ) : ViewModelEvent {
+        constructor(p: Parcel) : this(p.readLong(), p.createTypedArrayList(SigningRequest.CREATOR)!!)
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeLong(authToken)
+            parcel.writeParcelableList(messages, 0)
+        }
+
+        override fun describeContents(): Int = 0
+
+        companion object CREATOR : Parcelable.Creator<SignMessages> {
+            override fun createFromParcel(parcel: Parcel) = SignMessages(parcel)
+            override fun newArray(size: Int): Array<SignMessages?> = arrayOfNulls(size)
+        }
+    }
 
     data class RequestPublicKeys(
         @WalletContractV1.AuthToken val authToken: Long,
         val derivationPaths: ArrayList<Uri>,
-    ) : ViewModelEvent
+    ) : ViewModelEvent {
+        constructor(p: Parcel) : this(p.readLong(), p.createTypedArrayList(Uri.CREATOR)!!)
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeLong(authToken)
+            parcel.writeParcelableList(derivationPaths, 0)
+        }
+
+        override fun describeContents(): Int = 0
+
+        companion object CREATOR : Parcelable.Creator<RequestPublicKeys> {
+            override fun createFromParcel(parcel: Parcel) = RequestPublicKeys(parcel)
+            override fun newArray(size: Int): Array<RequestPublicKeys?> = arrayOfNulls(size)
+        }
+    }
 }
