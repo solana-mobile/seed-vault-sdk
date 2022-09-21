@@ -6,7 +6,6 @@ package com.solanamobile.fakewallet.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -79,6 +78,16 @@ class MainActivity : AppCompatActivity() {
                 viewModel.authorizeNewSeed()
             }
         )
+        val createNewSeedAdapter = CreateSeedAdapter(
+            onCreateNewSeed = {
+                viewModel.createNewSeed()
+            }
+        )
+        val importExistingSeedAdapter = ImportSeedAdapter(
+            onImportExistingSeed = {
+                viewModel.importExistingSeed()
+            }
+        )
         val implementationLimitsAdapter = ImplementationLimitsAdapter(
             onTestExceedLimit = {
                 viewModel.exceedImplementationLimit(it)
@@ -90,6 +99,8 @@ class MainActivity : AppCompatActivity() {
             ).build(),
             seedListadapter,
             remainingSeedsAdapter,
+            createNewSeedAdapter,
+            importExistingSeedAdapter,
             implementationLimitsAdapter
         )
         binding.recyclerviewSeeds.adapter = concatAdapter
@@ -135,6 +146,18 @@ class MainActivity : AppCompatActivity() {
                             val i = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
                             @Suppress("deprecation")
                             startActivityForResult(i, REQUEST_AUTHORIZE_SEED_ACCESS)
+                            pendingEvent = event
+                        }
+                        is ViewModelEvent.CreateNewSeed -> {
+                            val i = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+                            @Suppress("deprecation")
+                            startActivityForResult(i, REQUEST_CREATE_NEW_SEED)
+                            pendingEvent = event
+                        }
+                        is ViewModelEvent.ImportExistingSeed -> {
+                            val i = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+                            @Suppress("deprecation")
+                            startActivityForResult(i, REQUEST_IMPORT_EXISTING_SEED)
                             pendingEvent = event
                         }
                         is ViewModelEvent.DeauthorizeSeed -> {
@@ -198,10 +221,32 @@ class MainActivity : AppCompatActivity() {
                 try {
                     val authToken = Wallet.onAuthorizeSeedResult(resultCode, data)
                     Log.d(TAG, "Seed authorized, AuthToken=$authToken")
-                    viewModel.onAuthorizeNewSeedSuccess(event, authToken)
+                    viewModel.onAddSeedSuccess(event, authToken)
                 } catch (e: Wallet.ActionFailedException) {
                     Log.e(TAG, "Seed authorization failed", e)
-                    viewModel.onAuthorizeNewSeedFailure(event, resultCode)
+                    viewModel.onAddSeedFailure(event, resultCode)
+                }
+            }
+            REQUEST_CREATE_NEW_SEED -> {
+                check(event is ViewModelEvent.CreateNewSeed)
+                try {
+                    val authToken = Wallet.onCreateSeedResult(resultCode, data)
+                    Log.d(TAG, "Seed created, AuthToken=$authToken")
+                    viewModel.onAddSeedSuccess(event, authToken)
+                } catch (e: Wallet.ActionFailedException) {
+                    Log.e(TAG, "Seed creation failed", e)
+                    viewModel.onAddSeedFailure(event, resultCode)
+                }
+            }
+            REQUEST_IMPORT_EXISTING_SEED -> {
+                check(event is ViewModelEvent.ImportExistingSeed)
+                try {
+                    val authToken = Wallet.onImportSeedResult(resultCode, data)
+                    Log.d(TAG, "Seed imported, AuthToken=$authToken")
+                    viewModel.onAddSeedSuccess(event, authToken)
+                } catch (e: Wallet.ActionFailedException) {
+                    Log.e(TAG, "Seed import failed", e)
+                    viewModel.onAddSeedFailure(event, resultCode)
                 }
             }
             REQUEST_SIGN_TRANSACTIONS -> {
@@ -248,9 +293,11 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private val TAG = MainActivity::class.simpleName
         private const val REQUEST_AUTHORIZE_SEED_ACCESS = 0
-        private const val REQUEST_SIGN_TRANSACTIONS = 1
-        private const val REQUEST_SIGN_MESSAGES = 2
-        private const val REQUEST_GET_PUBLIC_KEYS = 3
+        private const val REQUEST_CREATE_NEW_SEED = 1
+        private const val REQUEST_IMPORT_EXISTING_SEED = 2
+        private const val REQUEST_SIGN_TRANSACTIONS = 3
+        private const val REQUEST_SIGN_MESSAGES = 4
+        private const val REQUEST_GET_PUBLIC_KEYS = 5
         private const val KEY_PENDING_EVENT = "pendingEvent"
     }
 }

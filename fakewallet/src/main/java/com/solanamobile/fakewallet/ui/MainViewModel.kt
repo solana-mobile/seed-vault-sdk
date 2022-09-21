@@ -150,7 +150,23 @@ class MainViewModel(
         }
     }
 
-    fun onAuthorizeNewSeedSuccess(event: ViewModelEvent.AuthorizeNewSeed, authToken: Long) {
+    fun createNewSeed() {
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.CreateNewSeed
+            )
+        }
+    }
+
+    fun importExistingSeed() {
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.ImportExistingSeed
+            )
+        }
+    }
+
+    fun onAddSeedSuccess(event: ViewModelEvent.AddSeedViewModelEvent, authToken: Long) {
         // Mark two accounts as user wallets. This simulates a real wallet app exploring each
         // account and marking them as containing user funds.
         viewModelScope.launch {
@@ -188,7 +204,7 @@ class MainViewModel(
         }
     }
 
-    fun onAuthorizeNewSeedFailure(event: ViewModelEvent.AuthorizeNewSeed, resultCode: Int) {
+    fun onAddSeedFailure(event: ViewModelEvent.AddSeedViewModelEvent, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -489,7 +505,9 @@ data class UiState(
 )
 
 sealed interface ViewModelEvent : Parcelable {
-    object AuthorizeNewSeed : ViewModelEvent {
+    sealed interface AddSeedViewModelEvent : ViewModelEvent
+
+    object AuthorizeNewSeed : AddSeedViewModelEvent {
         override fun writeToParcel(parcel: Parcel, flags: Int) = Unit
         override fun describeContents(): Int = 0
 
@@ -497,6 +515,28 @@ sealed interface ViewModelEvent : Parcelable {
         val CREATOR = object : Parcelable.Creator<AuthorizeNewSeed> {
             override fun createFromParcel(parcel: Parcel) = AuthorizeNewSeed
             override fun newArray(size: Int): Array<AuthorizeNewSeed?> = arrayOfNulls(size)
+        }
+    }
+
+    object CreateNewSeed : AddSeedViewModelEvent {
+        override fun writeToParcel(parcel: Parcel, flags: Int) = Unit
+        override fun describeContents(): Int = 0
+
+        @JvmField
+        val CREATOR = object : Parcelable.Creator<CreateNewSeed> {
+            override fun createFromParcel(parcel: Parcel) = CreateNewSeed
+            override fun newArray(size: Int): Array<CreateNewSeed?> = arrayOfNulls(size)
+        }
+    }
+
+    object ImportExistingSeed : AddSeedViewModelEvent {
+        override fun writeToParcel(parcel: Parcel, flags: Int) = Unit
+        override fun describeContents(): Int = 0
+
+        @JvmField
+        val CREATOR = object : Parcelable.Creator<ImportExistingSeed> {
+            override fun createFromParcel(parcel: Parcel) = ImportExistingSeed
+            override fun newArray(size: Int): Array<ImportExistingSeed?> = arrayOfNulls(size)
         }
     }
 

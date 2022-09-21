@@ -9,19 +9,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/textview_has_unauthorized_seeds"
+        android:id="@+id/label"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        app:layout_constraintTop_toTopOf="@id/button_authorize_seed"
-        app:layout_constraintBottom_toBottomOf="@id/button_authorize_seed"
+        app:layout_constraintTop_toTopOf="@id/button_add"
+        app:layout_constraintBottom_toBottomOf="@id/button_add"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/button_authorize_seed"
+        app:layout_constraintEnd_toStartOf="@id/button_add"
         android:textStyle="italic"
         android:textSize="12pt" />
 
     <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/button_authorize_seed"
+        android:id="@+id/button_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"

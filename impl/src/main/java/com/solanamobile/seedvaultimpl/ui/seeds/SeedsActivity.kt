@@ -4,56 +4,47 @@
 
 package com.solanamobile.seedvaultimpl.ui.seeds
 
-import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
 import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
-import com.solanamobile.seedvaultimpl.databinding.FragmentSeedsBinding
+import com.solanamobile.seedvaultimpl.databinding.ActivitySeedsBinding
+import com.solanamobile.seedvaultimpl.ui.seeddetail.SeedDetailActivity
 import kotlinx.coroutines.launch
 
-class SeedsFragment : Fragment() {
+class SeedsActivity : AppCompatActivity() {
     private lateinit var dependencyContainer: ApplicationDependencyContainer
     private val viewModel: SeedsViewModel by viewModels { SeedsViewModel.provideFactory(dependencyContainer.seedRepository) }
 
-    private var _binding: FragmentSeedsBinding? = null
-    private val binding get() = _binding!! // Only valid between onViewCreated and onViewDestroyed
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        dependencyContainer = (requireActivity().application as SeedVaultImplApplication).dependencyContainer
-    }
+    private lateinit var binding: ActivitySeedsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentSeedsBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+        dependencyContainer = (application as SeedVaultImplApplication).dependencyContainer
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        binding = ActivitySeedsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
 
         binding.seedsList.addItemDecoration(DividerItemDecoration(binding.seedsList.context, DividerItemDecoration.VERTICAL))
 
         val seedListAdapter = SeedListAdapter(
             onClick = {
-                findNavController().navigate(SeedsFragmentDirections.actionSeedsFragmentToSeedDetailFragmentForUpdate(it.id))
+                val intent = Intent(SeedDetailActivity.ACTION_EDIT_SEED).setClass(
+                    this,
+                    SeedDetailActivity::class.java
+                ).putExtra(SeedDetailActivity.EXTRA_SEED_ID, it.id)
+                startActivity(intent)
             },
             onDelete = {
                 viewModel.deleteSeed(it.id)
@@ -61,8 +52,8 @@ class SeedsFragment : Fragment() {
         )
         binding.seedsList.adapter = seedListAdapter
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.seedsUiState.collect {
                     seedListAdapter.submitList(it.seeds)
                 }
@@ -70,27 +61,31 @@ class SeedsFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_seeds, menu)
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_seeds, menu)
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.seedsUiState.collect {
                     menu.findItem(R.id.action_add).isVisible = it.canCreateSeeds
                 }
             }
         }
+
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_add -> {
-                findNavController().navigate(SeedsFragmentDirections.actionSeedsFragmentToSeedDetailFragmentForCreate())
+                val intent = Intent(WalletContractV1.ACTION_IMPORT_SEED).setClass(
+                    this,
+                    SeedDetailActivity::class.java
+                ).putExtra(
+                    WalletContractV1.EXTRA_PURPOSE,
+                    WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+                )
+                startActivity(intent)
                 true
             }
             R.id.action_clear -> {
