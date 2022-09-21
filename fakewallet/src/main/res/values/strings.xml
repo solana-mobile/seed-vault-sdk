@@ -18,6 +18,8 @@
         <item quantity="other">(No seeds remaining to be authorized for PURPOSE_SIGN_SOLANA_TRANSACTION)</item>
         <item quantity="one">Authorize another seed for PURPOSE_SIGN_SOLANA_TRANSACTION</item>
     </plurals>
+    <string name="label_create_new_seed">Create a new seed</string>
+    <string name="label_import_existing_seed">Import an existing seed</string>
     <string name="title_set_account_name">Name this account</string>
     <string name="label_implementation_limit">Implementation Limit:</string>
     <string name="action_exceed_implementation_limit">Exceed limit by 1</string>

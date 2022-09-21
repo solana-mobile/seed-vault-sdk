@@ -11,23 +11,23 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.solanamobile.fakewallet.R
-import com.solanamobile.fakewallet.databinding.ItemHasUnauthorizedSeedsBinding
+import com.solanamobile.fakewallet.databinding.ItemLabelWithAddButtonBinding
 
 class HasUnauthorizedSeedsAdapter(
     private val onAuthorizeNewSeed: () -> Unit
 ) : ListAdapter<Boolean, HasUnauthorizedSeedsAdapter.HasUnauthorizedSeedsViewHolder>(HasUnauthorizedSeedsDiffCallback) {
     inner class HasUnauthorizedSeedsViewHolder(
-        private val binding: ItemHasUnauthorizedSeedsBinding,
+        private val binding: ItemLabelWithAddButtonBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
         init {
-            binding.buttonAuthorizeSeed.setOnClickListener {
+            binding.buttonAdd.setOnClickListener {
                 onAuthorizeNewSeed()
             }
         }
 
         fun bind(hasUnauthorizedSeeds: Boolean) {
-            binding.buttonAuthorizeSeed.visibility = if (hasUnauthorizedSeeds) View.VISIBLE else View.GONE
-            binding.textviewHasUnauthorizedSeeds.text = binding.root.context.resources.getQuantityText(
+            binding.buttonAdd.visibility = if (hasUnauthorizedSeeds) View.VISIBLE else View.GONE
+            binding.label.text = binding.root.context.resources.getQuantityText(
                 R.plurals.label_has_unauthorized_seeds, if (hasUnauthorizedSeeds) 1 else 0)
         }
     }
@@ -37,7 +37,7 @@ class HasUnauthorizedSeedsAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HasUnauthorizedSeedsViewHolder {
-        val binding = ItemHasUnauthorizedSeedsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemLabelWithAddButtonBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return HasUnauthorizedSeedsViewHolder(binding)
     }
 

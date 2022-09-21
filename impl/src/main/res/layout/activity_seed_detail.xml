@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.seeddetail.SeedDetailActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/Theme.SeedVaultImpl.AppBarOverlay">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/Theme.SeedVaultImpl.PopupOverlay" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/edittext_seed_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                android:hint="@string/hint_seed_name"
+                android:inputType="text"
+                android:textSize="10pt"
+                android:maxLength="40"
+                android:autofillHints="" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/label_pin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="@id/edittext_pin"
+                app:layout_constraintBottom_toBottomOf="@id/edittext_pin"
+                app:layout_constraintStart_toStartOf="parent"
+                android:text="@string/label_pin"
+                android:textSize="10pt" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/edittext_pin"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                app:layout_constraintTop_toBottomOf="@id/edittext_seed_name"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/label_pin"
+                android:hint="@string/hint_pin"
+                android:inputType="textVisiblePassword"
+                android:textSize="10pt" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier_error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="label_pin,edittext_pin" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/label_error_invalid_pin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@id/barrier_error"
+                android:visibility="gone"
+                android:text="@string/error_invalid_pin"
+                android:textColor="?attr/colorError"
+                android:textSize="10pt" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_enable_biometrics"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:switchPadding="8dp"
+                app:layout_constraintTop_toBottomOf="@id/label_error_invalid_pin"
+                app:layout_constraintStart_toStartOf="parent"
+                android:text="@string/label_enable_biometrics_for_seed"
+                android:textSize="10pt" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/label_seed_phrase"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:text="@string/title_seed_phrase"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="12dp"
+                app:layout_constraintTop_toBottomOf="@id/switch_enable_biometrics"
+                android:textStyle="bold"
+                android:textSize="12pt" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipgroup_phrase_length"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:layout_constraintTop_toBottomOf="@id/switch_enable_biometrics"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_phrase_length_12"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/text_phrase_length_12"
+                    android:checkable="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_phrase_length_24"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/text_phrase_length_24"
+                    android:checkable="true"
+                    android:checked="true" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="label_seed_phrase,chipgroup_phrase_length" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview_seed_phrase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@id/barrier"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:orientation="vertical" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/label_authorized_apps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:layout_constraintTop_toBottomOf="@id/recyclerview_seed_phrase"
+                android:visibility="gone"
+                android:text="@string/label_authorized_apps"
+                android:textStyle="bold"
+                android:textSize="12pt" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview_authorized_apps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@id/label_authorized_apps"
+                android:visibility="gone"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:orientation="vertical" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -12,44 +12,58 @@ import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.SeedDetails
 import com.solanamobile.seedvaultimpl.usecase.Bip39PhraseUseCase
+import com.solanamobile.seedvaultimpl.usecase.PrepopulateKnownAccountsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class SeedDetailViewModel private constructor(
-    private val seedRepository: SeedRepository,
-    private val seedId: Long
+    private val seedRepository: SeedRepository
 ) : ViewModel() {
     private val _seedDetailUiState: MutableStateFlow<SeedDetailUiState> = MutableStateFlow(SeedDetailUiState())
     val seedDetailUiState = _seedDetailUiState.asStateFlow()
 
-    init {
-        if (seedId == 0L) {
-            // Initializing for create
-            _seedDetailUiState.value = SeedDetailUiState()
-        } else {
-            // Initializing for update
-            viewModelScope.launch {
-                val seed = seedRepository.seeds.value[seedId]
-                require(seed != null) { "Seed $seedId not found" }
-                val seedPhraseLength = if (seed.details.seedPhraseWordIndices.size == SeedDetails.SEED_PHRASE_WORD_COUNT_SHORT) {
-                    SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_12_WORDS
-                } else {
-                    SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS
-                }
-                _seedDetailUiState.value = SeedDetailUiState(
-                    isCreateMode = false,
-                    name = seed.details.name ?: "",
-                    phraseLength = seedPhraseLength,
-                    phrase = List(SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS.length) {
-                        seed.details.seedPhraseWordIndices.getOrNull(it)?.let { Bip39PhraseUseCase.toWord(it) } ?: ""
-                    },
-                    pin = seed.details.pin,
-                    enableBiometrics = seed.details.unlockWithBiometrics,
-                    authorizedApps = seed.authorizations
-                )
+    private var mode: SeedDetailMode = UninitializedMode
+
+    fun createNewSeed(authorize: PreAuthorizeSeed? = null) {
+        val phrase = List(SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS.length) {
+            Bip39PhraseUseCase.bip39EnglishWordlist[Random.nextInt(Bip39PhraseUseCase.bip39EnglishWordlist.size)]
+        }
+        _seedDetailUiState.value = SeedDetailUiState(
+            phraseLength = SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_12_WORDS,
+            phrase = phrase
+        )
+        mode = NewSeedMode(authorize)
+    }
+
+    fun importExistingSeed(authorize: PreAuthorizeSeed? = null) {
+        _seedDetailUiState.value = SeedDetailUiState()
+        mode = NewSeedMode(authorize)
+    }
+
+    fun editSeed(seedId: Long) {
+        viewModelScope.launch {
+            val seed = seedRepository.seeds.value[seedId]
+            require(seed != null) { "Seed $seedId not found" }
+            val seedPhraseLength = if (seed.details.seedPhraseWordIndices.size == SeedDetails.SEED_PHRASE_WORD_COUNT_SHORT) {
+                SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_12_WORDS
+            } else {
+                SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS
             }
+            _seedDetailUiState.value = SeedDetailUiState(
+                isCreateMode = false,
+                name = seed.details.name ?: "",
+                phraseLength = seedPhraseLength,
+                phrase = List(SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS.length) {
+                    seed.details.seedPhraseWordIndices.getOrNull(it)?.let { Bip39PhraseUseCase.toWord(it) } ?: ""
+                },
+                pin = seed.details.pin,
+                enableBiometrics = seed.details.unlockWithBiometrics,
+                authorizedApps = seed.authorizations
+            )
+            mode = EditSeedMode(seedId)
         }
     }
 
@@ -85,11 +99,11 @@ class SeedDetailViewModel private constructor(
         _seedDetailUiState.update { it.copy(enableBiometrics = en) }
     }
 
-    fun saveSeed(): Boolean {
+    suspend fun saveSeed(): Long? {
         Log.d(TAG, "Validating seed parameters")
 
-        try {
-            val seed = seedDetailUiState.value.let {
+        return try {
+            val seedDetails = seedDetailUiState.value.let {
                 val phrase: List<Int> = it.phrase.take(it.phraseLength.length).map { w ->
                     Bip39PhraseUseCase.toIndex(w)
                 }
@@ -97,27 +111,40 @@ class SeedDetailViewModel private constructor(
                 SeedDetails(seedBytes, phrase, it.name.ifBlank { null }, it.pin, it.enableBiometrics)
             }
 
-            Log.i(TAG, "Successfully created Seed $seed; committing to SeedRepository")
-            viewModelScope.launch {
-                if (seedId == 0L) {
-                    seedRepository.createSeed(seed)
-                } else {
-                    seedRepository.updateSeed(seedId, seed)
+            Log.i(TAG, "Successfully created Seed $seedDetails; committing to SeedRepository")
+            when (val mode = mode) { // immutable snapshot of mode
+                is NewSeedMode -> {
+                    val seedId = seedRepository.createSeed(seedDetails)
+                    mode.authorize?.let { authorize ->
+                        val authToken = seedRepository.authorizeSeedForUid(seedId, authorize.uid, authorize.purpose)
+
+                        // Ensure that the seed vault contains appropriate known accounts for this authorization purpose
+                        val seed = seedRepository.seeds.value[seedId]!!
+                        PrepopulateKnownAccountsUseCase(seedRepository).populateKnownAccounts(seed, authorize.purpose)
+
+                        authToken
+                    } ?: -1L
                 }
+                is EditSeedMode -> {
+                    seedRepository.updateSeed(mode.seedId, seedDetails)
+                    -1L // don't emit a valid auth token when editing a Seed
+                }
+                else -> throw RuntimeException("Unexpected mode $mode")
             }
         } catch (e: IllegalArgumentException) {
             Log.w(TAG, "Seed creation/update failed", e)
-            return false
+            null
         }
-
-        return true
     }
 
     fun deauthorize(authToken: Long) {
-        Log.d(TAG, "Deauthorizing AuthToken $authToken for seed $seedId")
+        val mode = mode // immutable snapshot of mode
+        check(mode is EditSeedMode)
+
+        Log.d(TAG, "Deauthorizing AuthToken $authToken for seed ${mode.seedId}")
 
         viewModelScope.launch {
-            seedRepository.deauthorizeSeed(seedId, authToken)
+            seedRepository.deauthorizeSeed(mode.seedId, authToken)
 
             // This ViewModel doesn't observe the SeedRepository state - update our UiState manually
             _seedDetailUiState.update { current ->
@@ -129,16 +156,20 @@ class SeedDetailViewModel private constructor(
         }
     }
 
+    private sealed interface SeedDetailMode
+    private object UninitializedMode : SeedDetailMode
+    private data class NewSeedMode(val authorize: PreAuthorizeSeed?) : SeedDetailMode
+    private data class EditSeedMode(val seedId: Long) : SeedDetailMode
+
     companion object {
         private val TAG = SeedDetailViewModel::class.simpleName
 
         fun provideFactory(
-            seedRepository: SeedRepository,
-            seedId: Long
+            seedRepository: SeedRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SeedDetailViewModel(seedRepository, seedId) as T
+                return SeedDetailViewModel(seedRepository) as T
             }
         }
     }
@@ -151,7 +182,7 @@ data class SeedDetailUiState(
     val phrase: List<String> = List(SeedPhraseLength.SEED_PHRASE_24_WORDS.length) { "" },
     val pin: String = "",
     val enableBiometrics: Boolean = false,
-    val authorizedApps: List<Authorization> = listOf()
+    val authorizedApps: List<Authorization> = listOf(),
 ) {
     enum class SeedPhraseLength(val length: Int) {
         SEED_PHRASE_12_WORDS(12), SEED_PHRASE_24_WORDS(24);
@@ -168,4 +199,9 @@ data class SeedDetailUiState(
         }
     }
 }
+
+data class PreAuthorizeSeed(
+    val uid: Int,
+    val purpose: Authorization.Purpose
+)
 

@@ -6,6 +6,7 @@ package com.solanamobile.seedvault;
 
 import static android.app.Activity.RESULT_FIRST_USER;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.BaseColumns;
@@ -20,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * The programming contract for the Seed Vault Wallet API
  *
- * @version 0.2.5
+ * @version 0.2.6
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public final class WalletContractV1 {
@@ -142,6 +143,36 @@ public final class WalletContractV1 {
      */
     public static final String ACTION_GET_PUBLIC_KEY = AUTHORITY_WALLET + ".ACTION_GET_PUBLIC_KEY";
 
+    /**
+     * Intent action to request that a new seed be created by the Seed Vault. The Intent may
+     * optionally contain an {@link #EXTRA_PURPOSE} extra, specifying the purpose for which the new
+     * seed should be authorized for the calling app. This requires that the Intent be sent with
+     * {@link android.app.Activity#startActivityForResult(Intent, int)}.
+     * <p>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
+     * {@link #EXTRA_AUTH_TOKEN} extra with the authorization token for the newly created seed.</p>
+     * <p>If seed creation is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
+     * will be returned. If the specified purpose is not one of the {@code PURPOSE_*} values,
+     * {@link #RESULT_INVALID_PURPOSE} will be returned.</p>
+     * <p>NOTE: this action should be used with an implicit Intent; it should not specify
+     * {@link #PACKAGE_SEED_VAULT}.</p>
+     */
+    public static final String ACTION_CREATE_SEED = AUTHORITY_WALLET + ".ACTION_CREATE_SEED";
+
+    /**
+     * Intent action to request that an existing seed be imported by the Seed Vault. The Intent
+     * may optionally contain an {@link #EXTRA_PURPOSE} extra, specifying the purpose for which the
+     * seed should be authorized for the calling app. This requires that the Intent be sent with
+     * {@link android.app.Activity#startActivityForResult(Intent, int)}.
+     * <p>On {@link android.app.Activity#RESULT_OK}, the resulting Intent will contain an
+     * {@link #EXTRA_AUTH_TOKEN} extra with the authorization token for the imported seed.</p>
+     * <p>If seed creation is cancelled for any reason, {@link android.app.Activity#RESULT_CANCELED}
+     * will be returned. If the specified purpose is not one of the {@code PURPOSE_*} values,
+     * {@link #RESULT_INVALID_PURPOSE} will be returned.</p>
+     * <p>NOTE: this action should be used with an implicit Intent; it should not specify
+     * {@link #PACKAGE_SEED_VAULT}.</p>
+     */
+    public static final String ACTION_IMPORT_SEED = AUTHORITY_WALLET + ".ACTION_IMPORT_SEED";
+
     /** An unspecified error occurred in response to one of the {@code ACTION_*} actions */
     public static final int RESULT_UNSPECIFIED_ERROR = RESULT_FIRST_USER + 1000;
 
@@ -176,8 +207,8 @@ public final class WalletContractV1 {
     public static final int RESULT_NO_AVAILABLE_SEEDS = RESULT_FIRST_USER + 1004;
 
     /**
-     * The {@link #EXTRA_PURPOSE} value provided to {@link #ACTION_AUTHORIZE_SEED_ACCESS} is not a
-     * known {@code PURPOSE_*}
+     * The {@link #EXTRA_PURPOSE} value provided to {@link #ACTION_AUTHORIZE_SEED_ACCESS},
+     * {@link #ACTION_CREATE_SEED}, or {@link #ACTION_IMPORT_SEED} is not a known {@code PURPOSE_*}
      */
     public static final int RESULT_INVALID_PURPOSE = RESULT_FIRST_USER + 1005;
 

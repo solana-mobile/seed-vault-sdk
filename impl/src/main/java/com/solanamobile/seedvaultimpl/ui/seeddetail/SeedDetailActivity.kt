@@ -4,55 +4,85 @@
 
 package com.solanamobile.seedvaultimpl.ui.seeddetail
 
-import android.content.Context
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.TextView
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.R
 import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
-import com.solanamobile.seedvaultimpl.databinding.FragmentSeedDetailBinding
+import com.solanamobile.seedvaultimpl.databinding.ActivitySeedDetailBinding
+import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.SeedDetails
 import kotlinx.coroutines.launch
 
-class SeedDetailFragment : Fragment() {
+class SeedDetailActivity : AppCompatActivity() {
     private lateinit var dependencyContainer: ApplicationDependencyContainer
-    private val viewModel: SeedDetailViewModel by viewModels { SeedDetailViewModel.provideFactory(dependencyContainer.seedRepository, args.seedId) }
-
-    private val args: SeedDetailFragmentArgs by navArgs()
-
-    private var _binding: FragmentSeedDetailBinding? = null
-    private val binding get() = _binding!! // Only valid between onViewCreated and onViewDestroyed
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        dependencyContainer = (requireActivity().application as SeedVaultImplApplication).dependencyContainer
+    private val viewModel: SeedDetailViewModel by viewModels {
+        SeedDetailViewModel.provideFactory(dependencyContainer.seedRepository)
     }
+
+    private lateinit var binding: ActivitySeedDetailBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentSeedDetailBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+        dependencyContainer = (application as SeedVaultImplApplication).dependencyContainer
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        binding = ActivitySeedDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
+
+        setResult(Activity.RESULT_CANCELED) // this will be set to RESULT_OK on success
+
+        when (intent.action) {
+            WalletContractV1.ACTION_CREATE_SEED,
+            WalletContractV1.ACTION_IMPORT_SEED -> {
+                val authorize = if (intent.hasExtra(WalletContractV1.EXTRA_PURPOSE)) {
+                    val authorizePurposeInt = intent.getIntExtra(WalletContractV1.EXTRA_PURPOSE, -1)
+                    val authorizePurpose = try {
+                        Authorization.Purpose.fromWalletContractConstant(authorizePurposeInt)
+                    } catch (e: IllegalArgumentException) {
+                        Log.e(TAG, "Invalid purpose $authorizePurposeInt specified for Intent $intent; terminating...", e)
+                        setResult(WalletContractV1.RESULT_INVALID_PURPOSE)
+                        finish()
+                        return
+                    }
+
+                    callingPackage?.let { packageName ->
+                        PreAuthorizeSeed(
+                            packageManager.getPackageUid(packageName, 0),
+                            authorizePurpose
+                        )
+                    }
+                } else null
+
+                if (intent.action == WalletContractV1.ACTION_CREATE_SEED) {
+                    viewModel.createNewSeed(authorize)
+                } else {
+                    viewModel.importExistingSeed(authorize)
+                }
+            }
+            ACTION_EDIT_SEED -> {
+                val seedId = intent.getLongExtra(EXTRA_SEED_ID, -1L)
+                if (seedId == -1L) {
+                    Log.e(TAG, "Invalid seed ID $seedId specified for Intent $intent; terminating...")
+                    finish()
+                    return
+                }
+                viewModel.editSeed(seedId)
+            }
+            else -> throw IllegalArgumentException("Unsupported Intent $intent")
+        }
 
         val seedPhraseAdapter = SeedPhraseAdapter { i, s ->
             viewModel.setSeedPhraseWord(i, s)
@@ -62,8 +92,8 @@ class SeedDetailFragment : Fragment() {
             viewModel.deauthorize(auth.authToken)
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.seedDetailUiState.collect {
                     binding.edittextSeedName.setTextKeepState(it.name)
                     binding.edittextPin.setTextKeepState(it.pin)
@@ -125,13 +155,9 @@ class SeedDetailFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_seed_detail, menu)
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_seed_detail, menu)
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -140,8 +166,16 @@ class SeedDetailFragment : Fragment() {
                 // An EditText may currently have the focus. Since we only save text to the ViewModel
                 // when focus is lost, force the entire fragment view hierarchy to lose focus.
                 binding.root.clearFocus()
-                if (viewModel.saveSeed()) {
-                    findNavController().popBackStack()
+
+                lifecycleScope.launch {
+                    viewModel.saveSeed()?.let { authToken ->
+                        val intent = if (authToken != -1L)
+                            Intent().putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
+                        else
+                            null
+                        setResult(Activity.RESULT_OK, intent)
+                        finish()
+                    }
                 }
                 true
             }
@@ -159,5 +193,11 @@ class SeedDetailFragment : Fragment() {
             check(!v.isFocusableInTouchMode) { "Expected view $v to be non-focusable in touch mode" }
             binding.root.clearFocus()
         }
+    }
+
+    companion object {
+        private val TAG = SeedDetailActivity::class.simpleName
+        const val ACTION_EDIT_SEED = "com.solanamobile.seedvaultimpl.ui.seeddetail.ACTION_EDIT_SEED"
+        const val EXTRA_SEED_ID = "seed_id"
     }
 }

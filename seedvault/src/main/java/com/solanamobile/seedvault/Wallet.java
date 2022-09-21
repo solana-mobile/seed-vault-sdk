@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Programming interfaces for {@link WalletContractV1}
  *
- * @version 0.2.5
+ * @version 0.2.6
  */
 @RequiresApi(api = Build.VERSION_CODES.R) // library minSdk is 17
 public final class Wallet {
@@ -91,6 +91,94 @@ public final class Wallet {
         final long authToken = result.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1);
         if (authToken == -1) {
             throw new ActionFailedException("authorizeSeed returned an invalid AuthToken");
+        }
+
+        return authToken;
+    }
+
+    /**
+     * Request creation of a new seed for the specified purpose. The returned {@link Intent}
+     * should be used with {@link Activity#startActivityForResult(Intent, int)}, and the result (as
+     * returned to {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters
+     * to {@link #onCreateSeedResult(int, Intent)}.
+     * @param purpose the purpose for which the seed will be used. One of the
+     *      {@code WalletContractV1.PURPOSE_*} constants.
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     */
+    @NonNull
+    public static Intent createSeed(
+            @WalletContractV1.Purpose int purpose) {
+        return new Intent()
+                .setAction(WalletContractV1.ACTION_CREATE_SEED)
+                .putExtra(WalletContractV1.EXTRA_PURPOSE, purpose);
+    }
+
+    /**
+     * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
+     * invocation of {@link #createSeed(int)})
+     * @param resultCode resultCode from {@code onActivityResult}
+     * @param result intent from {@code onActivityResult}
+     * @return the auth token for the newly created seed
+     * @throws ActionFailedException if the creation failed
+     */
+    @WalletContractV1.AuthToken
+    public static long onCreateSeedResult(
+            int resultCode,
+            @Nullable Intent result) throws ActionFailedException {
+        if (resultCode != Activity.RESULT_OK) {
+            throw new ActionFailedException("createSeed failed with result=" + resultCode);
+        } else if (result == null) {
+            throw new ActionFailedException("createSeed failed to return a result");
+        }
+
+        final long authToken = result.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1);
+        if (authToken == -1) {
+            throw new ActionFailedException("createSeed returned an invalid AuthToken");
+        }
+
+        return authToken;
+    }
+
+    /**
+     * Request import of an existing seed for the specified purpose. The returned {@link Intent}
+     * should be used with {@link Activity#startActivityForResult(Intent, int)}, and the result (as
+     * returned to {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters
+     * to {@link #onImportSeedResult(int, Intent)}.
+     * @param purpose the purpose for which the seed will be used. One of the
+     *      {@code WalletContractV1.PURPOSE_*} constants.
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     */
+    @NonNull
+    public static Intent importSeed(
+            @WalletContractV1.Purpose int purpose) {
+        return new Intent()
+                .setAction(WalletContractV1.ACTION_IMPORT_SEED)
+                .putExtra(WalletContractV1.EXTRA_PURPOSE, purpose);
+    }
+
+    /**
+     * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
+     * invocation of {@link #importSeed(int)})
+     * @param resultCode resultCode from {@code onActivityResult}
+     * @param result intent from {@code onActivityResult}
+     * @return the auth token for the imported seed
+     * @throws ActionFailedException if the import failed
+     */
+    @WalletContractV1.AuthToken
+    public static long onImportSeedResult(
+            int resultCode,
+            @Nullable Intent result) throws ActionFailedException {
+        if (resultCode != Activity.RESULT_OK) {
+            throw new ActionFailedException("importSeed failed with result=" + resultCode);
+        } else if (result == null) {
+            throw new ActionFailedException("importSeed failed to return a result");
+        }
+
+        final long authToken = result.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1);
+        if (authToken == -1) {
+            throw new ActionFailedException("importSeed returned an invalid AuthToken");
         }
 
         return authToken;
