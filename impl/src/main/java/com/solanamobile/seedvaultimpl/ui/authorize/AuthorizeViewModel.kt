@@ -190,8 +190,8 @@ class AuthorizeViewModel private constructor(
                     requestorAppIcon = requestorAppIcon,
                     requestorAppName = requestorAppName,
                     seedName = seed.details.name,
-                    enableBiometrics = seed.details.unlockWithBiometrics,
-                    enablePIN = !seed.details.unlockWithBiometrics
+                    allowBiometrics = seed.details.unlockWithBiometrics,
+                    allowPIN = !seed.details.unlockWithBiometrics
                 )
 
                 biometricsFailureCount = 0
@@ -223,18 +223,36 @@ class AuthorizeViewModel private constructor(
         doAuthorizationAction()
     }
 
-    fun biometricAuthorizationSuccess() = doAuthorizationAction()
+    fun biometricAuthorizationSuccess() {
+        Log.d(TAG, "FP authorization succeeded")
+        doAuthorizationAction()
+        _uiState.update {
+            it.copy(allowBiometrics = false)
+        }
+    }
 
     fun biometricsAuthorizationFailed() {
         biometricsFailureCount++
+        Log.d(TAG, "FP authorization failed (failure count: $biometricsFailureCount)")
         if (biometricsFailureCount >= SHOW_PIN_ENTRY_AFTER_NUM_BIOMETRIC_FAILURES) {
             _uiState.update {
-                it.copy(enablePIN = true)
+                it.copy(allowPIN = true)
             }
         }
     }
 
-    private fun showMessage(message: String) {
+    fun biometricAuthorizationRecoverableError(code: Int, message: CharSequence?) {
+        Log.d(TAG, "FP authentication recoverable error: $code/$message")
+        message?.let { showMessage(it) }
+    }
+
+    fun biometricAuthorizationUnrecoverableError(code: Int, message: CharSequence?) {
+        Log.d(TAG, "FP authentication unrecoverable error: $code/$message")
+        message?.let { showMessage(it) }
+        _uiState.update { it.copy(allowBiometrics = false, allowPIN = true) }
+    }
+
+    private fun showMessage(message: CharSequence) {
         _uiState.update { it.copy(message = message) }
     }
 
@@ -366,8 +384,8 @@ data class AuthorizeUiState(
     val requestorAppIcon: Drawable? = null,
     val requestorAppName: CharSequence? = null,
     val seedName: CharSequence? = null,
-    val enablePIN: Boolean = true,
-    val enableBiometrics: Boolean = false,
+    val allowPIN: Boolean = true,
+    val allowBiometrics: Boolean = false,
     val message: CharSequence? = null
 ) {
     enum class AuthorizationType {
