@@ -280,9 +280,23 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ACTION_CREATE_SEED">ACTION_CREATE_SEED</a></span></code></th>
+<td class="colLast">
+<div class="block">Intent action to request that a new seed be created by the Seed Vault.</div>
+</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ACTION_GET_PUBLIC_KEY">ACTION_GET_PUBLIC_KEY</a></span></code></th>
 <td class="colLast">
 <div class="block">Intent action to request the public key for a set of accounts.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ACTION_IMPORT_SEED">ACTION_IMPORT_SEED</a></span></code></th>
+<td class="colLast">
+<div class="block">Intent action to request that an existing seed be imported by the Seed Vault.</div>
 </td>
 </tr>
 <tr class="rowColor">
@@ -612,8 +626,8 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <td class="colFirst"><code>static int</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#RESULT_INVALID_PURPOSE">RESULT_INVALID_PURPOSE</a></span></code></th>
 <td class="colLast">
-<div class="block">The <a href="#EXTRA_PURPOSE"><code>EXTRA_PURPOSE</code></a> value provided to <a href="#ACTION_AUTHORIZE_SEED_ACCESS"><code>ACTION_AUTHORIZE_SEED_ACCESS</code></a> is not a
- known <code>PURPOSE_*</code></div>
+<div class="block">The <a href="#EXTRA_PURPOSE"><code>EXTRA_PURPOSE</code></a> value provided to <a href="#ACTION_AUTHORIZE_SEED_ACCESS"><code>ACTION_AUTHORIZE_SEED_ACCESS</code></a>,
+ <a href="#ACTION_CREATE_SEED"><code>ACTION_CREATE_SEED</code></a>, or <a href="#ACTION_IMPORT_SEED"><code>ACTION_IMPORT_SEED</code></a> is not a known <code>PURPOSE_*</code></div>
 </td>
 </tr>
 <tr class="altColor">
@@ -906,6 +920,54 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 </dl>
 </li>
 </ul>
+<a id="ACTION_CREATE_SEED">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ACTION_CREATE_SEED</h4>
+<pre>public static final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> ACTION_CREATE_SEED</pre>
+<div class="block">Intent action to request that a new seed be created by the Seed Vault. The Intent may
+ optionally contain an <a href="#EXTRA_PURPOSE"><code>EXTRA_PURPOSE</code></a> extra, specifying the purpose for which the new
+ seed should be authorized for the calling app. This requires that the Intent be sent with
+ <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a>.
+ <p>On <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#RESULT_OK" title="class or interface in android.app" class="externalLink"><code>Activity.RESULT_OK</code></a>, the resulting Intent will contain an
+ <a href="#EXTRA_AUTH_TOKEN"><code>EXTRA_AUTH_TOKEN</code></a> extra with the authorization token for the newly created seed.</p>
+ <p>If seed creation is cancelled for any reason, <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#RESULT_CANCELED" title="class or interface in android.app" class="externalLink"><code>Activity.RESULT_CANCELED</code></a>
+ will be returned. If the specified purpose is not one of the <code>PURPOSE_*</code> values,
+ <a href="#RESULT_INVALID_PURPOSE"><code>RESULT_INVALID_PURPOSE</code></a> will be returned.</p>
+ <p>NOTE: this action should be used with an implicit Intent; it should not specify
+ <a href="#PACKAGE_SEED_VAULT"><code>PACKAGE_SEED_VAULT</code></a>.</p></div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../constant-values.html#com.solanamobile.seedvault.WalletContractV1.ACTION_CREATE_SEED">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
+<a id="ACTION_IMPORT_SEED">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ACTION_IMPORT_SEED</h4>
+<pre>public static final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> ACTION_IMPORT_SEED</pre>
+<div class="block">Intent action to request that an existing seed be imported by the Seed Vault. The Intent
+ may optionally contain an <a href="#EXTRA_PURPOSE"><code>EXTRA_PURPOSE</code></a> extra, specifying the purpose for which the
+ seed should be authorized for the calling app. This requires that the Intent be sent with
+ <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a>.
+ <p>On <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#RESULT_OK" title="class or interface in android.app" class="externalLink"><code>Activity.RESULT_OK</code></a>, the resulting Intent will contain an
+ <a href="#EXTRA_AUTH_TOKEN"><code>EXTRA_AUTH_TOKEN</code></a> extra with the authorization token for the imported seed.</p>
+ <p>If seed creation is cancelled for any reason, <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#RESULT_CANCELED" title="class or interface in android.app" class="externalLink"><code>Activity.RESULT_CANCELED</code></a>
+ will be returned. If the specified purpose is not one of the <code>PURPOSE_*</code> values,
+ <a href="#RESULT_INVALID_PURPOSE"><code>RESULT_INVALID_PURPOSE</code></a> will be returned.</p>
+ <p>NOTE: this action should be used with an implicit Intent; it should not specify
+ <a href="#PACKAGE_SEED_VAULT"><code>PACKAGE_SEED_VAULT</code></a>.</p></div>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../constant-values.html#com.solanamobile.seedvault.WalletContractV1.ACTION_IMPORT_SEED">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
 <a id="RESULT_UNSPECIFIED_ERROR">
 <!--   -->
 </a>
@@ -1005,8 +1067,8 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <li class="blockList">
 <h4>RESULT_INVALID_PURPOSE</h4>
 <pre>public static final&nbsp;int RESULT_INVALID_PURPOSE</pre>
-<div class="block">The <a href="#EXTRA_PURPOSE"><code>EXTRA_PURPOSE</code></a> value provided to <a href="#ACTION_AUTHORIZE_SEED_ACCESS"><code>ACTION_AUTHORIZE_SEED_ACCESS</code></a> is not a
- known <code>PURPOSE_*</code></div>
+<div class="block">The <a href="#EXTRA_PURPOSE"><code>EXTRA_PURPOSE</code></a> value provided to <a href="#ACTION_AUTHORIZE_SEED_ACCESS"><code>ACTION_AUTHORIZE_SEED_ACCESS</code></a>,
+ <a href="#ACTION_CREATE_SEED"><code>ACTION_CREATE_SEED</code></a>, or <a href="#ACTION_IMPORT_SEED"><code>ACTION_IMPORT_SEED</code></a> is not a known <code>PURPOSE_*</code></div>
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="../../../constant-values.html#com.solanamobile.seedvault.WalletContractV1.RESULT_INVALID_PURPOSE">Constant Field Values</a></dd>

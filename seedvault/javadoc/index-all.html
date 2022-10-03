@@ -144,9 +144,17 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">Intent action to request that a new seed be authorized for usage by the calling app.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_CREATE_SEED">ACTION_CREATE_SEED</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
+<dd>
+<div class="block">Intent action to request that a new seed be created by the Seed Vault.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_GET_PUBLIC_KEY">ACTION_GET_PUBLIC_KEY</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
 <dd>
 <div class="block">Intent action to request the public key for a set of accounts.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_IMPORT_SEED">ACTION_IMPORT_SEED</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
+<dd>
+<div class="block">Intent action to request that an existing seed be imported by the Seed Vault.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_SIGN_MESSAGE">ACTION_SIGN_MESSAGE</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
 <dd>
@@ -289,6 +297,10 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dl>
 <dt><a href="com/solanamobile/seedvault/package-summary.html">com.solanamobile.seedvault</a> - package com.solanamobile.seedvault</dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#createSeed(int)">createSeed(int)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
+<dd>
+<div class="block">Request creation of a new seed for the specified purpose.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/PublicKeyResponse.html#CREATOR">CREATOR</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/PublicKeyResponse.html" title="class in com.solanamobile.seedvault">PublicKeyResponse</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/SigningRequest.html#CREATOR">CREATOR</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/SigningRequest.html" title="class in com.solanamobile.seedvault">SigningRequest</a></dt>
@@ -548,6 +560,10 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">Wallet content provider implementation limits table name</div>
 </dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#importSeed(int)">importSeed(int)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
+<dd>
+<div class="block">Request import of an existing seed for the specified purpose.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/BipLevel.html#index">index</a></span> - Variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/BipLevel.html" title="class in com.solanamobile.seedvault">BipLevel</a></dt>
 <dd>
 <div class="block">Index of this <a href="com/solanamobile/seedvault/BipLevel.html" title="class in com.solanamobile.seedvault"><code>BipLevel</code></a></div>
@@ -615,6 +631,16 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
  invocation of <a href="com/solanamobile/seedvault/Wallet.html#authorizeSeed(int)"><code>Wallet.authorizeSeed(int)</code></a>)</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#onCreateSeedResult(int,android.content.Intent)">onCreateSeedResult(int, Intent)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
+<dd>
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="com/solanamobile/seedvault/Wallet.html#createSeed(int)"><code>Wallet.createSeed(int)</code></a>)</div>
+</dd>
+<dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#onImportSeedResult(int,android.content.Intent)">onImportSeedResult(int, Intent)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
+<dd>
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="com/solanamobile/seedvault/Wallet.html#importSeed(int)"><code>Wallet.importSeed(int)</code></a>)</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/Wallet.html#onRequestPublicKeysResult(int,android.content.Intent)">onRequestPublicKeysResult(int, Intent)</a></span> - Static method in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/Wallet.html" title="class in com.solanamobile.seedvault">Wallet</a></dt>
 <dd>
@@ -735,8 +761,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#RESULT_INVALID_PURPOSE">RESULT_INVALID_PURPOSE</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
 <dd>
-<div class="block">The <a href="com/solanamobile/seedvault/WalletContractV1.html#EXTRA_PURPOSE"><code>WalletContractV1.EXTRA_PURPOSE</code></a> value provided to <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_AUTHORIZE_SEED_ACCESS"><code>WalletContractV1.ACTION_AUTHORIZE_SEED_ACCESS</code></a> is not a
- known <code>PURPOSE_*</code></div>
+<div class="block">The <a href="com/solanamobile/seedvault/WalletContractV1.html#EXTRA_PURPOSE"><code>WalletContractV1.EXTRA_PURPOSE</code></a> value provided to <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_AUTHORIZE_SEED_ACCESS"><code>WalletContractV1.ACTION_AUTHORIZE_SEED_ACCESS</code></a>,
+ <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_CREATE_SEED"><code>WalletContractV1.ACTION_CREATE_SEED</code></a>, or <a href="com/solanamobile/seedvault/WalletContractV1.html#ACTION_IMPORT_SEED"><code>WalletContractV1.ACTION_IMPORT_SEED</code></a> is not a known <code>PURPOSE_*</code></div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/solanamobile/seedvault/WalletContractV1.html#RESULT_INVALID_TRANSACTION">RESULT_INVALID_TRANSACTION</a></span> - Static variable in class com.solanamobile.seedvault.<a href="com/solanamobile/seedvault/WalletContractV1.html" title="class in com.solanamobile.seedvault">WalletContractV1</a></dt>
 <dd>&nbsp;</dd>

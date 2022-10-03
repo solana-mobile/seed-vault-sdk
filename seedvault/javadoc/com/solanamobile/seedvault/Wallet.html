@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9,"i27":9};
+var data = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":9,"i5":9,"i6":9,"i7":9,"i8":9,"i9":9,"i10":9,"i11":9,"i12":9,"i13":9,"i14":9,"i15":9,"i16":9,"i17":9,"i18":9,"i19":9,"i20":9,"i21":9,"i22":9,"i23":9,"i24":9,"i25":9,"i26":9,"i27":9,"i28":9,"i29":9,"i30":9,"i31":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -194,6 +194,13 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 </td>
 </tr>
 <tr id="i1" class="rowColor">
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSeed(int)">createSeed</a></span>&#8203;(int&nbsp;purpose)</code></th>
+<td class="colLast">
+<div class="block">Request creation of a new seed for the specified purpose.</div>
+</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#deauthorizeSeed(android.content.Context,long)">deauthorizeSeed</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                long&nbsp;authToken)</code></th>
@@ -201,7 +208,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Deauthorize the specified seed for the current app</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getAccount(android.content.Context,long,long,java.lang.String%5B%5D)">getAccount</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
           long&nbsp;authToken,
@@ -212,7 +219,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  given auth token.</div>
 </td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getAccounts(android.content.Context,long,java.lang.String%5B%5D)">getAccounts</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
            long&nbsp;authToken,
@@ -222,7 +229,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  auth token.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getAccounts(android.content.Context,long,java.lang.String%5B%5D,java.lang.String,java.lang.Object)">getAccounts</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
            long&nbsp;authToken,
@@ -234,7 +241,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  auth token which match the provided query.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getAuthorizedSeed(android.content.Context,long,java.lang.String%5B%5D)">getAuthorizedSeed</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                  long&nbsp;authToken,
@@ -243,7 +250,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Request a <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink"><code>Cursor</code></a> containing the specified authorized seed for the current app.</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getAuthorizedSeeds(android.content.Context,java.lang.String%5B%5D)">getAuthorizedSeeds</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;projection)</code></th>
@@ -251,7 +258,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Request a <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink"><code>Cursor</code></a> containing the authorized seeds for the current app.</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getAuthorizedSeeds(android.content.Context,java.lang.String%5B%5D,java.lang.String,java.lang.Object)">getAuthorizedSeeds</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;projection,
@@ -262,7 +269,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  provided query.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getImplementationLimits(android.content.Context,java.lang.String%5B%5D)">getImplementationLimits</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;projection)</code></th>
@@ -271,7 +278,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  implementation.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getImplementationLimits(android.content.Context,java.lang.String%5B%5D,java.lang.String,java.lang.Object)">getImplementationLimits</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;projection,
@@ -282,7 +289,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  implementation.</div>
 </td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/util/ArrayMap.html?is-external=true" title="class or interface in android.util" class="externalLink">ArrayMap</a>&lt;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://d.android.com/reference/java/lang/Long.html?is-external=true" title="class or interface in java.lang" class="externalLink">Long</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getImplementationLimitsForPurpose(android.content.Context,int)">getImplementationLimitsForPurpose</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                                  int&nbsp;purpose)</code></th>
@@ -290,7 +297,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Request the implementation limits of the specified purpose for the Seed Vault implementation.</div>
 </td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getUnauthorizedSeeds(android.content.Context,java.lang.String%5B%5D)">getUnauthorizedSeeds</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;projection)</code></th>
@@ -299,7 +306,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  for each purpose for the current app.</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getUnauthorizedSeeds(android.content.Context,java.lang.String%5B%5D,java.lang.String,java.lang.Object)">getUnauthorizedSeeds</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;projection,
@@ -310,7 +317,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  authorized for each purpose for the current app which match the provided query.</div>
 </td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>static boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#hasUnauthorizedSeedsForPurpose(android.content.Context,int)">hasUnauthorizedSeedsForPurpose</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                               int&nbsp;purpose)</code></th>
@@ -319,7 +326,14 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  current app</div>
 </td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i15" class="rowColor">
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#importSeed(int)">importSeed</a></span>&#8203;(int&nbsp;purpose)</code></th>
+<td class="colLast">
+<div class="block">Request import of an existing seed for the specified purpose.</div>
+</td>
+</tr>
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>static long</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onAuthorizeSeedResult(int,android.content.Intent)">onAuthorizeSeedResult</a></span>&#8203;(int&nbsp;resultCode,
                      <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
@@ -328,7 +342,25 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  invocation of <a href="#authorizeSeed(int)"><code>authorizeSeed(int)</code></a>)</div>
 </td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
+<td class="colFirst"><code>static long</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onCreateSeedResult(int,android.content.Intent)">onCreateSeedResult</a></span>&#8203;(int&nbsp;resultCode,
+                  <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
+<td class="colLast">
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="#createSeed(int)"><code>createSeed(int)</code></a>)</div>
+</td>
+</tr>
+<tr id="i18" class="altColor">
+<td class="colFirst"><code>static long</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onImportSeedResult(int,android.content.Intent)">onImportSeedResult</a></span>&#8203;(int&nbsp;resultCode,
+                  <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
+<td class="colLast">
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="#importSeed(int)"><code>importSeed(int)</code></a>)</div>
+</td>
+</tr>
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="PublicKeyResponse.html" title="class in com.solanamobile.seedvault">PublicKeyResponse</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onRequestPublicKeysResult(int,android.content.Intent)">onRequestPublicKeysResult</a></span>&#8203;(int&nbsp;resultCode,
                          <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
@@ -337,7 +369,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  invocation of <a href="#requestPublicKeys(long,java.util.ArrayList)"><code>requestPublicKeys(long, ArrayList)</code></a>)</div>
 </td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i20" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningResponse.html" title="class in com.solanamobile.seedvault">SigningResponse</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignMessagesResult(int,android.content.Intent)">onSignMessagesResult</a></span>&#8203;(int&nbsp;resultCode,
                     <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
@@ -347,7 +379,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  <a href="#signMessages(long,java.util.ArrayList)"><code>signMessages(long, ArrayList)</code></a>)</div>
 </td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningResponse.html" title="class in com.solanamobile.seedvault">SigningResponse</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignTransactionsResult(int,android.content.Intent)">onSignTransactionsResult</a></span>&#8203;(int&nbsp;resultCode,
                         <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)</code></th>
@@ -357,7 +389,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  <a href="#signTransactions(long,java.util.ArrayList)"><code>signTransactions(long, ArrayList)</code></a>)</div>
 </td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i22" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#requestPublicKey(long,android.net.Uri)">requestPublicKey</a></span>&#8203;(long&nbsp;authToken,
                 <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath)</code></th>
@@ -365,7 +397,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Request the public key for a given <a href="BipDerivationPath.html" title="class in com.solanamobile.seedvault"><code>BipDerivationPath</code></a> of a seed.</div>
 </td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i23" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#requestPublicKeys(long,java.util.ArrayList)">requestPublicKeys</a></span>&#8203;(long&nbsp;authToken,
                  <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&gt;&nbsp;derivationPaths)</code></th>
@@ -373,7 +405,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Request the public keys for a set of <a href="BipDerivationPath.html" title="class in com.solanamobile.seedvault"><code>BipDerivationPath</code></a>s of a seed.</div>
 </td>
 </tr>
-<tr id="i20" class="altColor">
+<tr id="i24" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#resolveDerivationPath(android.content.Context,android.net.Uri,int)">resolveDerivationPath</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                      <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath,
@@ -384,7 +416,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  the provided <code>WalletContractV1.PURPOSE_*</code> purpose to a BIP32 derivation path.</div>
 </td>
 </tr>
-<tr id="i21" class="rowColor">
+<tr id="i25" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessage(long,android.net.Uri,byte%5B%5D)">signMessage</a></span>&#8203;(long&nbsp;authToken,
            <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath,
@@ -394,7 +426,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  purpose originally specified for this auth token).</div>
 </td>
 </tr>
-<tr id="i22" class="altColor">
+<tr id="i26" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(long,java.util.ArrayList)">signMessages</a></span>&#8203;(long&nbsp;authToken,
             <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningRequest.html" title="class in com.solanamobile.seedvault">SigningRequest</a>&gt;&nbsp;signingRequests)</code></th>
@@ -403,7 +435,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  purpose originally specified for this auth token).</div>
 </td>
 </tr>
-<tr id="i23" class="rowColor">
+<tr id="i27" class="rowColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransaction(long,android.net.Uri,byte%5B%5D)">signTransaction</a></span>&#8203;(long&nbsp;authToken,
                <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;derivationPath,
@@ -413,7 +445,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  purpose originally specified for this auth token).</div>
 </td>
 </tr>
-<tr id="i24" class="altColor">
+<tr id="i28" class="altColor">
 <td class="colFirst"><code>static <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransactions(long,java.util.ArrayList)">signTransactions</a></span>&#8203;(long&nbsp;authToken,
                 <a href="https://d.android.com/reference/java/util/ArrayList.html?is-external=true" title="class or interface in java.util" class="externalLink">ArrayList</a>&lt;<a href="SigningRequest.html" title="class in com.solanamobile.seedvault">SigningRequest</a>&gt;&nbsp;signingRequests)</code></th>
@@ -422,7 +454,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
  purpose originally specified for this auth token).</div>
 </td>
 </tr>
-<tr id="i25" class="rowColor">
+<tr id="i29" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#updateAccountIsUserWallet(android.content.Context,long,long,boolean)">updateAccountIsUserWallet</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                          long&nbsp;authToken,
@@ -432,7 +464,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Update the user wallet flag for the specified known account for the given auth token.</div>
 </td>
 </tr>
-<tr id="i26" class="altColor">
+<tr id="i30" class="altColor">
 <td class="colFirst"><code>static void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#updateAccountIsValid(android.content.Context,long,long,boolean)">updateAccountIsValid</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                     long&nbsp;authToken,
@@ -442,7 +474,7 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <div class="block">Update the valid flag for the specified known account for the given auth token.</div>
 </td>
 </tr>
-<tr id="i27" class="rowColor">
+<tr id="i31" class="rowColor">
 <td class="colFirst"><code>static void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#updateAccountName(android.content.Context,long,long,java.lang.String)">updateAccountName</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/Context.html?is-external=true" title="class or interface in android.content" class="externalLink">Context</a>&nbsp;context,
                  long&nbsp;authToken,
@@ -518,6 +550,96 @@ public static&nbsp;<a href="https://d.android.com/reference/android/content/Inte
 <dd>the auth token for the newly authorized seed</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></code> - if the authorization failed</dd>
+</dl>
+</li>
+</ul>
+<a id="createSeed(int)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>createSeed</h4>
+<pre class="methodSignature">@NonNull
+public static&nbsp;<a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;createSeed&#8203;(int&nbsp;purpose)</pre>
+<div class="block">Request creation of a new seed for the specified purpose. The returned <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a>
+ should be used with <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a>, and the result (as
+ returned to <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a>) should be used as parameters
+ to <a href="#onCreateSeedResult(int,android.content.Intent)"><code>onCreateSeedResult(int, Intent)</code></a>.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>purpose</code> - the purpose for which the seed will be used. One of the
+      <code>WalletContractV1.PURPOSE_*</code> constants.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>an <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a> suitable for usage with
+      <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a></dd>
+</dl>
+</li>
+</ul>
+<a id="onCreateSeedResult(int,android.content.Intent)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>onCreateSeedResult</h4>
+<pre class="methodSignature">public static&nbsp;long&nbsp;onCreateSeedResult&#8203;(int&nbsp;resultCode,
+                                      @Nullable
+                                      <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)
+                               throws <a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></pre>
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="#createSeed(int)"><code>createSeed(int)</code></a>)</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>resultCode</code> - resultCode from <code>onActivityResult</code></dd>
+<dd><code>result</code> - intent from <code>onActivityResult</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the auth token for the newly created seed</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></code> - if the creation failed</dd>
+</dl>
+</li>
+</ul>
+<a id="importSeed(int)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>importSeed</h4>
+<pre class="methodSignature">@NonNull
+public static&nbsp;<a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;importSeed&#8203;(int&nbsp;purpose)</pre>
+<div class="block">Request import of an existing seed for the specified purpose. The returned <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a>
+ should be used with <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a>, and the result (as
+ returned to <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a>) should be used as parameters
+ to <a href="#onImportSeedResult(int,android.content.Intent)"><code>onImportSeedResult(int, Intent)</code></a>.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>purpose</code> - the purpose for which the seed will be used. One of the
+      <code>WalletContractV1.PURPOSE_*</code> constants.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>an <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink"><code>Intent</code></a> suitable for usage with
+      <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#startActivityForResult(android.content.Intent,int)" title="class or interface in android.app" class="externalLink"><code>Activity.startActivityForResult(Intent, int)</code></a></dd>
+</dl>
+</li>
+</ul>
+<a id="onImportSeedResult(int,android.content.Intent)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>onImportSeedResult</h4>
+<pre class="methodSignature">public static&nbsp;long&nbsp;onImportSeedResult&#8203;(int&nbsp;resultCode,
+                                      @Nullable
+                                      <a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;result)
+                               throws <a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></pre>
+<div class="block">Process the results of <a href="https://d.android.com/reference/android/app/Activity.html?is-external=true#onActivityResult(int,int,android.content.Intent)" title="class or interface in android.app" class="externalLink"><code>Activity.onActivityResult(int, int, Intent)</code></a> (in response to an
+ invocation of <a href="#importSeed(int)"><code>importSeed(int)</code></a>)</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>resultCode</code> - resultCode from <code>onActivityResult</code></dd>
+<dd><code>result</code> - intent from <code>onActivityResult</code></dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>the auth token for the imported seed</dd>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="Wallet.ActionFailedException.html" title="class in com.solanamobile.seedvault">Wallet.ActionFailedException</a></code> - if the import failed</dd>
 </dl>
 </li>
 </ul>
