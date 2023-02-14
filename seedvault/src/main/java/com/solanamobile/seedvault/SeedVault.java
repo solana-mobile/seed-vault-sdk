@@ -1,5 +1,8 @@
 package com.solanamobile.seedvault;
 
+import static android.content.pm.PermissionInfo.PROTECTION_FLAG_PRIVILEGED;
+import static android.content.pm.PermissionInfo.PROTECTION_MASK_BASE;
+
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -48,12 +51,18 @@ public class SeedVault {
         }
 
         for (PermissionInfo permission : pi.permissions) {
-            if (WalletContractV1.PERMISSION_SEED_VAULT_IMPL.equals(permission.name) &&
-                    ((permission.flags & PermissionInfo.PROTECTION_FLAG_PRIVILEGED) != 0)) {
-                return true;
+            if (WalletContractV1.PERMISSION_SEED_VAULT_IMPL.equals(permission.name)) {
+                return hasPrivilegedFlag(permission);
             }
         }
 
         return false;
+    }
+
+    private static boolean hasPrivilegedFlag(@NonNull PermissionInfo permission) {
+        int privilegedFlag = permission.protectionLevel
+                & ~PROTECTION_MASK_BASE
+                & PROTECTION_FLAG_PRIVILEGED;
+        return privilegedFlag != 0;
     }
 }
