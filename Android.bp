@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) 2022 Solana Mobile Inc.
+ */
+
+package {
+    default_applicable_licenses: ["external_seedvault_license"],
+}
+
+license {
+    name: "external_seedvault_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-Apache-2.0",
+    ],
+    license_text: [
+        "LICENSE",
+    ],
+}
+
+android_library {
+    name: "seed-vault-sdk",
+    srcs: [
+        "seedvault/src/**/*.java",
+    ],
+    manifest: "seedvault/src/main/AndroidManifest.xml",
+    libs: [
+    ],
+    static_libs: [
+        "androidx.annotation_annotation",
+        "jetbrains-annotations",
+    ],
+    sdk_version: "current",
+    min_sdk_version: "17",
+}
