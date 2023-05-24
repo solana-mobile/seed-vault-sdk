@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="@id/edittextautocomplete_seed_phrase_word"
         app:layout_constraintBottom_toBottomOf="@id/edittextautocomplete_seed_phrase_word"
         app:layout_constraintStart_toStartOf="parent"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
     <androidx.appcompat.widget.AppCompatAutoCompleteTextView
         android:id="@+id/edittextautocomplete_seed_phrase_word"
@@ -28,7 +28,7 @@
         app:layout_constraintStart_toEndOf="@id/label_seed_phrase_word_index"
         app:layout_constraintEnd_toEndOf="parent"
         android:inputType="text"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_error"
@@ -46,6 +46,6 @@
         android:visibility="gone"
         android:text="@string/error_invalid_seed_word"
         android:textColor="?attr/colorError"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
