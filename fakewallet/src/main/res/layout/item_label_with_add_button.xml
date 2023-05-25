@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/button_add"
         android:textStyle="italic"
-        android:textSize="12pt" />
+        android:textSize="26sp" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/button_add"

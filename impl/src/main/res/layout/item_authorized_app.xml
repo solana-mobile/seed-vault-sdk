@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/imagebutton_deauthorize_app"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/label_purpose"
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toBottomOf="@id/label_app_name"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/imagebutton_deauthorize_app"
-        android:textSize="8pt" />
+        android:textSize="18sp" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/imagebutton_deauthorize_app"
