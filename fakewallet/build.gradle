@@ -9,6 +9,7 @@ plugins {
 }
 
 android {
+    namespace 'com.solanamobile.fakewallet'
     compileSdk 33
 
     defaultConfig {
