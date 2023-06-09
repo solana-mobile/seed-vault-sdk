@@ -4,8 +4,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.solanamobile.seedvaultimpl">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <permission-group
         android:name="com.solanamobile.seedvault.SEED_VAULT_PERMISSIONS"
