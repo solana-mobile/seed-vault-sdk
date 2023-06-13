@@ -1,0 +1,16 @@
+{
+  "include": ["rollup.config.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES6"
+  }
+}
