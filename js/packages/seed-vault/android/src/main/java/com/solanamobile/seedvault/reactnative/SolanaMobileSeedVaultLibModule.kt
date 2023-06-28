@@ -33,7 +33,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 resultCode: Int,
                 data: Intent?
             ) {
-                handleActivtyResult(requestCode, resultCode, data)
+                handleActivityResult(requestCode, resultCode, data)
             }
         }
 
@@ -243,7 +243,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
         )
     }
 
-    private fun handleActivtyResult(requestCode: Int,  resultCode: Int, data: Intent?) {
+    private fun handleActivityResult(requestCode: Int,  resultCode: Int, data: Intent?) {
         when (requestCode) {
             REQUEST_AUTHORIZE_SEED_ACCESS -> {
                 try {

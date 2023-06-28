@@ -52,7 +52,7 @@ const checkIsSeedVaultAvailable = async (allowSimulated: boolean = false) => {
 
 const SEED_VAULT_EVENT_BRIDGE_NAME = 'SeedVaultEventBridge';
 
-export function subscribeToNativeEvents(
+export function useSeedVault(
     handleSeedVaultEvent: (event: SeedVaultEvent) => void,
     handleContentChange: (event: SeedVaultContentChange) => void,
 ) {
@@ -64,8 +64,6 @@ export function subscribeToNativeEvents(
     useEffect(() => {
         const seedVaultEventEmitter = new NativeEventEmitter();
         const listener = seedVaultEventEmitter.addListener(SEED_VAULT_EVENT_BRIDGE_NAME, (nativeEvent) => {
-            // console.log('Received seed vault event: ' + JSON.stringify(nativeEvent, null, 4));
-
             if (isContentChangeEvent(nativeEvent)) {
                 handleContentChange(nativeEvent as SeedVaultContentChange)
             } else if (isSeedVaultEvent(nativeEvent)) {
@@ -78,7 +76,7 @@ export function subscribeToNativeEvents(
         return () => {
             listener.remove();
         };
-    }, []);
+    }, [handleContentChange, handleContentChange]);
 }
 
 function isSeedVaultEvent(nativeEvent: any): boolean {
