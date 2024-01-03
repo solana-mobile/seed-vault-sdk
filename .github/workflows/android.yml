@@ -29,7 +29,7 @@ jobs:
         run: ./gradlew build
 
       # Upload libraries to workflow artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: libraries
@@ -38,7 +38,7 @@ jobs:
           retention-days: 5
 
       # Upload javadoc to workflow artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: seedvault-javadoc
@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Update seedvault javadoc
-        uses: solana-mobile/gha-commit-artifact-to-branch@v1
+        uses: solana-mobile/gha-commit-artifact-to-branch@v2
         with:
           token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
           branch: gh-pages
@@ -85,11 +85,11 @@ jobs:
     if: ${{ github.event_name == 'release' }}
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: libraries
           path: libraries
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: seedvault-javadoc
           path: seedvault-javadoc
