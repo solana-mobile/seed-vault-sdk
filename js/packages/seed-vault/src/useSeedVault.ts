@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { NativeEventEmitter, NativeModules, Permission, PermissionsAndroid, Platform } from 'react-native';
 import { SeedVaultContentChange, SeedVaultEvent, SeedVaultEventType } from './seedVaultEvent';
 
@@ -57,6 +57,13 @@ export function useSeedVault(
     handleContentChange: (event: SeedVaultContentChange) => void,
 ) {
 
+    const seedVaultEventHandler = useRef(handleSeedVaultEvent);
+    const contentChangeHandler = useRef(handleContentChange);
+    useEffect(() => {
+        seedVaultEventHandler.current = handleSeedVaultEvent;
+        contentChangeHandler.current = handleContentChange;
+    });
+
     checkIsSeedVaultAvailable(true);
     checkSeedVaultPermission();
 
@@ -65,9 +72,11 @@ export function useSeedVault(
         const seedVaultEventEmitter = new NativeEventEmitter();
         const listener = seedVaultEventEmitter.addListener(SEED_VAULT_EVENT_BRIDGE_NAME, (nativeEvent) => {
             if (isContentChangeEvent(nativeEvent)) {
+                contentChangeHandler.current(nativeEvent as SeedVaultContentChange)
                 handleContentChange(nativeEvent as SeedVaultContentChange)
             } else if (isSeedVaultEvent(nativeEvent)) {
                 handleSeedVaultEvent(nativeEvent as SeedVaultEvent)
+                seedVaultEventHandler.current(nativeEvent as SeedVaultEvent)
             } else {
                 console.warn('Unexpected native event type');
             }
@@ -76,7 +85,7 @@ export function useSeedVault(
         return () => {
             listener.remove();
         };
-    }, [handleContentChange, handleContentChange]);
+    }, []);
 }
 
 function isSeedVaultEvent(nativeEvent: any): boolean {
