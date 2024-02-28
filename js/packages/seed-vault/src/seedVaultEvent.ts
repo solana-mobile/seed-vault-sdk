@@ -8,14 +8,16 @@ export type ActionFailedError = SeedVaultError;
 export type NotModifiedError = SeedVaultError;
 
 // EVENTS
-export enum SeedVaultEventType {
-    AuthorizeSeedAccess = "SeedAuthorized",
-    CreateNewSeed = "NewSeedCreated",
-    ImportExistingSeed = "ExistingSeedImported",
-    PayloadsSigned = "PayloadsSigned",
-    GetPublicKeys = "PublicKeysEvent",
-    ContentChange = "SeedVaultContentChange"
-}
+// Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
+export const SeedVaultEventType = {
+    AuthorizeSeedAccess: "SeedAuthorized",
+    CreateNewSeed: "NewSeedCreated",
+    ImportExistingSeed: "ExistingSeedImported",
+    PayloadsSigned: "PayloadsSigned",
+    GetPublicKeys: "PublicKeysEvent",
+    ContentChange: "SeedVaultContentChange"
+} as const;
+export type SeedVaultEventType = typeof SeedVaultEventType[keyof typeof SeedVaultEventType]
 
 export interface ISeedVaultEvent {
     __type: SeedVaultEventType;
@@ -23,7 +25,7 @@ export interface ISeedVaultEvent {
 
 // Authorize Seed Access
 export type SeedAccessAuthorizedEvent = Readonly<{
-    __type: SeedVaultEventType.AuthorizeSeedAccess;
+    __type: typeof SeedVaultEventType.AuthorizeSeedAccess;
     authToken: string
 }> &
     ISeedVaultEvent;
@@ -32,7 +34,7 @@ export type AuthorizeSeedAccessEvent = SeedAccessAuthorizedEvent | ActionFailedE
 
 // Create New Seed
 export type NewSeedCreatedEvent = Readonly<{
-    __type: SeedVaultEventType.CreateNewSeed;
+    __type: typeof SeedVaultEventType.CreateNewSeed;
     authToken: string
 }> &
     ISeedVaultEvent;
@@ -41,7 +43,7 @@ export type CreateNewSeedEvent = NewSeedCreatedEvent | ActionFailedError
 
 // Import Existing Seed
 export type ExistingSeedImportedEvent = Readonly<{
-    __type: SeedVaultEventType.ImportExistingSeed;
+    __type: typeof SeedVaultEventType.ImportExistingSeed;
     authToken: string
 }> &
     ISeedVaultEvent;
@@ -60,7 +62,7 @@ export type SigningResponse = Readonly<{
 }>
 
 export type PayloadsSignedEvent = Readonly<{
-    __type: SeedVaultEventType.PayloadsSigned;
+    __type: typeof SeedVaultEventType.PayloadsSigned;
     result: SigningResponse[]
 }> &
     ISeedVaultEvent;
@@ -75,7 +77,7 @@ export type PublicKeyResponse = Readonly<{
 }>
 
 export type GotPublicKeyEvent = Readonly<{
-    __type: SeedVaultEventType.GetPublicKeys;
+    __type: typeof SeedVaultEventType.GetPublicKeys;
     result: PublicKeyResponse[]
 }> &
     ISeedVaultEvent;
@@ -84,7 +86,7 @@ export type PublicKeyEvent = GotPublicKeyEvent | ActionFailedError
 
 // Content Change
 export type SeedVaultContentChangeNotification = Readonly<{
-    __type: SeedVaultEventType.ContentChange;
+    __type: typeof SeedVaultEventType.ContentChange;
     uris: string[]
 }> &
     ISeedVaultEvent;
