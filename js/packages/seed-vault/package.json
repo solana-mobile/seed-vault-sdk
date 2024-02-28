@@ -3,7 +3,7 @@
     "description": "A React Native wrapper of the Solana Mobile, Seed Vault SDK. Apps can use this to interact with seed vault implementations on Android",
     "version": "0.1.0",
     "author": "Marco Martinez <marco.martinez@solanamobile.com>",
-    "repository": "https://github.com/solana-mobile/sed-vault-sdk",
+    "repository": "https://github.com/solana-mobile/seed-vault-sdk",
     "license": "Apache-2.0",
     "type": "module",
     "sideEffects": false,
