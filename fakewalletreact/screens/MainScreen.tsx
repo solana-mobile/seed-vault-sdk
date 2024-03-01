@@ -34,10 +34,6 @@ export default function MainScreen() {
         getAuthorizedSeeds()
     }, []);
 
-    useCallback(() => {
-
-    }, [])
-
     useSeedVault(
         (event) => {
           if ((event as PayloadsSignedEvent).result)
