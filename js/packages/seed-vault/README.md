@@ -19,12 +19,12 @@ if (!seedVaultAvailable) {
 Before interacting with Seed Vault, you should first register callbacks from the Seed Vault service using the `useSeedVault` hook.
 ```javascript
 
-var seedVaultEventListener = (event) => {
+const seedVaultEventListener = (event) => {
     // event is SeedVaultEvent type
     // handle event here
 };
 
-var seedVaultContentChangeListener = (contentChangeEvent) => {
+const seedVaultContentChangeListener = (contentChangeEvent) => {
     // contentChangeEvent is SeedVaultContentChange type
     // handle content change here
 };
