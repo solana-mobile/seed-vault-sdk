@@ -126,21 +126,84 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     fun authorizeNewSeed() {
         Log.d(TAG, "Requesting authorization for a new seed...")
         val intent = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
-        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_AUTHORIZE_SEED_ACCESS);
+        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_AUTHORIZE_SEED_ACCESS)
+    }
+
+    @ReactMethod
+    fun authorizeNewSeedAsync(promise: Promise) {
+        Log.d(TAG, "Requesting authorization for a new seed...")
+        val intent = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        registerForActivityResult(intent, REQUEST_AUTHORIZE_SEED_ACCESS) { resultCode, data -> 
+            try {
+                val authToken = Wallet.onAuthorizeSeedResult(resultCode, data)
+                Log.d(TAG, "Seed authorized, AuthToken=$authToken")
+                
+                promise.resolve(
+                    Arguments.createMap().apply {
+                        putString("authToken", authToken.toString())
+                    }
+                )
+            } catch (e: Wallet.ActionFailedException) {
+                Log.e(TAG, "Seed authorization failed", e)
+                promise.reject(e)
+            }
+        }
     }
 
     @ReactMethod
     fun createNewSeed() {
         Log.d(TAG, "Requesting creation of a new seed...")
         val intent = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
-        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_CREATE_NEW_SEED);
+        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_CREATE_NEW_SEED)
+    }
+
+    @ReactMethod
+    fun createNewSeedAsync(promise: Promise) {
+        Log.d(TAG, "Requesting creation of a new seed...")
+        val intent = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        registerForActivityResult(intent, REQUEST_CREATE_NEW_SEED) { resultCode, data -> 
+            try {
+                val authToken = Wallet.onCreateSeedResult(resultCode, data)
+                Log.d(TAG, "Seed created, AuthToken=$authToken")
+                
+                promise.resolve(
+                    Arguments.createMap().apply {
+                        putString("authToken", authToken.toString())
+                    }
+                )
+            } catch (e: Wallet.ActionFailedException) {
+                Log.e(TAG, "Seed creation failed", e)
+                promise.reject(e)
+            }
+        }
     }
 
     @ReactMethod
     fun importExistingSeed() {
         Log.d(TAG, "Requesting import of an existing seed...")
         val intent = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
-        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_IMPORT_EXISTING_SEED);
+        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_IMPORT_EXISTING_SEED)
+    }
+
+    @ReactMethod
+    fun importExistingSeedAsync(promise: Promise) {
+        Log.d(TAG, "Requesting import of an existing seed...")
+        val intent = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        registerForActivityResult(intent, REQUEST_IMPORT_EXISTING_SEED) { resultCode, data -> 
+            try {
+                val authToken = Wallet.onImportSeedResult(resultCode, data)
+                Log.d(TAG, "Seed imported, AuthToken=$authToken")
+                
+                promise.resolve(
+                    Arguments.createMap().apply {
+                        putString("authToken", authToken.toString())
+                    }
+                )
+            } catch (e: Wallet.ActionFailedException) {
+                Log.e(TAG, "Seed import failed", e)
+                promise.reject(e)
+            }
+        }
     }
 
     @ReactMethod
@@ -298,6 +361,40 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
             (it as? String)?.let { uriString -> Uri.parse(uriString) }
         } as ArrayList ?: arrayListOf())
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_GET_PUBLIC_KEYS);
+    }
+
+    @ReactMethod
+    fun requestPublicKeyAsync(authToken: String, derivationPath: String, promise: Promise) {
+        requestPublicKeysAsync(authToken, Arguments.createArray().apply {
+            pushString(derivationPath)
+        }, promise)
+    }
+
+    @ReactMethod
+    fun requestPublicKeysAsync(authToken: String, derivationPaths: ReadableArray, promise: Promise) {
+        Log.d(TAG, "Requesting public keys for provided derviation paths...")
+        val intent = Wallet.requestPublicKeys(authToken.toLong(), Arguments.toList(derivationPaths)?.mapNotNull {
+            (it as? String)?.let { uriString -> Uri.parse(uriString) }
+        } as ArrayList ?: arrayListOf())
+        registerForActivityResult(intent, REQUEST_GET_PUBLIC_KEYS) { resultCode, data ->
+            try {
+                val result = Wallet.onRequestPublicKeysResult(resultCode, data)
+                Log.d(TAG, "Public key retrieved: publicKey=$result")
+
+                promise.resolve(
+                    Arguments.makeNativeArray(result.map { response ->
+                        Arguments.createMap().apply {
+                            putArray("publicKey", response.publicKey.toWritableArray())
+                            putString("publicKeyEncoded", response.publicKeyEncoded)
+                            putString("resolvedDerviationPath", response.resolvedDerivationPath.toString())
+                        }
+                    })
+                )
+            } catch (e: Wallet.ActionFailedException) {
+                    Log.e(TAG, "Public Key retrieval failed", e)
+                promise.reject(e)
+            }
+        }
     }
 
     private fun sendEvent(reactContext: ReactContext, eventName: String, params: WritableMap? = null) {
