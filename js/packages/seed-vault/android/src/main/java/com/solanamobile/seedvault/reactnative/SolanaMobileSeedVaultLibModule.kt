@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.ContentObserver
 import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.util.Log
 import com.facebook.react.bridge.*
@@ -185,7 +186,68 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     private fun signTransactions(authToken: String, signingRequests: List<SigningRequest>) {
         Log.d(TAG, "Requesting provided transactions to be signed...")
         val intent = Wallet.signTransactions(authToken.toLong(), ArrayList(signingRequests))
-        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SIGN_TRANSACTIONS);
+        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SIGN_TRANSACTIONS)
+    }
+
+    @ReactMethod
+    fun signTransactionAsync(authToken: String, derivationPath: String, transaction: ReadableArray, promise: Promise) {
+        signTransactionsAsync(authToken, listOf(SigningRequest(transaction.toByteArray(), arrayListOf(Uri.parse(derivationPath)))), promise)
+    }
+
+    @ReactMethod
+    fun signTransactionsAsync(authToken: String, signingRequestsJson: String, promise: Promise) {
+        val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
+        signTransactionsAsync(authToken, signingRequests, promise)
+    }
+
+    private fun signTransactionsAsync(authToken: String, signingRequests: List<SigningRequest>, promise: Promise) {
+        Log.d(TAG, "Requesting provided transactions to be signed...")
+        val intent = Wallet.signTransactions(authToken.toLong(), ArrayList(signingRequests))
+        registerForActivityResult(intent, REQUEST_SIGN_TRANSACTIONS) { resultCode, data ->
+            try {
+                val result = Wallet.onSignTransactionsResult(resultCode, data)
+                Log.d(TAG, "Transactions signed: signatures=$result")
+
+                promise.resolve(
+                    Arguments.makeNativeArray(result.map { response ->
+                        Arguments.createMap().apply {
+                            putArray("signatures", Arguments.makeNativeArray(response.signatures.map { it.toWritableArray() }))
+                            putArray("resolvedDerivationPaths", Arguments.makeNativeArray(response.resolvedDerivationPaths.map { it.toString() }))
+                        }
+                    })
+                )
+            } catch (e: Wallet.ActionFailedException) {
+                Log.e(TAG, "Transaction signing failed", e)
+                promise.reject(e)
+            }
+        }
+    }
+
+    private fun registerForActivityResult(intent: Intent, requestCode: Int, callback: (resultCode: Int, data: Intent?) -> Unit) {
+        val timeout = object : CountDownTimer(30000, 30000) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                reactContext.currentActivity?.finishActivity(requestCode)
+            }
+        }
+
+        reactContext.addActivityEventListener(object : BaseActivityEventListener() {
+            override fun onActivityResult(
+                activity: Activity?,
+                receivedRequestCode: Int,
+                resultCode: Int,
+                data: Intent?
+            ) {
+                if (receivedRequestCode == requestCode) {
+                    reactContext.removeActivityEventListener(this)
+                    callback(resultCode, data)
+                    timeout.cancel()
+                }
+            }
+        })
+        
+        reactContext.currentActivity?.startActivityForResult(intent, requestCode)
+        timeout.start()
     }
 
     @ReactMethod
