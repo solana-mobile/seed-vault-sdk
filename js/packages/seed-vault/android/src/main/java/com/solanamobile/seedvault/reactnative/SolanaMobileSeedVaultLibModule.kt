@@ -173,6 +173,40 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
+    fun signMessageAsync(authToken: String, derivationPath: String, message: ReadableArray, promise: Promise) {
+        signMessagesAsync(authToken, listOf(SigningRequest(message.toByteArray(), arrayListOf(Uri.parse(derivationPath)))), promise)
+    }
+
+    @ReactMethod
+    fun signMessagesAsync(authToken: String, signingRequestsJson: String, promise: Promise) {
+        val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
+        signMessagesAsync(authToken, signingRequests, promise)
+    }
+
+    private fun signMessagesAsync(authToken: String, signingRequests: List<SigningRequest>, promise: Promise) {
+        Log.d(TAG, "Requesting provided messages to be signed...")
+        val intent = Wallet.signMessages(authToken.toLong(), ArrayList(signingRequests))
+        registerForActivityResult(intent, REQUEST_SIGN_MESSAGES) { resultCode, data ->
+            try {
+                val result = Wallet.onSignMessagesResult(resultCode, data)
+                Log.d(TAG, "Message signed: signatures=$result")
+
+                promise.resolve(
+                    Arguments.makeNativeArray(result.map { response ->
+                        Arguments.createMap().apply {
+                            putArray("signatures", Arguments.makeNativeArray(response.signatures.map { it.toWritableArray() }))
+                            putArray("resolvedDerivationPaths", Arguments.makeNativeArray(response.resolvedDerivationPaths.map { it.toString() }))
+                        }
+                    })
+                )
+            } catch (e: Wallet.ActionFailedException) {
+                Log.e(TAG, "Message signing failed", e)
+                promise.reject(e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun signTransaction(authToken: String, derivationPath: String, transaction: ReadableArray) {
         signTransactions(authToken, listOf(SigningRequest(transaction.toByteArray(), arrayListOf(Uri.parse(derivationPath)))))
     }
