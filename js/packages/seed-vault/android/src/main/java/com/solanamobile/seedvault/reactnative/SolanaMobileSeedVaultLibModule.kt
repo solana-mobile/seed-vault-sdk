@@ -364,14 +364,14 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun requestPublicKeyAsync(authToken: String, derivationPath: String, promise: Promise) {
-        requestPublicKeysAsync(authToken, Arguments.createArray().apply {
+    fun getPublicKey(authToken: String, derivationPath: String, promise: Promise) {
+        getPublicKeys(authToken, Arguments.createArray().apply {
             pushString(derivationPath)
         }, promise)
     }
 
     @ReactMethod
-    fun requestPublicKeysAsync(authToken: String, derivationPaths: ReadableArray, promise: Promise) {
+    fun getPublicKeys(authToken: String, derivationPaths: ReadableArray, promise: Promise) {
         Log.d(TAG, "Requesting public keys for provided derviation paths...")
         val intent = Wallet.requestPublicKeys(authToken.toLong(), Arguments.toList(derivationPaths)?.mapNotNull {
             (it as? String)?.let { uriString -> Uri.parse(uriString) }
