@@ -108,3 +108,5 @@ export type Seed = Readonly<{
     name: string,
     purpose: number
 }>;
+
+export const SeedVault = SolanaMobileSeedVaultLib;
