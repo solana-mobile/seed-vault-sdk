@@ -73,9 +73,7 @@ export function useSeedVault(
         const listener = seedVaultEventEmitter.addListener(SEED_VAULT_EVENT_BRIDGE_NAME, (nativeEvent) => {
             if (isContentChangeEvent(nativeEvent)) {
                 contentChangeHandler.current(nativeEvent as SeedVaultContentChange)
-                handleContentChange(nativeEvent as SeedVaultContentChange)
             } else if (isSeedVaultEvent(nativeEvent)) {
-                handleSeedVaultEvent(nativeEvent as SeedVaultEvent)
                 seedVaultEventHandler.current(nativeEvent as SeedVaultEvent)
             } else {
                 console.warn('Unexpected native event type');
