@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {View, NativeModules, StyleSheet} from 'react-native';
-import {Appbar, Button, Text} from 'react-native-paper';
-import {Account, PayloadsSignedEvent, Seed, useSeedVault} from "@solana-mobile/seed-vault-lib"
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Appbar, Button, Text } from 'react-native-paper';
+import { Account, Seed, SeedEvent, SeedVault, SeedVaultEvent, useSeedVault } from "@solana-mobile/seed-vault-lib";
 
 export default function MainScreen() {
     const [hasUnauthorizedSeeds, setHasUnauthorizedSeeds] = useState(false);
@@ -10,7 +10,7 @@ export default function MainScreen() {
     useEffect(() => {
 
         async function updateHasUnauthorizedSeeds() {
-            const hasUnauthorizedSeeds = await NativeModules.SolanaMobileSeedVaultLib.hasUnauthorizedSeeds();
+            const hasUnauthorizedSeeds = await SeedVault.hasUnauthorizedSeeds();
             setHasUnauthorizedSeeds(hasUnauthorizedSeeds)
         } 
 
@@ -20,10 +20,10 @@ export default function MainScreen() {
     useEffect(() => {
 
         async function getAuthorizedSeeds() {
-            const authorizedSeeds = await NativeModules.SolanaMobileSeedVaultLib.getAuthorizedSeeds();
+            const authorizedSeeds = await SeedVault.getAuthorizedSeeds();
             authorizedSeeds.forEach(async (authorizedSeed: Seed) => {
                 console.log('Authorized seed = ' + authorizedSeed.name + ', ' + authorizedSeed.authToken)
-                const accounts = await NativeModules.SolanaMobileSeedVaultLib.getAccounts(authorizedSeed.authToken);
+                const accounts = await SeedVault.getAccounts(authorizedSeed.authToken);
                 accounts.forEach((account: Account) => {
                   console.log('   account: ' + account.name + ', ' + account.publicKeyEncoded + ', ' + account.derivationPath)
                 })
@@ -35,12 +35,11 @@ export default function MainScreen() {
     }, []);
 
     useSeedVault(
-        (event) => {
-          if ((event as PayloadsSignedEvent).result)
-            console.log('event test: ' + event.result[0].signatures)
+        (event: SeedVaultEvent) => {
+          console.log(`Seed Vault Event: ${event.__type}, result = ${JSON.stringify(event.result)}`)
         }, 
-        (event) => {
-          console.log('Seed Vault Content Changed: ' + event.uris)
+        (event: SeedEvent) => {
+          console.log(`Seed Vault Content Changed: ${event.__type}, uris = ${event.uris}`)
         }
     )
 
@@ -51,49 +50,54 @@ export default function MainScreen() {
         </Appbar.Header>
         <View style={styles.container}>
           <Text>I'm a Wallet! (with seedvault!)</Text>
-          {hasUnauthorizedSeeds && <Button
+          {hasUnauthorizedSeeds ? <Button
             onPress={async () => {
-                NativeModules.SeedVaultLib.authorizeNewSeed()
+                const result = await SeedVault.authorizeNewSeed();
+                console.log(`New seed authorized! auth token: ${result.authToken}`);
             }}>
             Authorize another seed for PURPOSE_SIGN_SOLANA_TRANSACTION
-          </Button>}
+          </Button> : null}
           <Button
             onPress={async () => {
-                const authorizedSeeds = await NativeModules.SolanaMobileSeedVaultLib.getAuthorizedSeeds()
+                const authorizedSeeds = await SeedVault.getAuthorizedSeeds()
                 console.log(authorizedSeeds)
             }}>
             Get Authorized Seeds
           </Button>
-          {/* {authorizedSeeds.length && <Button
+          {authorizedSeeds.length ? <Button
             onPress={async () => {
                 const seed = authorizedSeeds[0]
-                const accounts = await NativeModules.SeedVaultLib.getAccounts(seed.authToken)
+                const accounts = await SeedVault.getAccounts(seed.authToken)
                 console.log(accounts)
-                if (accounts.length && accounts[0].derivationPath)
-                    NativeModules.SeedVaultLib.signMessage(seed.authToken, accounts[0].derivationPath, [0, 1, 2, 3])
+                if (accounts.length && accounts[0].derivationPath) {
+                  try {
+                    const publicKeys = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
+                    const result = await SeedVault.signMessage(seed.authToken, accounts[0].derivationPath, [0, 1, 2, 3]);
+                    console.log(`Message signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignature = ${result[0].signatures[0]}`);
+                  }catch (error) {
+                    console.log("Sign Message Failed: " + error);
+                  }
+                }
             }}>
             Sign Message
-          </Button>} */}
-          <Button
+          </Button> : null}
+          {authorizedSeeds.length ? <Button
             onPress={async () => {
                 const seed = authorizedSeeds[0]
-                const accounts = await NativeModules.SolanaMobileSeedVaultLib.getAccounts(seed.authToken)
+                const accounts = await SeedVault.getAccounts(seed.authToken)
                 console.log(accounts)
-                if (accounts.length && accounts[0].derivationPath)
-                    NativeModules.SolanaMobileSeedVaultLib.signMessage(seed.authToken, accounts[0].derivationPath, [0, 1, 2, 3])
-            }}>
-            Sign Message
-          </Button>
-          <Button
-            onPress={async () => {
-                const seed = authorizedSeeds[0]
-                const accounts = await NativeModules.SolanaMobileSeedVaultLib.getAccounts(seed.authToken)
-                console.log(accounts)
-                if (accounts.length && accounts[0].derivationPath)
-                    NativeModules.SolanaMobileSeedVaultLib.signTransaction(seed.authToken, accounts[0].derivationPath, [0, 1, 2, 3])
+                if (accounts.length && accounts[0].derivationPath) {
+                  try {
+                    const publicKeys = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
+                    const result = await SeedVault.signTransaction(seed.authToken, accounts[0].derivationPath, [0, 1, 2, 3]);
+                    console.log(`Transaction signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignatures = ${result[0].signatures}`);
+                  } catch (error) {
+                    console.log("Sign Transaction Failed: " + error);
+                  }
+                }
             }}>
             Sign Transaction
-          </Button>
+          </Button> : null}
         </View>
       </>
     );
