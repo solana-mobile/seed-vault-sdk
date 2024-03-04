@@ -4,7 +4,7 @@ type Props = Readonly<{
     authToken: number
 }>
 
-export default function AutorizedSeed({authToken}: Props) {
+export default function AuthorizedSeed({authToken}: Props) {
 
     return (
         <View>
