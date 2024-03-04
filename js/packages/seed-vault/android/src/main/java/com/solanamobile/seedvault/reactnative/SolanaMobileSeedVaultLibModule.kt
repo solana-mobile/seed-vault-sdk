@@ -123,14 +123,14 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun authorizeNewSeed() {
+    fun requestAuthorizeNewSeed() {
         Log.d(TAG, "Requesting authorization for a new seed...")
         val intent = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_AUTHORIZE_SEED_ACCESS)
     }
 
     @ReactMethod
-    fun authorizeNewSeedAsync(promise: Promise) {
+    fun authorizeNewSeed(promise: Promise) {
         Log.d(TAG, "Requesting authorization for a new seed...")
         val intent = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         registerForActivityResult(intent, REQUEST_AUTHORIZE_SEED_ACCESS) { resultCode, data -> 
@@ -151,14 +151,14 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun createNewSeed() {
+    fun requestCreateNewSeed() {
         Log.d(TAG, "Requesting creation of a new seed...")
         val intent = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_CREATE_NEW_SEED)
     }
 
     @ReactMethod
-    fun createNewSeedAsync(promise: Promise) {
+    fun createNewSeed(promise: Promise) {
         Log.d(TAG, "Requesting creation of a new seed...")
         val intent = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         registerForActivityResult(intent, REQUEST_CREATE_NEW_SEED) { resultCode, data -> 
@@ -179,14 +179,14 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun importExistingSeed() {
+    fun requestImportExistingSeed() {
         Log.d(TAG, "Requesting import of an existing seed...")
         val intent = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_IMPORT_EXISTING_SEED)
     }
 
     @ReactMethod
-    fun importExistingSeedAsync(promise: Promise) {
+    fun importExistingSeed(promise: Promise) {
         Log.d(TAG, "Requesting import of an existing seed...")
         val intent = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         registerForActivityResult(intent, REQUEST_IMPORT_EXISTING_SEED) { resultCode, data -> 
@@ -219,29 +219,29 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun signMessage(authToken: String, derivationPath: String, message: ReadableArray) {
-        signMessages(authToken, listOf(SigningRequest(message.toByteArray(), arrayListOf(Uri.parse(derivationPath)))))
+    fun requestSignMessage(authToken: String, derivationPath: String, message: ReadableArray) {
+        requestSignMessages(authToken, listOf(SigningRequest(message.toByteArray(), arrayListOf(Uri.parse(derivationPath)))))
     }
 
     @ReactMethod
-    fun signMessages(authToken: String, signingRequestsJson: String) {
+    fun requestSignMessages(authToken: String, signingRequestsJson: String) {
         val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
-        signMessages(authToken, signingRequests)
+        requestSignMessages(authToken, signingRequests)
     }
 
-    private fun signMessages(authToken: String, signingRequests: List<SigningRequest>) {
+    private fun requestSignMessages(authToken: String, signingRequests: List<SigningRequest>) {
         Log.d(TAG, "Requesting provided messages to be signed...")
         val intent = Wallet.signMessages(authToken.toLong(), ArrayList(signingRequests))
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SIGN_MESSAGES);
     }
 
     @ReactMethod
-    fun signMessageAsync(authToken: String, derivationPath: String, message: ReadableArray, promise: Promise) {
+    fun signMessage(authToken: String, derivationPath: String, message: ReadableArray, promise: Promise) {
         signMessagesAsync(authToken, listOf(SigningRequest(message.toByteArray(), arrayListOf(Uri.parse(derivationPath)))), promise)
     }
 
     @ReactMethod
-    fun signMessagesAsync(authToken: String, signingRequestsJson: String, promise: Promise) {
+    fun signMessages(authToken: String, signingRequestsJson: String, promise: Promise) {
         val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
         signMessagesAsync(authToken, signingRequests, promise)
     }
@@ -270,29 +270,29 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun signTransaction(authToken: String, derivationPath: String, transaction: ReadableArray) {
-        signTransactions(authToken, listOf(SigningRequest(transaction.toByteArray(), arrayListOf(Uri.parse(derivationPath)))))
+    fun requestSignTransaction(authToken: String, derivationPath: String, transaction: ReadableArray) {
+        requestSignTransactions(authToken, listOf(SigningRequest(transaction.toByteArray(), arrayListOf(Uri.parse(derivationPath)))))
     }
 
     @ReactMethod
-    fun signTransactions(authToken: String, signingRequestsJson: String) {
+    fun requestSignTransactions(authToken: String, signingRequestsJson: String) {
         val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
-        signTransactions(authToken, signingRequests)
+        requestSignTransactions(authToken, signingRequests)
     }
 
-    private fun signTransactions(authToken: String, signingRequests: List<SigningRequest>) {
+    private fun requestSignTransactions(authToken: String, signingRequests: List<SigningRequest>) {
         Log.d(TAG, "Requesting provided transactions to be signed...")
         val intent = Wallet.signTransactions(authToken.toLong(), ArrayList(signingRequests))
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SIGN_TRANSACTIONS)
     }
 
     @ReactMethod
-    fun signTransactionAsync(authToken: String, derivationPath: String, transaction: ReadableArray, promise: Promise) {
+    fun signTransaction(authToken: String, derivationPath: String, transaction: ReadableArray, promise: Promise) {
         signTransactionsAsync(authToken, listOf(SigningRequest(transaction.toByteArray(), arrayListOf(Uri.parse(derivationPath)))), promise)
     }
 
     @ReactMethod
-    fun signTransactionsAsync(authToken: String, signingRequestsJson: String, promise: Promise) {
+    fun signTransactions(authToken: String, signingRequestsJson: String, promise: Promise) {
         val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
         signTransactionsAsync(authToken, signingRequests, promise)
     }
