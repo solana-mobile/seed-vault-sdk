@@ -75,8 +75,8 @@ function createConfig({
     };
 }
 
-const configOld: RollupOptions[] = [
-    // createConfig({ bundleName: 'index.js', format: 'esm', runtime: 'node' }),
+const config: RollupOptions[] = [
+    createConfig({ bundleName: 'index.js', format: 'esm', runtime: 'node' }),
     createConfig({
         bundleName: 'index.native.js',
         format: 'esm',
@@ -143,7 +143,7 @@ const configCjs: RollupOptions[] = [
     }
 ];
 
-const config: RollupOptions[] = [
+const configNativeOnly: RollupOptions[] = [
     {
         input: 'src/index.ts',
         output: {

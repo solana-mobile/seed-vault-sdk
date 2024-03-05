@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
+import android.util.Base64
 import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
@@ -236,8 +237,9 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun signMessage(authToken: String, derivationPath: String, message: ReadableArray, promise: Promise) {
-        signMessagesAsync(authToken, listOf(SigningRequest(message.toByteArray(), arrayListOf(Uri.parse(derivationPath)))), promise)
+    fun signMessage(authToken: String, derivationPath: String, message: String, promise: Promise) {
+        val messageBytes = Base64.decode(message, Base64.DEFAULT);
+        signMessagesAsync(authToken, listOf(SigningRequest(messageBytes, arrayListOf(Uri.parse(derivationPath)))), promise)
     }
 
     @ReactMethod
@@ -257,7 +259,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 promise.resolve(
                     Arguments.makeNativeArray(result.map { response ->
                         Arguments.createMap().apply {
-                            putArray("signatures", Arguments.makeNativeArray(response.signatures.map { it.toWritableArray() }))
+                            putArray("signatures", Arguments.makeNativeArray(response.signatures.map { Base64.encodeToString(it, Base64.NO_WRAP) }))
                             putArray("resolvedDerivationPaths", Arguments.makeNativeArray(response.resolvedDerivationPaths.map { it.toString() }))
                         }
                     })
@@ -287,8 +289,9 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun signTransaction(authToken: String, derivationPath: String, transaction: ReadableArray, promise: Promise) {
-        signTransactionsAsync(authToken, listOf(SigningRequest(transaction.toByteArray(), arrayListOf(Uri.parse(derivationPath)))), promise)
+    fun signTransaction(authToken: String, derivationPath: String, transaction: String, promise: Promise) {
+        val txBytes = Base64.decode(transaction, Base64.DEFAULT);
+        signTransactionsAsync(authToken, listOf(SigningRequest(txBytes, arrayListOf(Uri.parse(derivationPath)))), promise)
     }
 
     @ReactMethod
@@ -308,7 +311,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 promise.resolve(
                     Arguments.makeNativeArray(result.map { response ->
                         Arguments.createMap().apply {
-                            putArray("signatures", Arguments.makeNativeArray(response.signatures.map { it.toWritableArray() }))
+                            putArray("signatures", Arguments.makeNativeArray(response.signatures.map { Base64.encodeToString(it, Base64.NO_WRAP) }))
                             putArray("resolvedDerivationPaths", Arguments.makeNativeArray(response.resolvedDerivationPaths.map { it.toString() }))
                         }
                     })

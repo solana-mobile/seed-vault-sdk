@@ -7,9 +7,9 @@
     "license": "Apache-2.0",
     "type": "module",
     "sideEffects": false,
-    "main": "lib/esm/index.native.js",
-    "react-native": "lib/esm/index.native.js",
-    "module": "lib/esm/index.native.js",
+    "main": "lib/esm/index",
+    "react-native": "lib/esm/index",
+    "module": "lib/esm/index",
     "types": "lib/types/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
