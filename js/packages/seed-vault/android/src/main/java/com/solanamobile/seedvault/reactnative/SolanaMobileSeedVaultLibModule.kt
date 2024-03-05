@@ -39,10 +39,20 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
             }
         }
 
+    private var activityResultTimeout: Long? = DEFAULT_ACTIVITY_RESULT_TIMEOUT_MS
+
     init {
         reactContext.addActivityEventListener(mActivityEventListener)
 
         observeSeedVaultContentChanges()
+    }
+
+    @ReactMethod
+    fun setActivtyResultTimeout(timeout: Long) {
+        activityResultTimeout = 
+            if (timeout > MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS) timeout 
+            else if (timeout == 0L) null 
+            else MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS
     }
 
     @ReactMethod
@@ -324,10 +334,12 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     private fun registerForActivityResult(intent: Intent, requestCode: Int, callback: (resultCode: Int, data: Intent?) -> Unit) {
-        val timeout = object : CountDownTimer(30000, 30000) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                reactContext.currentActivity?.finishActivity(requestCode)
+        val timeout = activityResultTimeout?.let { timeout ->
+            object : CountDownTimer(timeout, timeout) {
+                override fun onTick(millisUntilFinished: Long) {}
+                override fun onFinish() {
+                    reactContext.currentActivity?.finishActivity(requestCode)
+                }
             }
         }
 
@@ -341,13 +353,13 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 if (receivedRequestCode == requestCode) {
                     reactContext.removeActivityEventListener(this)
                     callback(resultCode, data)
-                    timeout.cancel()
+                    timeout?.cancel()
                 }
             }
         })
         
         reactContext.currentActivity?.startActivityForResult(intent, requestCode)
-        timeout.start()
+        timeout?.start()
     }
 
     @ReactMethod
@@ -509,6 +521,8 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
         private const val REQUEST_SIGN_MESSAGES = 4
         private const val REQUEST_GET_PUBLIC_KEYS = 5
         private const val KEY_PENDING_EVENT = "pendingEvent"
+        private const val DEFAULT_ACTIVITY_RESULT_TIMEOUT_MS = 300000L
+        private const val MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS = 30000L
     }
 }
 

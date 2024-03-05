@@ -15,7 +15,7 @@ function createConfig({
 }: {
     bundleName: string;
     format: 'cjs' | 'esm';
-    runtime: 'browser' | 'node' | 'react-native';
+    runtime: 'node' | 'react-native';
 }): RollupOptions {
     return {
         input: 'src/index.ts',
@@ -56,14 +56,14 @@ function createConfig({
             }),
             externals(),
             nodeResolve({
-                browser: runtime === 'browser',
+                browser: false,
                 extensions: ['.ts'],
                 preferBuiltins: runtime === 'node',
             }),
             replace({
                 preventAssignment: true,
                 values: {
-                    'process.env.BROWSER': JSON.stringify(runtime === 'browser'),
+                    'process.env.BROWSER': JSON.stringify(false),
                     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
                 },
             }),
@@ -82,124 +82,6 @@ const config: RollupOptions[] = [
         format: 'esm',
         runtime: 'react-native',
     }),
-];
-
-const configCjs: RollupOptions[] = [
-    {
-        input: 'src/index.ts',
-        output: {
-            file: 'lib/cjs/index.native.js',
-            format: 'cjs',
-        },
-        plugins: [
-            alias({
-                entries: [
-                    {
-                        find: /^\./, // Relative paths.
-                        replacement: '.',
-                        async customResolver(source, importer, options) {
-                            const resolved = await this.resolve(source, importer, {
-                                skipSelf: true,
-                                ...options,
-                            });
-                            if (resolved == null) {
-                                return;
-                            }
-                            const { id: resolvedId } = resolved;
-                            const directory = path.dirname(resolvedId);
-                            const moduleFilename = path.basename(resolvedId);
-                            const forkPath = path.join(directory, '__forks__', 'react-native', moduleFilename);
-                            const hasForkCacheKey = `has_fork:${forkPath}`;
-                            let hasFork = this.cache.get(hasForkCacheKey);
-                            if (hasFork === undefined) {
-                                hasFork = fs.existsSync(forkPath);
-                                this.cache.set(hasForkCacheKey, hasFork);
-                            }
-                            if (hasFork) {
-                                return forkPath;
-                            }
-                        },
-                    },
-                ],
-            }),
-            externals(),
-            nodeResolve({
-                browser: false,
-                extensions: ['.ts'],
-                preferBuiltins: false,
-            }),
-            replace({
-                preventAssignment: true,
-                values: {
-                    'process.env.BROWSER': JSON.stringify(false),
-                    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-                },
-            }),
-            ts({
-                tsconfig: 'tsconfig.cjs.json',
-            }),
-            commonJsPlugin({ exclude: 'node_modules', extensions: ['.js', '.ts'] }),
-        ],
-    }
-];
-
-const configNativeOnly: RollupOptions[] = [
-    {
-        input: 'src/index.ts',
-        output: {
-            file: 'lib/esm/index.native.js',
-            format: 'esm',
-        },
-        plugins: [
-            alias({
-                entries: [
-                    {
-                        find: /^\./, // Relative paths.
-                        replacement: '.',
-                        async customResolver(source, importer, options) {
-                            const resolved = await this.resolve(source, importer, {
-                                skipSelf: true,
-                                ...options,
-                            });
-                            if (resolved == null) {
-                                return;
-                            }
-                            const { id: resolvedId } = resolved;
-                            const directory = path.dirname(resolvedId);
-                            const moduleFilename = path.basename(resolvedId);
-                            const forkPath = path.join(directory, '__forks__', "react-native", moduleFilename);
-                            const hasForkCacheKey = `has_fork:${forkPath}`;
-                            let hasFork = this.cache.get(hasForkCacheKey);
-                            if (hasFork === undefined) {
-                                hasFork = fs.existsSync(forkPath);
-                                this.cache.set(hasForkCacheKey, hasFork);
-                            }
-                            if (hasFork) {
-                                return forkPath;
-                            }
-                        },
-                    },
-                ],
-            }),
-            externals(),
-            nodeResolve({
-                browser: false,
-                extensions: ['.ts'],
-                preferBuiltins: false,
-            }),
-            replace({
-                preventAssignment: true,
-                values: {
-                    'process.env.BROWSER': JSON.stringify(false),
-                    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-                },
-            }),
-            ts({
-                tsconfig: 'tsconfig.json',
-            }),
-            commonJsPlugin({ exclude: 'node_modules', extensions: ['.js', '.ts'] }),
-        ],
-    }
 ];
 
 export default config;
