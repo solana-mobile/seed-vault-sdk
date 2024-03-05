@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Appbar, Button, Text } from 'react-native-paper';
-import { Account, Seed, SeedEvent, SeedVault, SeedVaultEvent, useSeedVault } from "@solana-mobile/seed-vault-lib";
+import { Account, Seed, SeedVault, useSeedVault } from "@solana-mobile/seed-vault-lib";
 
 export default function MainScreen() {
     const [hasUnauthorizedSeeds, setHasUnauthorizedSeeds] = useState(false);
@@ -35,10 +35,10 @@ export default function MainScreen() {
     }, []);
 
     useSeedVault(
-        (event: SeedVaultEvent) => {
+        (event) => {
           console.log(`Seed Vault Event: ${event.__type}, result = ${JSON.stringify(event.result)}`)
         }, 
-        (event: SeedEvent) => {
+        (event) => {
           console.log(`Seed Vault Content Changed: ${event.__type}, uris = ${event.uris}`)
         }
     )
@@ -72,7 +72,7 @@ export default function MainScreen() {
                 if (accounts.length && accounts[0].derivationPath) {
                   try {
                     const publicKeys = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
-                    const result = await SeedVault.signMessage(seed.authToken, accounts[0].derivationPath, [0, 1, 2, 3]);
+                    const result = await SeedVault.signMessage(seed.authToken, accounts[0].derivationPath, "aGVsbG8gd29ybGQh");
                     console.log(`Message signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignature = ${result[0].signatures[0]}`);
                   }catch (error) {
                     console.log("Sign Message Failed: " + error);
@@ -89,7 +89,7 @@ export default function MainScreen() {
                 if (accounts.length && accounts[0].derivationPath) {
                   try {
                     const publicKeys = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
-                    const result = await SeedVault.signTransaction(seed.authToken, accounts[0].derivationPath, [0, 1, 2, 3]);
+                    const result = await SeedVault.signTransaction(seed.authToken, accounts[0].derivationPath, "aGVsbG8gd29ybGQh");
                     console.log(`Transaction signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignatures = ${result[0].signatures}`);
                   } catch (error) {
                     console.log("Sign Transaction Failed: " + error);
