@@ -12,7 +12,6 @@ import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.solanamobile.seedvault.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -249,16 +248,21 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun signMessage(authToken: String, derivationPath: String, message: String, promise: Promise) {
         val messageBytes = Base64.decode(message, Base64.DEFAULT);
-        signMessagesAsync(authToken, listOf(SigningRequest(messageBytes, arrayListOf(Uri.parse(derivationPath)))), promise)
+        signMessagesAsync(authToken, listOf(SigningRequest(messageBytes, arrayListOf(Uri.parse(derivationPath))))) { result, error ->
+            result?.let { promise.resolve(Arguments.makeNativeMap(Arguments.toBundle(result.getMap(0)))) } 
+            ?: promise.reject(error ?: Error("An unkown error occurred"))
+        }
     }
 
     @ReactMethod
-    fun signMessages(authToken: String, signingRequestsJson: String, promise: Promise) {
-        val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
-        signMessagesAsync(authToken, signingRequests, promise)
+    fun signMessages(authToken: String, signingRequests: ReadableArray, promise: Promise) {
+        val signingRequests: List<SigningRequest> = json.decodeFromJsonElement(ListSerializer(SigningRequestSerializer), signingRequests.toJson())
+        signMessagesAsync(authToken, signingRequests) { result, error ->
+            result?.let { promise.resolve(result) } ?: promise.reject(error ?: Error("An unkown error occurred"))
+        }
     }
 
-    private fun signMessagesAsync(authToken: String, signingRequests: List<SigningRequest>, promise: Promise) {
+    private fun signMessagesAsync(authToken: String, signingRequests: List<SigningRequest>, callback: (result: ReadableArray?, error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting provided messages to be signed...")
         val intent = Wallet.signMessages(authToken.toLong(), ArrayList(signingRequests))
         registerForActivityResult(intent, REQUEST_SIGN_MESSAGES) { resultCode, data ->
@@ -266,17 +270,17 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 val result = Wallet.onSignMessagesResult(resultCode, data)
                 Log.d(TAG, "Message signed: signatures=$result")
 
-                promise.resolve(
+                callback(
                     Arguments.makeNativeArray(result.map { response ->
                         Arguments.createMap().apply {
                             putArray("signatures", Arguments.makeNativeArray(response.signatures.map { Base64.encodeToString(it, Base64.NO_WRAP) }))
                             putArray("resolvedDerivationPaths", Arguments.makeNativeArray(response.resolvedDerivationPaths.map { it.toString() }))
                         }
-                    })
+                    }), null
                 )
             } catch (e: Wallet.ActionFailedException) {
                 Log.e(TAG, "Message signing failed", e)
-                promise.reject(e)
+                callback(null, e)
             }
         }
     }
@@ -301,16 +305,21 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun signTransaction(authToken: String, derivationPath: String, transaction: String, promise: Promise) {
         val txBytes = Base64.decode(transaction, Base64.DEFAULT);
-        signTransactionsAsync(authToken, listOf(SigningRequest(txBytes, arrayListOf(Uri.parse(derivationPath)))), promise)
+        signTransactionsAsync(authToken, listOf(SigningRequest(txBytes, arrayListOf(Uri.parse(derivationPath))))) { result, error ->
+            result?.let { promise.resolve(Arguments.makeNativeMap(Arguments.toBundle(result.getMap(0)))) } 
+            ?: promise.reject(error ?: Error("An unkown error occurred"))
+        }
     }
 
     @ReactMethod
-    fun signTransactions(authToken: String, signingRequestsJson: String, promise: Promise) {
-        val signingRequests: List<SigningRequest> = json.decodeFromString(ListSerializer(SigningRequestSerializer), signingRequestsJson)
-        signTransactionsAsync(authToken, signingRequests, promise)
+    fun signTransactions(authToken: String, signingRequests: ReadableArray, promise: Promise) {
+        val signingRequests: List<SigningRequest> = json.decodeFromJsonElement(ListSerializer(SigningRequestSerializer), signingRequests.toJson())
+        signTransactionsAsync(authToken, signingRequests) { result, error ->
+            result?.let { promise.resolve(result) } ?: promise.reject(error ?: Error("An unkown error occurred"))
+        }
     }
 
-    private fun signTransactionsAsync(authToken: String, signingRequests: List<SigningRequest>, promise: Promise) {
+    private fun signTransactionsAsync(authToken: String, signingRequests: List<SigningRequest>, callback: (result: ReadableArray?, error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting provided transactions to be signed...")
         val intent = Wallet.signTransactions(authToken.toLong(), ArrayList(signingRequests))
         registerForActivityResult(intent, REQUEST_SIGN_TRANSACTIONS) { resultCode, data ->
@@ -318,17 +327,17 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 val result = Wallet.onSignTransactionsResult(resultCode, data)
                 Log.d(TAG, "Transactions signed: signatures=$result")
 
-                promise.resolve(
+                callback(
                     Arguments.makeNativeArray(result.map { response ->
                         Arguments.createMap().apply {
                             putArray("signatures", Arguments.makeNativeArray(response.signatures.map { Base64.encodeToString(it, Base64.NO_WRAP) }))
                             putArray("resolvedDerivationPaths", Arguments.makeNativeArray(response.resolvedDerivationPaths.map { it.toString() }))
                         }
-                    })
+                    }), null
                 )
             } catch (e: Wallet.ActionFailedException) {
                 Log.e(TAG, "Transaction signing failed", e)
-                promise.reject(e)
+                callback(null, e)
             }
         }
     }
@@ -380,13 +389,22 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     @ReactMethod
     fun getPublicKey(authToken: String, derivationPath: String, promise: Promise) {
-        getPublicKeys(authToken, Arguments.createArray().apply {
+        getPublicKeysAsync(authToken, Arguments.createArray().apply {
             pushString(derivationPath)
-        }, promise)
+        }) { result, error ->
+            result?.let { promise.resolve(Arguments.makeNativeMap(Arguments.toBundle(result.getMap(0)))) } 
+            ?: promise.reject(error ?: Error("An unkown error occurred"))
+        }
     }
 
     @ReactMethod
     fun getPublicKeys(authToken: String, derivationPaths: ReadableArray, promise: Promise) {
+        getPublicKeysAsync(authToken, derivationPaths) { result, error ->
+            result?.let { promise.resolve(result) } ?: promise.reject(error ?: Error("An unkown error occurred"))
+        }
+    }
+
+    private fun getPublicKeysAsync(authToken: String, derivationPaths: ReadableArray, callback: (result: ReadableArray?, error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting public keys for provided derviation paths...")
         val intent = Wallet.requestPublicKeys(authToken.toLong(), Arguments.toList(derivationPaths)?.mapNotNull {
             (it as? String)?.let { uriString -> Uri.parse(uriString) }
@@ -396,18 +414,18 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 val result = Wallet.onRequestPublicKeysResult(resultCode, data)
                 Log.d(TAG, "Public key retrieved: publicKey=$result")
 
-                promise.resolve(
+                callback(
                     Arguments.makeNativeArray(result.map { response ->
                         Arguments.createMap().apply {
                             putArray("publicKey", response.publicKey.toWritableArray())
                             putString("publicKeyEncoded", response.publicKeyEncoded)
                             putString("resolvedDerviationPath", response.resolvedDerivationPath.toString())
                         }
-                    })
+                    }), null
                 )
             } catch (e: Wallet.ActionFailedException) {
-                    Log.e(TAG, "Public Key retrieval failed", e)
-                promise.reject(e)
+                Log.e(TAG, "Public Key retrieval failed", e)
+                callback(null, e)
             }
         }
     }
@@ -523,80 +541,5 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
         private const val KEY_PENDING_EVENT = "pendingEvent"
         private const val DEFAULT_ACTIVITY_RESULT_TIMEOUT_MS = 300000L
         private const val MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS = 30000L
-    }
-}
-
-interface RNWritable {
-    fun toWritableMap(): WritableMap
-}
-
-data class Account(
-    @WalletContractV1.AccountId val id: Long,
-    val name: String,
-    val derivationPath: Uri,
-    val publicKeyEncoded: String
-) : RNWritable {
-    override fun toWritableMap() = Arguments.createMap().apply {
-        putString("id", "$id")
-        putString("name", name)
-        putString("derivationPath", "$derivationPath")
-        putString("publicKeyEncoded", publicKeyEncoded)
-    }
-}
-
-data class Seed(
-    @WalletContractV1.AuthToken val authToken: Long,
-    val name: String,
-    @WalletContractV1.Purpose val purpose: Int,
-    // val accounts: List<Account> = listOf()
-) : RNWritable {
-    override fun toWritableMap() = Arguments.createMap().apply {
-        putString("authToken", "$authToken")
-        putString("name", name)
-        putInt("purpose", purpose)
-    }
-}
-
-fun List<RNWritable>.toWritableArray() = Arguments.createArray().apply {
-    forEach { writable ->
-        pushMap(writable.toWritableMap())
-    }
-}
-
-@Serializable
-sealed interface SeedVaultEvent {
-    sealed class SeedEvent(val authToken: Long) : SeedVaultEvent
-    class SeedAuthorized(authToken: Long) : SeedEvent(authToken)
-    class NewSeedCreated(authToken: Long) : SeedEvent(authToken)
-    class ExistingSeedImported(authToken: Long) : SeedEvent(authToken)
-
-    data class PayloadsSigned(val result: List<SigningResponse>) : SeedVaultEvent
-
-    data class PublicKeysEvent(val result: List<PublicKeyResponse>) : SeedVaultEvent
-}
-
-internal fun SeedVaultEvent.toWritableMap() : WritableMap = Arguments.createMap().apply {
-    putString("__type", this@toWritableMap::class.simpleName)
-    when (this@toWritableMap) {
-        is SeedVaultEvent.SeedEvent -> {
-            putString("authToken", authToken.toString())
-        }
-        is SeedVaultEvent.PayloadsSigned -> {
-            putArray("result", Arguments.makeNativeArray(result.map { response ->
-                Arguments.createMap().apply {
-                    putArray("signatures", Arguments.makeNativeArray(response.signatures.map { it.toWritableArray() }))
-                    putArray("resolvedDerivationPaths", Arguments.makeNativeArray(response.resolvedDerivationPaths.map { it.toString() }))
-                }
-            }))
-        }
-        is SeedVaultEvent.PublicKeysEvent -> {
-            putArray("result", Arguments.makeNativeArray(result.map { response ->
-                Arguments.createMap().apply {
-                    putArray("publicKey", response.publicKey.toWritableArray())
-                    putString("publicKeyEncoded", response.publicKeyEncoded)
-                    putString("resolvedDerviationPath", response.resolvedDerivationPath.toString())
-                }
-            }))
-        }
     }
 }

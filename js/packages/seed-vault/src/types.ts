@@ -38,23 +38,23 @@ export type SeedPublicKey = Readonly<{
 
 export type SigningRequest = Readonly<{
     payload: Base64EncodedPayload,
-    requestedSignatures: [DerivationPath]
+    requestedSignatures: DerivationPath[]
 }>;
 
 export type SigningResult = Readonly<{
-    signatures: [Base64EncodedSignature],
-    resolvedDerivationPaths: [DerivationPath]
+    signatures: Base64EncodedSignature[],
+    resolvedDerivationPaths: DerivationPath[]
 }>;
 
 interface AuthorizeSeedAPI {
     hasUnauthorizedSeeds(): boolean
-    getAuthorizedSeeds(): [Seed]
+    getAuthorizedSeeds(): Seed[]
     authorizeNewSeed(): {authToken: AuthToken}
     deauthorizeSeed(authToken: AuthToken): void
 }
 
 interface AccountAPI {
-    getAccounts(authToken: AuthToken): [Account]
+    getAccounts(authToken: AuthToken): Account[]
     updateAccountName(authToken: AuthToken, accountId: number, name?: string): void
 }
 
@@ -67,18 +67,18 @@ interface ImportExistingSeedAPI {
 }
 
 interface PublicKeyAPI {
-    getPublicKey(authToken: AuthToken, derivationPath: DerivationPath): [SeedPublicKey]
-    getPublicKeys(authToken: AuthToken, derivationPaths: [DerivationPath]): [SeedPublicKey]
+    getPublicKey(authToken: AuthToken, derivationPath: DerivationPath): SeedPublicKey
+    getPublicKeys(authToken: AuthToken, derivationPaths: DerivationPath[]): SeedPublicKey[]
 }
 
 interface SignMessagesAPI {
-    signMessage(authToken: AuthToken, derivationPath: DerivationPath, message: Base64EncodedMessage): [SigningResult]
-    signMessages(authToken: AuthToken, signingRequests: [SigningRequest]): [SigningResult]
+    signMessage(authToken: AuthToken, derivationPath: DerivationPath, message: Base64EncodedMessage): SigningResult
+    signMessages(authToken: AuthToken, signingRequests: SigningRequest[]): SigningResult[]
 }
 
 interface SignTransactionsAPI {
-    signTransaction(authToken: AuthToken, derivationPath: DerivationPath, transaction: Base64EncodedTransaction): [SigningResult]
-    signTransactions(authToken: AuthToken, signingRequests: [SigningRequest]): [SigningResult]
+    signTransaction(authToken: AuthToken, derivationPath: DerivationPath, transaction: Base64EncodedTransaction): SigningResult
+    signTransactions(authToken: AuthToken, signingRequests: SigningRequest[]): SigningResult[]
 }
 
 export interface SeedVaultAPI 
