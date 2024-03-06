@@ -71,9 +71,9 @@ export default function MainScreen() {
                 console.log(accounts)
                 if (accounts.length && accounts[0].derivationPath) {
                   try {
-                    const publicKeys = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
+                    const publicKey = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
                     const result = await SeedVault.signMessage(seed.authToken, accounts[0].derivationPath, "aGVsbG8gd29ybGQh");
-                    console.log(`Message signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignature = ${result[0].signatures[0]}`);
+                    console.log(`Message signed:\n\tpublic key = ${publicKey.publicKeyEncoded}\n\tsignature = ${result.signatures[0]}`);
                   }catch (error) {
                     console.log("Sign Message Failed: " + error);
                   }
@@ -88,15 +88,57 @@ export default function MainScreen() {
                 console.log(accounts)
                 if (accounts.length && accounts[0].derivationPath) {
                   try {
-                    const publicKeys = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
+                    const publicKey = await SeedVault.getPublicKey(seed.authToken, accounts[0].derivationPath);
                     const result = await SeedVault.signTransaction(seed.authToken, accounts[0].derivationPath, "aGVsbG8gd29ybGQh");
-                    console.log(`Transaction signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignatures = ${result[0].signatures}`);
+                    console.log(`Transaction signed:\n\tpublic key = ${publicKey.publicKeyEncoded}\n\tsignatures = ${result.signatures}`);
                   } catch (error) {
                     console.log("Sign Transaction Failed: " + error);
                   }
                 }
             }}>
             Sign Transaction
+          </Button> : null}
+          {authorizedSeeds.length ? <Button
+            onPress={async () => {
+                const seed = authorizedSeeds[0]
+                const accounts = await SeedVault.getAccounts(seed.authToken)
+                console.log(accounts)
+                if (accounts.length && accounts[0].derivationPath) {
+                  try {
+                    const publicKeys = await SeedVault.getPublicKeys(seed.authToken, [accounts[0].derivationPath, accounts[1].derivationPath]);
+                    const result = await SeedVault.signMessages(seed.authToken, [
+                      {requestedSignatures: [accounts[0].derivationPath], payload: "aGVsbG8gd29ybGQh"}, 
+                      {requestedSignatures: [accounts[1].derivationPath], payload: "aGVsbG8gd29ybGQh"}
+                    ]);
+                    console.log(`Message signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignatures = ${result[0].signatures}`);
+                    console.log(`Message signed:\n\tpublic key = ${publicKeys[1].publicKeyEncoded}\n\tsignatures = ${result[1].signatures}`);
+                  } catch (error) {
+                    console.log("Sign Messages Failed: " + error);
+                  }
+                }
+            }}>
+            Sign Messages
+          </Button> : null}
+          {authorizedSeeds.length ? <Button
+            onPress={async () => {
+                const seed = authorizedSeeds[0]
+                const accounts = await SeedVault.getAccounts(seed.authToken)
+                console.log(accounts)
+                if (accounts.length && accounts[0].derivationPath) {
+                  try {
+                    const publicKeys = await SeedVault.getPublicKeys(seed.authToken, [accounts[0].derivationPath, accounts[1].derivationPath]);
+                    const result = await SeedVault.signTransactions(seed.authToken, [
+                      {requestedSignatures: [accounts[0].derivationPath], payload: "aGVsbG8gd29ybGQh"}, 
+                      {requestedSignatures: [accounts[1].derivationPath], payload: "aGVsbG8gd29ybGQh"}
+                    ]);
+                    console.log(`Transaction signed:\n\tpublic key = ${publicKeys[0].publicKeyEncoded}\n\tsignatures = ${result[0].signatures}`);
+                    console.log(`Transaction signed:\n\tpublic key = ${publicKeys[1].publicKeyEncoded}\n\tsignatures = ${result[1].signatures}`);
+                  } catch (error) {
+                    console.log("Sign Transactions Failed: " + error);
+                  }
+                }
+            }}>
+            Sign Transactions
           </Button> : null}
         </View>
       </>
