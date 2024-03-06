@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { NativeEventEmitter, NativeModules, Permission, PermissionsAndroid, Platform } from 'react-native';
 import { SeedVaultContentChange, SeedVaultEvent, SeedVaultEventType } from './seedVaultEvent';
+import { SeedVaultAPI } from './types';
 
 const LINKING_ERROR =
     `The package 'solana-mobile-seed-vault-lib' doesn't seem to be linked. Make sure: \n\n` +
@@ -73,9 +74,7 @@ export function useSeedVault(
         const listener = seedVaultEventEmitter.addListener(SEED_VAULT_EVENT_BRIDGE_NAME, (nativeEvent) => {
             if (isContentChangeEvent(nativeEvent)) {
                 contentChangeHandler.current(nativeEvent as SeedVaultContentChange)
-                handleContentChange(nativeEvent as SeedVaultContentChange)
             } else if (isSeedVaultEvent(nativeEvent)) {
-                handleSeedVaultEvent(nativeEvent as SeedVaultEvent)
                 seedVaultEventHandler.current(nativeEvent as SeedVaultEvent)
             } else {
                 console.warn('Unexpected native event type');
@@ -96,15 +95,4 @@ function isContentChangeEvent(nativeEvent: any): boolean {
     return nativeEvent.__type == SeedVaultEventType.ContentChange;
 }
 
-export type Account = Readonly<{
-    id: number,
-    name: string,
-    derivationPath: string,
-    publicKeyEncoded: string
-}>;
-
-export type Seed = Readonly<{
-    authToken: number,
-    name: string,
-    purpose: number
-}>;
+export const SeedVault: SeedVaultAPI = SolanaMobileSeedVaultLib as SeedVaultAPI
