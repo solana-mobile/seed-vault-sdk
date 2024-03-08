@@ -42,7 +42,7 @@ if (permissionResult === PermissionsAndroid.RESULTS.GRANTED) {
 Read more about requesting Android Permission in React Natvie [here](https://reactnative.dev/docs/permissionsandroid).
 
 ### Authorize a Seed
-Before our app can urequest signatures form seed vault, we must first request authorization for our app to use a seed from the user.
+Before our app can access any seeds in the seed vault, we must first request authorization for our app to use a seed from the user.
 ```javascript
 import { SeedVault } from "@solana-mobile/seed-vault-lib";
 
@@ -80,7 +80,7 @@ const publicKey = await SeedVault.getPublicKey(seed.authToken, account.derivatio
 // can now build transaction using publickey 
 ```
 
-This will return a list of `SeedPublicKey` objects with the following structure 
+This will return a `SeedPublicKey` object with the following structure 
 ```
 {
   publicKey: Uint8Array;
