@@ -77,7 +77,7 @@ Once we have obtained an authorized seed, we can get a list of all the accounts 
 ```javascript
 const account = account[0]
 const publicKey = await SeedVault.getPublicKey(seed.authToken, account.derivationPath);
-// can now build transaction using publickey 
+// can now build transaction using the public key
 ```
 
 This will return a `SeedPublicKey` object with the following structure 
@@ -90,7 +90,7 @@ This will return a `SeedPublicKey` object with the following structure
 ```
 
 ### Sign a Payload
-Once we have obtained an accont, we can request signatures from seed vault for that account: 
+Once we have obtained an account, we can request signatures from seed vault for that account: 
 ```javascript
 SeedVault.signMessage(seed.authToken, account.derivationPath, messageBytes);
 SeedVault.signTransaction(seed.authToken, account.derivationPath, transactionByteArray);
