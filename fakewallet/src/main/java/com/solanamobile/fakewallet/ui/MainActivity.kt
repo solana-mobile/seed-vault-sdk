@@ -278,7 +278,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "Public key retrieved: publicKey=$result")
                     viewModel.onRequestPublicKeysSuccess(event, result)
                 } catch (e: Wallet.ActionFailedException) {
-                    Log.e(TAG, "Transaction signing failed", e)
+                    Log.e(TAG, "Public Key retrieval failed", e)
                     viewModel.onRequestPublicKeysFailure(event, resultCode)
                 }
             }
