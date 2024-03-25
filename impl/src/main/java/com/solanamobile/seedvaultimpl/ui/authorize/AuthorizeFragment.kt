@@ -6,10 +6,13 @@ package com.solanamobile.seedvaultimpl.ui.authorize
 
 import android.app.Dialog
 import android.content.Context
+import android.content.pm.PackageManager
+import android.hardware.fingerprint.FingerprintManager
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
+import android.os.CancellationSignal
+import android.util.Log
 import android.view.*
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -27,7 +30,8 @@ import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.databinding.FragmentAuthorizeBinding
 import com.solanamobile.seedvaultimpl.ui.authorizeinfo.AuthorizeInfoDialogFragment
 import com.solanamobile.seedvaultimpl.ui.selectseed.SelectSeedDialogFragment
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlin.coroutines.resume
 
 class AuthorizeFragment : Fragment() {
     private lateinit var dependencyContainer: ApplicationDependencyContainer
@@ -43,9 +47,15 @@ class AuthorizeFragment : Fragment() {
     private var _binding: FragmentAuthorizeBinding? = null
     private val binding get() = _binding!!
 
+    private var supportsFingerprint: Boolean = false
+
+    private var messageShowing: Boolean = false
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         dependencyContainer = (requireActivity().application as SeedVaultImplApplication).dependencyContainer
+
+        supportsFingerprint = context.packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)
     }
 
     override fun onCreateView(
@@ -74,13 +84,12 @@ class AuthorizeFragment : Fragment() {
                     binding.textAppName.text = uiState.requestorAppName
 
                     val fingerprintWidgetVisibility =
-                        if (uiState.enableBiometrics) View.VISIBLE else View.GONE
+                        if (uiState.allowBiometrics) View.VISIBLE else View.GONE
                     binding.dividerFingerprintBelow.visibility = fingerprintWidgetVisibility
                     binding.labelFingerprintOption.visibility = fingerprintWidgetVisibility
                     binding.imageviewFingerprintIcon.visibility = fingerprintWidgetVisibility
-                    binding.imageviewFingerprintErrorIcon.visibility = fingerprintWidgetVisibility
 
-                    val pinWidgetVisibility = if (uiState.enablePIN) View.VISIBLE else View.GONE
+                    val pinWidgetVisibility = if (uiState.allowPIN) View.VISIBLE else View.GONE
                     binding.btnPin.visibility = pinWidgetVisibility
 
                     val authorizeSeedWidgetVisibility =
@@ -94,14 +103,39 @@ class AuthorizeFragment : Fragment() {
 
                     binding.textSeedName.text = uiState.seedName
 
-                    uiState.message?.let { message ->
-                        val toast = Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT)
-                        toast.addCallback(object : Toast.Callback() {
-                            override fun onToastHidden() {
-                                viewModel.onMessageShown()
-                            }
-                        })
-                        toast.show()
+                    if (!messageShowing) {
+                        uiState.message?.let { message ->
+                            val toast =
+                                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT)
+                            toast.addCallback(object : Toast.Callback() {
+                                override fun onToastHidden() {
+                                    messageShowing = false
+                                    viewModel.onMessageShown()
+                                }
+                            })
+                            messageShowing = true
+                            toast.show()
+                        }
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                if (!supportsFingerprint) return@repeatOnLifecycle
+
+                var fingerprintSession: Job? = null
+                viewModel.uiState.collect { uiState ->
+                    if (fingerprintSession != null) {
+                        if (!uiState.allowBiometrics) {
+                            fingerprintSession!!.cancel()
+                            fingerprintSession = null
+                        }
+                    } else {
+                        if (uiState.allowBiometrics) {
+                            fingerprintSession = launch { processFingerprints() }
+                        }
                     }
                 }
             }
@@ -121,20 +155,6 @@ class AuthorizeFragment : Fragment() {
 
         binding.btnPin.setOnClickListener {
             showPinEntryDialog()
-        }
-
-        binding.imageviewFingerprintIcon.setOnClickListener {
-            viewModel.biometricAuthorizationSuccess()
-        }
-
-        binding.imageviewFingerprintErrorIcon.setOnClickListener {
-            viewModel.biometricsAuthorizationFailed()
-
-            @Suppress("DEPRECATION")
-            val vibrator = requireActivity().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
-            vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK))
-
-            // TODO: shake animation
         }
     }
 
@@ -169,8 +189,69 @@ class AuthorizeFragment : Fragment() {
             }
     }
 
+    private suspend fun processFingerprints() {
+        val fpManager = requireActivity().getSystemService(Context.FINGERPRINT_SERVICE)!! as FingerprintManager
+        val cancelFpSession = CancellationSignal()
+
+        try {
+            while (true) {
+                suspendCancellableCoroutine { continuation ->
+                    val fpCallbacks = object : FingerprintManager.AuthenticationCallback() {
+                        override fun onAuthenticationSucceeded(result: FingerprintManager.AuthenticationResult?) {
+                            super.onAuthenticationSucceeded(result)
+                            viewModel.biometricAuthorizationSuccess()
+                            continuation.resume(Unit)
+                        }
+
+                        override fun onAuthenticationFailed() {
+                            super.onAuthenticationFailed()
+                            viewModel.biometricsAuthorizationFailed()
+                            continuation.resume(Unit)
+                            animateFingerprintIconShake()
+                        }
+
+                        override fun onAuthenticationHelp(
+                            helpCode: Int,
+                            helpString: CharSequence?
+                        ) {
+                            super.onAuthenticationHelp(helpCode, helpString)
+                            viewModel.biometricAuthorizationRecoverableError(helpCode, helpString)
+                        }
+
+                        override fun onAuthenticationError(
+                            errorCode: Int,
+                            errString: CharSequence?
+                        ) {
+                            super.onAuthenticationError(errorCode, errString)
+                            if (errorCode != FingerprintManager.FINGERPRINT_ERROR_CANCELED) {
+                                viewModel.biometricAuthorizationUnrecoverableError(errorCode, errString)
+                                continuation.resume(Unit)
+                            }
+                        }
+                    }
+
+                    Log.d(TAG, "Starting a FP session")
+                    fpManager.authenticate(null, cancelFpSession, 0, fpCallbacks, null)
+                    // stops here and waits for continuation.resume() (or cancellation)
+                }
+            }
+        } finally {
+            Log.d(TAG, "Cancelling active FP session")
+            cancelFpSession.cancel()
+        }
+    }
+
+    private fun animateFingerprintIconShake() {
+        val shake = AnimationUtils.loadAnimation(requireContext(), R.anim.anim_shake)
+        binding.imageviewFingerprintIcon.startAnimation(shake)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+    }
+
+    companion object {
+        private val TAG = AuthorizeFragment::class.simpleName
     }
 }

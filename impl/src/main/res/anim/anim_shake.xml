@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <translate
+        android:duration="30"
+        android:fromXDelta="-6%"
+        android:toXDelta="6%"
+        android:repeatMode="reverse"
+        android:interpolator="@android:anim/linear_interpolator"
+        android:repeatCount="5" />
+</set>
