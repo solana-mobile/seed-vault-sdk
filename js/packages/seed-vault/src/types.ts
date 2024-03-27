@@ -81,11 +81,16 @@ interface SignTransactionsAPI {
     signTransactions(authToken: AuthToken, signingRequests: SigningRequest[]): SigningResult[]
 }
 
+interface SeedVaultAvailabilityAPI {
+    isSeedVaultAvailable(allowSimulated: boolean): boolean
+}
+
 export interface SeedVaultAPI 
     extends AuthorizeSeedAPI,
         AccountAPI,
         CreateNewSeedAPI,
         ImportExistingSeedAPI,
         PublicKeyAPI,
+        SeedVaultAvailabilityAPI,
         SignMessagesAPI, 
         SignTransactionsAPI {}
