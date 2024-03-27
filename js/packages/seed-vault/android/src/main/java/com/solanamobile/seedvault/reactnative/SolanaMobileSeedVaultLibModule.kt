@@ -43,7 +43,9 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     init {
         reactContext.addActivityEventListener(mActivityEventListener)
 
-        observeSeedVaultContentChanges()
+        if (SeedVault.isAvailable(reactContext, true)) {
+            observeSeedVaultContentChanges()
+        }
     }
 
     @ReactMethod
