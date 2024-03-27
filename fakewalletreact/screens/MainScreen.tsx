@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, NativeModules } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Appbar, Text } from 'react-native-paper';
 import { SeedVault } from "@solana-mobile/seed-vault-lib";
 import SeedVaultExampleUsage from '../components/SeedVaultExampleUsage';
