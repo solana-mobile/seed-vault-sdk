@@ -64,9 +64,17 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     @ReactMethod
     fun hasUnauthorizedSeeds(promise: Promise) {
+        hasUnauthorizedSeedsForPurpose(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION, promise)
+    }
+
+    @ReactMethod
+    fun hasUnauthorizedSeedsForPurpose(purpose: Double, promise: Promise) {
+        hasUnauthorizedSeedsForPurpose(purpose.toInt(), promise)
+    }
+
+    private fun hasUnauthorizedSeedsForPurpose(purpose: Int, promise: Promise) {
         val application = reactContext.currentActivity?.application!!
-        val hasUnauthorizedSeeds = Wallet.hasUnauthorizedSeedsForPurpose(application, 
-            WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val hasUnauthorizedSeeds = Wallet.hasUnauthorizedSeedsForPurpose(application, purpose)
         promise.resolve(hasUnauthorizedSeeds)
     }
 
@@ -232,6 +240,16 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     fun updateAccountName(authToken: String, accountId: Long, name: String?) {
         Wallet.updateAccountName(reactContext, authToken.toLong(), accountId, name)
         Log.d(TAG, "Account name updated (to '$name')")
+    }
+
+    @ReactMethod
+    fun updateAccountIsUserWallet(authToken: String, accountId: String, isUserWallet: Boolean) {
+        Wallet.updateAccountIsUserWallet(reactContext, authToken.toLong(), accountId.toLong(), isUserWallet)
+    }
+
+    @ReactMethod
+    fun updateAccountIsValid(authToken: String, accountId: String, isValid: Boolean) {
+        Wallet.updateAccountIsValid(reactContext, authToken.toLong(), accountId.toLong(), isValid)
     }
 
     @ReactMethod
@@ -434,6 +452,21 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 callback(null, e)
             }
         }
+    }
+
+    @ReactMethod
+    fun resolveDerivationPath(derivationPath: String, promise: Promise) {
+        resolveDerivationPath(Uri.parse(derivationPath), WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION, promise)
+    }
+
+    @ReactMethod
+    fun resolveDerivationPathForPurpose(derivationPath: String, purpose: Double, promise: Promise) {
+        resolveDerivationPath(Uri.parse(derivationPath), purpose.toInt(), promise)
+    }
+
+    private fun resolveDerivationPath(derivationPath: Uri, purpose: Int, promise: Promise) {
+        val resolvedDerivationPath = Wallet.resolveDerivationPath(reactContext, derivationPath, purpose)
+        promise.resolve(resolvedDerivationPath.toString())
     }
 
     private fun sendEvent(reactContext: ReactContext, eventName: String, params: WritableMap? = null) {
