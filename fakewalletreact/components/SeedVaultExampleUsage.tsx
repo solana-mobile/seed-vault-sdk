@@ -1,39 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, PermissionsAndroid } from 'react-native';
+import { View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { Account, Seed, SeedVault, SeedVaultPermissionAndroid, useSeedVault } from "@solana-mobile/seed-vault-lib";
+import { Account, Seed, SeedVault, useSeedVault } from "@solana-mobile/seed-vault-lib";
 
 export default function SeedVaultExampleUsage() {
     const [hasUnauthorizedSeeds, setHasUnauthorizedSeeds] = useState(false);
     const [authorizedSeeds, setAuthorizedSeeds] = useState<Seed[]>([]);
-
-    useEffect(() => {
-
-        async function requestSeedVaultPermission() {
-            try {
-                const granted = await PermissionsAndroid.request(
-                    SeedVaultPermissionAndroid,
-                    {
-                    title: 'Seed Vault Permission',
-                    message:
-                        'This app needs your permission to access Seed Vault',
-                    buttonNeutral: 'Ask Me Later',
-                    buttonNegative: 'Cancel',
-                    buttonPositive: 'OK',
-                    },
-                );
-                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                    console.log('You can use Seed Vault');
-                } else {
-                    console.log('Seed Vault permission denied');
-                }
-            } catch (err) {
-                console.warn(err);
-            }
-        };
-
-        requestSeedVaultPermission(); 
-    }, []);
 
     useEffect(() => {
 
@@ -50,10 +22,10 @@ export default function SeedVaultExampleUsage() {
         async function getAuthorizedSeeds() {
             const authorizedSeeds = await SeedVault.getAuthorizedSeeds();
             authorizedSeeds.forEach(async (authorizedSeed: Seed) => {
-                console.log('Authorized seed = ' + authorizedSeed.name + ', ' + authorizedSeed.authToken)
+                console.log('Authorized seed = ' + authorizedSeed.name + ', ' + authorizedSeed.authToken);
                 const accounts = await SeedVault.getUserWallets(authorizedSeed.authToken);
                 accounts.forEach((account: Account) => {
-                  console.log('   account: ' + account.name + ', ' + account.publicKeyEncoded + ', ' + account.derivationPath)
+                  console.log('   account: ' + account.name + ', ' + account.publicKeyEncoded + ', ' + account.derivationPath);
                 })
             });
             setAuthorizedSeeds(authorizedSeeds)
@@ -78,13 +50,16 @@ export default function SeedVaultExampleUsage() {
             onPress={async () => {
                 const result = await SeedVault.authorizeNewSeed();
                 console.log(`New seed authorized! auth token: ${result.authToken}`);
+                const authorizedSeeds = await SeedVault.getAuthorizedSeeds();
+                setAuthorizedSeeds(authorizedSeeds);
             }}>
             Authorize another seed for PURPOSE_SIGN_SOLANA_TRANSACTION
           </Button> : null}
           <Button
             onPress={async () => {
-                const authorizedSeeds = await SeedVault.getAuthorizedSeeds()
-                console.log(authorizedSeeds)
+                const authorizedSeeds = await SeedVault.getAuthorizedSeeds();
+                setAuthorizedSeeds(authorizedSeeds);
+                console.log(authorizedSeeds);
             }}>
             Get Authorized Seeds
           </Button>

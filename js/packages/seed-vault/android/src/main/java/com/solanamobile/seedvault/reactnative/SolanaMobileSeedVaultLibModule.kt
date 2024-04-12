@@ -2,6 +2,7 @@ package com.solanamobile.seedvault.reactnative
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.net.Uri
 import android.os.Bundle
@@ -43,7 +44,8 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     init {
         reactContext.addActivityEventListener(mActivityEventListener)
 
-        if (SeedVault.isAvailable(reactContext, true)) {
+        if (reactContext.checkSelfPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT) == PackageManager.PERMISSION_GRANTED &&
+                SeedVault.isAvailable(reactContext, true)) {
             observeSeedVaultContentChanges()
         }
     }
