@@ -110,11 +110,10 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun getAccounts(authToken: String, promise: Promise) {
+    fun getAccounts(authToken: String, filterOnColumn: String, value: Any, promise: Promise) {
         val application = reactContext.currentActivity?.application!!
         val accountsCursor = Wallet.getAccounts(application, authToken.toLong(),
-                    WalletContractV1.ACCOUNTS_ALL_COLUMNS,
-                    WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, "1")!!
+                    WalletContractV1.ACCOUNTS_ALL_COLUMNS, filterOnColumn, value)!!
 
         val accounts = mutableListOf<Account>()
         
@@ -132,6 +131,11 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
         }
 
         promise.resolve(accounts.toWritableArray())
+    }
+
+    @ReactMethod
+    fun getUserWallets(authToken: String, promise: Promise) {
+        getAccounts(authToken, WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, "1", promise)
     }
 
     @ReactMethod
@@ -421,7 +425,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                         Arguments.createMap().apply {
                             putArray("publicKey", response.publicKey.toWritableArray())
                             putString("publicKeyEncoded", response.publicKeyEncoded)
-                            putString("resolvedDerviationPath", response.resolvedDerivationPath.toString())
+                            putString("resolvedDerivationPath", response.resolvedDerivationPath.toString())
                         }
                     }), null
                 )
@@ -455,7 +459,6 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                     throw NotImplementedError("Stub for legacy onChange")
 
                 override fun onChange(selfChange: Boolean, uris: Collection<Uri>, flags: Int) {
-                    Log.d(TAG, "Received change notification for $uris (flags=$flags); refreshing viewmodel")
                     sendEvent(reactContext, SEED_VAULT_CONTENT_CHANGE_EVENT_BRIDGE_NAME, 
                         params = Arguments.createMap().apply {
                             putString("__type", "SeedVaultContentChange")

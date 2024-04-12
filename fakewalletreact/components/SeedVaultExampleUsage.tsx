@@ -51,7 +51,7 @@ export default function SeedVaultExampleUsage() {
             const authorizedSeeds = await SeedVault.getAuthorizedSeeds();
             authorizedSeeds.forEach(async (authorizedSeed: Seed) => {
                 console.log('Authorized seed = ' + authorizedSeed.name + ', ' + authorizedSeed.authToken)
-                const accounts = await SeedVault.getAccounts(authorizedSeed.authToken);
+                const accounts = await SeedVault.getUserWallets(authorizedSeed.authToken);
                 accounts.forEach((account: Account) => {
                   console.log('   account: ' + account.name + ', ' + account.publicKeyEncoded + ', ' + account.derivationPath)
                 })
@@ -91,7 +91,7 @@ export default function SeedVaultExampleUsage() {
           {authorizedSeeds.length ? <Button
             onPress={async () => {
                 const seed = authorizedSeeds[0]
-                const accounts = await SeedVault.getAccounts(seed.authToken)
+                const accounts = await SeedVault.getUserWallets(seed.authToken)
                 console.log(accounts)
                 if (accounts.length && accounts[0].derivationPath) {
                   try {
@@ -108,7 +108,7 @@ export default function SeedVaultExampleUsage() {
           {authorizedSeeds.length ? <Button
             onPress={async () => {
                 const seed = authorizedSeeds[0]
-                const accounts = await SeedVault.getAccounts(seed.authToken)
+                const accounts = await SeedVault.getUserWallets(seed.authToken)
                 console.log(accounts)
                 if (accounts.length && accounts[0].derivationPath) {
                   try {
@@ -125,7 +125,7 @@ export default function SeedVaultExampleUsage() {
           {authorizedSeeds.length ? <Button
             onPress={async () => {
                 const seed = authorizedSeeds[0]
-                const accounts = await SeedVault.getAccounts(seed.authToken)
+                const accounts = await SeedVault.getUserWallets(seed.authToken)
                 console.log(accounts)
                 if (accounts.length && accounts[0].derivationPath) {
                   try {
@@ -146,7 +146,7 @@ export default function SeedVaultExampleUsage() {
           {authorizedSeeds.length ? <Button
             onPress={async () => {
                 const seed = authorizedSeeds[0]
-                const accounts = await SeedVault.getAccounts(seed.authToken)
+                const accounts = await SeedVault.getUserWallets(seed.authToken)
                 console.log(accounts)
                 if (accounts.length && accounts[0].derivationPath) {
                   try {

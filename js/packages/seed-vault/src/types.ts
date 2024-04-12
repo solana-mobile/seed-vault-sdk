@@ -54,7 +54,8 @@ interface AuthorizeSeedAPI {
 }
 
 interface AccountAPI {
-    getAccounts(authToken: AuthToken): Account[]
+    getAccounts(authToken: AuthToken, filterOnColumn: string, value: any): Account[]
+    getUserWallets(authToken: AuthToken): Account[]
     updateAccountName(authToken: AuthToken, accountId: number, name?: string): void
 }
 

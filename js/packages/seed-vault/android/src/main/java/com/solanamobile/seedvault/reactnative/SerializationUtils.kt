@@ -73,7 +73,7 @@ internal fun SeedVaultEvent.toWritableMap() : WritableMap = Arguments.createMap(
                 Arguments.createMap().apply {
                     putArray("publicKey", response.publicKey.toWritableArray())
                     putString("publicKeyEncoded", response.publicKeyEncoded)
-                    putString("resolvedDerviationPath", response.resolvedDerivationPath.toString())
+                    putString("resolvedDerivationPath", response.resolvedDerivationPath.toString())
                 }
             }))
         }
