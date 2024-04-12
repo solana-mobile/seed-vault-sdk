@@ -2,6 +2,7 @@ package com.solanamobile.seedvault.reactnative
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.net.Uri
 import android.os.Bundle
@@ -43,7 +44,8 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     init {
         reactContext.addActivityEventListener(mActivityEventListener)
 
-        if (SeedVault.isAvailable(reactContext, true)) {
+        if (reactContext.checkSelfPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT) == PackageManager.PERMISSION_GRANTED &&
+                SeedVault.isAvailable(reactContext, true)) {
             observeSeedVaultContentChanges()
         }
     }
@@ -64,9 +66,17 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     @ReactMethod
     fun hasUnauthorizedSeeds(promise: Promise) {
+        hasUnauthorizedSeedsForPurpose(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION, promise)
+    }
+
+    @ReactMethod
+    fun hasUnauthorizedSeedsForPurpose(purpose: Double, promise: Promise) {
+        hasUnauthorizedSeedsForPurpose(purpose.toInt(), promise)
+    }
+
+    private fun hasUnauthorizedSeedsForPurpose(purpose: Int, promise: Promise) {
         val application = reactContext.currentActivity?.application!!
-        val hasUnauthorizedSeeds = Wallet.hasUnauthorizedSeedsForPurpose(application, 
-            WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val hasUnauthorizedSeeds = Wallet.hasUnauthorizedSeedsForPurpose(application, purpose)
         promise.resolve(hasUnauthorizedSeeds)
     }
 
@@ -110,11 +120,10 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun getAccounts(authToken: String, promise: Promise) {
+    fun getAccounts(authToken: String, filterOnColumn: String, value: Any, promise: Promise) {
         val application = reactContext.currentActivity?.application!!
         val accountsCursor = Wallet.getAccounts(application, authToken.toLong(),
-                    WalletContractV1.ACCOUNTS_ALL_COLUMNS,
-                    WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, "1")!!
+                    WalletContractV1.ACCOUNTS_ALL_COLUMNS, filterOnColumn, value)!!
 
         val accounts = mutableListOf<Account>()
         
@@ -132,6 +141,11 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
         }
 
         promise.resolve(accounts.toWritableArray())
+    }
+
+    @ReactMethod
+    fun getUserWallets(authToken: String, promise: Promise) {
+        getAccounts(authToken, WalletContractV1.ACCOUNTS_ACCOUNT_IS_USER_WALLET, "1", promise)
     }
 
     @ReactMethod
@@ -228,6 +242,16 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     fun updateAccountName(authToken: String, accountId: Long, name: String?) {
         Wallet.updateAccountName(reactContext, authToken.toLong(), accountId, name)
         Log.d(TAG, "Account name updated (to '$name')")
+    }
+
+    @ReactMethod
+    fun updateAccountIsUserWallet(authToken: String, accountId: String, isUserWallet: Boolean) {
+        Wallet.updateAccountIsUserWallet(reactContext, authToken.toLong(), accountId.toLong(), isUserWallet)
+    }
+
+    @ReactMethod
+    fun updateAccountIsValid(authToken: String, accountId: String, isValid: Boolean) {
+        Wallet.updateAccountIsValid(reactContext, authToken.toLong(), accountId.toLong(), isValid)
     }
 
     @ReactMethod
@@ -421,7 +445,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                         Arguments.createMap().apply {
                             putArray("publicKey", response.publicKey.toWritableArray())
                             putString("publicKeyEncoded", response.publicKeyEncoded)
-                            putString("resolvedDerviationPath", response.resolvedDerivationPath.toString())
+                            putString("resolvedDerivationPath", response.resolvedDerivationPath.toString())
                         }
                     }), null
                 )
@@ -430,6 +454,21 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 callback(null, e)
             }
         }
+    }
+
+    @ReactMethod
+    fun resolveDerivationPath(derivationPath: String, promise: Promise) {
+        resolveDerivationPath(Uri.parse(derivationPath), WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION, promise)
+    }
+
+    @ReactMethod
+    fun resolveDerivationPathForPurpose(derivationPath: String, purpose: Double, promise: Promise) {
+        resolveDerivationPath(Uri.parse(derivationPath), purpose.toInt(), promise)
+    }
+
+    private fun resolveDerivationPath(derivationPath: Uri, purpose: Int, promise: Promise) {
+        val resolvedDerivationPath = Wallet.resolveDerivationPath(reactContext, derivationPath, purpose)
+        promise.resolve(resolvedDerivationPath.toString())
     }
 
     private fun sendEvent(reactContext: ReactContext, eventName: String, params: WritableMap? = null) {
@@ -455,7 +494,6 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                     throw NotImplementedError("Stub for legacy onChange")
 
                 override fun onChange(selfChange: Boolean, uris: Collection<Uri>, flags: Int) {
-                    Log.d(TAG, "Received change notification for $uris (flags=$flags); refreshing viewmodel")
                     sendEvent(reactContext, SEED_VAULT_CONTENT_CHANGE_EVENT_BRIDGE_NAME, 
                         params = Arguments.createMap().apply {
                             putString("__type", "SeedVaultContentChange")

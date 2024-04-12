@@ -48,19 +48,29 @@ export type SigningResult = Readonly<{
 
 interface AuthorizeSeedAPI {
     hasUnauthorizedSeeds(): boolean
+    hasUnauthorizedSeedsForPurpose(purpose: SeedPurpose): boolean
     getAuthorizedSeeds(): Seed[]
     authorizeNewSeed(): {authToken: AuthToken}
     deauthorizeSeed(authToken: AuthToken): void
 }
 
 interface AccountAPI {
-    getAccounts(authToken: AuthToken): Account[]
+    getAccounts(authToken: AuthToken, filterOnColumn: string, value: any): Account[]
+    getUserWallets(authToken: AuthToken): Account[]
     updateAccountName(authToken: AuthToken, accountId: number, name?: string): void
+    updateAccountIsUserWallet(authToken: AuthToken, accountId: number, isUserWallet: boolean): void
+    updateAccountIsValid(authToken: AuthToken, accountId: number, isValid: boolean): void
 }
 
 interface CreateNewSeedAPI {
     createNewSeed(): {authToken: AuthToken}
 }
+
+// TODO
+// interface ImplementationLimitsAPI {
+//     getImplementationLimits(): void
+//     getImplementationLimitsForPurpose()
+// }
 
 interface ImportExistingSeedAPI {
     importExistingSeed(): {authToken: AuthToken}
@@ -69,6 +79,8 @@ interface ImportExistingSeedAPI {
 interface PublicKeyAPI {
     getPublicKey(authToken: AuthToken, derivationPath: DerivationPath): SeedPublicKey
     getPublicKeys(authToken: AuthToken, derivationPaths: DerivationPath[]): SeedPublicKey[]
+    resolveDerivationPath(derivationPath: DerivationPath): DerivationPath
+    resolveDerivationPathForPurpose(derivationPath: DerivationPath, purpose: SeedPurpose): DerivationPath
 }
 
 interface SignMessagesAPI {
