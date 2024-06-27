@@ -196,18 +196,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:src="?android:fingerprintAuthDrawable" />
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/imageview_fingerprint_error_icon"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginVertical="16dp"
-        android:layout_marginHorizontal="8dp"
-        app:layout_constraintTop_toBottomOf="@id/divider_for_below"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:src="?android:fingerprintAuthDrawable"
-        android:tint="?attr/colorError"
-        android:alpha="0.7" />
-
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/label_fingerprint_option"
         android:layout_width="0dp"
