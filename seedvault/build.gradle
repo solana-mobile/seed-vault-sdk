@@ -115,5 +115,5 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
-    compileOnly 'androidx.annotation:annotation:1.8.0'
+    compileOnly 'androidx.annotation:annotation:1.8.1'
 }
