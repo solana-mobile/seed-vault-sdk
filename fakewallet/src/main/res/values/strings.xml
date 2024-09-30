@@ -3,7 +3,7 @@
   -->
 
 <resources>
-    <string name="app_name">FakeWallet</string>
+    <string name="app_name">FakeWalletGeneric</string>
     <string name="label_seed_purpose">Purpose:</string>
     <string name="label_account_name">Account:</string>
     <string name="label_public_key">Public Key:</string>
@@ -12,10 +12,13 @@
     <string name="action_sign_transaction">transaction</string>
     <string name="action_sign_message">message</string>
     <string name="action_request_public_keys">Get public keys for %1$s - %2$s</string>
+    <string name="action_get_open_public_keys">Get no auth public keys</string>
+    <string name="action_sign_no_auth_transactions">Sign permissioned account %1$d transactions x %2$d keys</string>
     <string name="action_sign_max_transactions_with_max_signatures">Sign %1$d transactions x %2$d keys</string>
     <string name="action_sign_max_messages_with_max_signatures">Sign %1$d messages x %2$d keys</string>
+    <string name="action_sign_no_auth_messages">Sign permissioned account %1$d messages x %2$d keys</string>
     <plurals name="label_has_unauthorized_seeds">
-        <item quantity="other">(No seeds remaining to be authorized for PURPOSE_SIGN_SOLANA_TRANSACTION)</item>
+        <item quantity="other">No seeds remaining to be authorized for PURPOSE_SIGN_SOLANA_TRANSACTION</item>
         <item quantity="one">Authorize another seed for PURPOSE_SIGN_SOLANA_TRANSACTION</item>
     </plurals>
     <string name="label_create_new_seed">Create a new seed</string>

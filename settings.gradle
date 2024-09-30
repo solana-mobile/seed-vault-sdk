@@ -4,9 +4,15 @@
 
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        google()
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 dependencyResolutionManagement {
@@ -16,7 +22,10 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
 rootProject.name = "Wallet-API-SDK"
-include ':impl'
+include ':SeedVaultSimulator'
 include ':fakewallet'
 include ':seedvault'
+include ':cts'
+include ':ui:apptheme'

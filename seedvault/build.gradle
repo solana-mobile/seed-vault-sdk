@@ -3,21 +3,19 @@
  */
 
 plugins {
-    id 'com.android.library'
+    alias(libs.plugins.android.library)
     id 'maven-publish'
     id 'signing'
 }
 
 android {
     namespace = 'com.solanamobile.seedvault'
-
     compileSdk 34
 
     defaultConfig {
         // Note: 'minSdk 17' ensures that the library can be used with apps targeting much older
         // Android versions. It's only useful on devices which expose the Seed Vault API.
         minSdk 17
-        targetSdk 34
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -94,13 +92,13 @@ signing {
 }
 
 // Define JavaDoc build task for all variants
-android.libraryVariants.all { variant ->
-    task("generate${variant.name.capitalize()}Javadoc", type: Javadoc) {
+android.libraryVariants.configureEach { variant ->
+    tasks.register("generate${variant.name.capitalize()}Javadoc", Javadoc) {
         description "Generates Javadoc for $variant.name."
         source = variant.javaCompileProvider.get().source
         classpath = project.files(android.getBootClasspath().join(File.pathSeparator))
         classpath += files(variant.javaCompileProvider.get().classpath)
-        options.links("https://docs.oracle.com/javase/8/docs/api/")
+        options.links("https://docs.oracle.com/en/java/javase/11/docs/api/")
         options.links("https://d.android.com/reference/")
         exclude '**/BuildConfig.java'
         exclude '**/R.java'
@@ -108,12 +106,12 @@ android.libraryVariants.all { variant ->
 }
 
 // Build JavaDoc when making a release build
-tasks.whenTaskAdded { task ->
+tasks.configureEach { task ->
     if (task.name == 'assembleRelease') {
         task.dependsOn("generateReleaseJavadoc")
     }
 }
 
 dependencies {
-    compileOnly 'androidx.annotation:annotation:1.8.0'
+    compileOnly libs.androidx.annotation
 }

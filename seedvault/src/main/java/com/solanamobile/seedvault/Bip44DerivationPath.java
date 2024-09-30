@@ -222,8 +222,8 @@ public class Bip44DerivationPath extends BipDerivationPath {
             final boolean hardened = pathElement.endsWith(WalletContractV1.BIP_URI_HARDENED_INDEX_IDENTIFIER);
             final int index;
             try {
-                index = Integer.parseInt(pathElement.substring(0, pathElement.length() -
-                        WalletContractV1.BIP_URI_HARDENED_INDEX_IDENTIFIER.length()));
+                index = Integer.parseInt(pathElement.substring(0, pathElement.length() - (hardened ?
+                        WalletContractV1.BIP_URI_HARDENED_INDEX_IDENTIFIER.length() : 0)));
             } catch (NumberFormatException e) {
                 throw new UnsupportedOperationException("Path element " + i + " could not be parsed as a BIP32 level");
             }

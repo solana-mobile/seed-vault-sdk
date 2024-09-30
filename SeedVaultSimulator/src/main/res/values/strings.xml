@@ -1,0 +1,76 @@
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<resources>
+    <string name="app_name">Seed Vault Simulator</string>
+
+    <!-- Permissions strings -->
+    <string name="permission_group_seed_vault">Seed Vault</string>
+    <string name="permission_access_seed_vault">access your Seed Vault</string>
+    <string name="permission_privileged_access_seed_vault">privileged access your Seed Vault</string>
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="fragment_label_seeds">Seeds</string>
+    <string name="fragment_label_seed_detail">Seed Details</string>
+
+    <!-- Seeds fragment strings -->
+    <string name="menu_action_add">Add</string>
+    <string name="menu_action_import">Import</string>
+    <string name="menu_action_clear">Clear</string>
+
+    <!-- Seed Detail fragment strings -->
+    <string name="menu_action_ok">OK</string>
+    <string name="title_seed_phrase">Seed phrase</string>
+    <string name="hint_seed_name">(optional) Friendly seed name</string>
+    <string name="phrase_length_description">Phrase length %1$d</string>
+    <string name="text_phrase_length_12">12</string>
+    <string name="text_phrase_length_24">24</string>
+    <string name="label_pin">PIN</string>
+    <string name="hint_pin">4 to 20 characters</string>
+    <string name="error_invalid_pin">PIN must be between 4 and 20 characters</string>
+    <string name="label_enable_biometrics_for_seed">Enable biometrics for this seed</string>
+    <string name="label_authorized_apps">Authorized wallet apps</string>
+
+    <!-- Seed phrase word RecyclerView item strings -->
+    <string name="error_invalid_seed_word">Word not recognized</string>
+
+    <!-- Select seed fragment -->
+    <string name="label_select_seed_title">Choose a seed to establish a connection with:</string>
+    <string name="label_select_seed">Seeds</string>
+    <string name="label_save_seed">Save</string>
+
+    <!-- Authorize fragment -->
+    <string name="label_authorize_title">Seed Vault™</string>
+    <string name="label_authorize_seed">Connection request</string>
+    <string name="label_authorize_app">From</string>
+    <string name="label_authorize_for">Connect to</string>
+    <string name="label_authorize_info">See connection details</string>
+    <string name="label_authorize_fingerprint">Confirm Fingerprint</string>
+    <string name="authorize_fingerprint">Authorize Fingerprint</string>
+    <string name="deny_fingerprint">Deny Fingerprint</string>
+    <string name="action_pin">Use password</string>
+    <string name="action_cancel">Don\'t allow</string>
+    <string name="label_authorize_transaction">Approve transaction</string>
+    <string name="label_authorize_message">Apply signature</string>
+    <string name="label_authorize_public_key">Create new wallet</string>
+    <string name="error_incorrect_pin">Password not correct, please try again. You have %1$d attempt(s) remaining.</string>
+
+    <!-- Enter PIN dialog -->
+    <string name="label_enter_pin">Enter your seed password</string>
+
+    <!-- Authorize info fragment -->
+    <string name="label_authorize_info_title">Ongoing connection</string>
+    <string name="label_authorize_info_body1"><big>This app will have ongoing access with your Seed Vault™ until you decide otherwise</big>\n\n<small>You will be able to manage or revoke this access at any time in Seed Vault™ settings</small></string>
+    <string name="label_authorize_info_body2"><b>This app <u>will</u> be able to:</b>\n\n\u00A0✓\u2003View wallet balance and activity\n\n\u00A0✓\u2003Request approval for transactions\n\n<b>This app <u>will not</u> be able to:</b>\n\n\u00A0✕\u2003Move funds without your permission</string>
+    <string name="enter_pin_here">Enter pin here</string>
+
+    <!-- The set of certificates (identified by their SHA-256 hash) which should be granted the
+         ACCESS_SEED_VAULT_PRIVILEGED permission -->
+    <string-array name="known_certs" translatable="false">
+        <!-- <Root>/testkeystore/PrivilegedKey -->
+        <item>C47CE097717BDF4A9A738B4DFEFA17354AF025C3FAF850C5F7B82CEA02AD0B23</item>
+        <!-- Add your signing certificate's SHA-256 fingerprints here -->
+    </string-array>
+
+</resources>

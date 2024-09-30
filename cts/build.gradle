@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2024 Solana Mobile Inc.
+ */
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.google.kotlin.ksp)
+    alias(libs.plugins.androidx.compose.compiler)
+    alias(libs.plugins.hilt.android)
+}
+
+android {
+    namespace 'com.solanamobile.seedvault.cts'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.solanamobile.seedvault.cts"
+        minSdk 33
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner = "com.solanamobile.seedvault.cts.infra.CtsTestRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+    }
+
+    flavorDimensions += "featureSet"
+    signingConfigs {
+        create("generic") {
+            storeFile = file("../testkeystore/GenericKey")
+            storePassword = 'generic123'
+            keyAlias = 'generic'
+            keyPassword = 'generic456'
+        }
+        create("privileged") {
+            storeFile = file("../testkeystore/PrivilegedKey")
+            storePassword = 'privileged123'
+            keyAlias = 'privileged'
+            keyPassword = 'privileged456'
+        }
+    }
+
+    productFlavors {
+        create("Generic") {
+            dimension = "featureSet"
+            signingConfig = signingConfigs["generic"]
+        }
+        create("Privileged") {
+            dimension = "featureSet"
+            signingConfig = signingConfigs["privileged"]
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        // See https://stackoverflow.com/a/75481789/2531686
+        debug {
+            signingConfig null
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+dependencies {
+    implementation project(path: ':seedvault')
+    implementation project(path: ':ui:apptheme')
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.navigation.compose
+    implementation libs.hilt.android
+    implementation libs.logback.android
+    implementation libs.sl4j.api
+
+    testImplementation libs.junit
+
+    androidTestImplementation platform(libs.androidx.compose.bom)
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
+    androidTestImplementation libs.androidx.test.core
+    androidTestImplementation libs.androidx.test.espresso.core
+    androidTestImplementation libs.androidx.test.junit
+    androidTestImplementation libs.androidx.test.junit.ktx
+    androidTestImplementation libs.androidx.test.rules
+    androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.uiautomator
+    androidTestImplementation libs.hilt.android.testing
+
+    debugImplementation libs.androidx.compose.ui.tooling
+    debugImplementation libs.androidx.compose.ui.test.manifest
+
+    ksp libs.hilt.compiler
+    kspTest libs.hilt.testing.compiler
+}

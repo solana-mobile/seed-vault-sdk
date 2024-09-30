@@ -21,7 +21,7 @@ import java.util.Objects;
 /**
  * The signatures generated in response to a {@link SigningRequest}
  *
- * @version 0.2.6
+ * @version 0.3.0
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class SigningResponse implements Parcelable {
@@ -33,7 +33,9 @@ public class SigningResponse implements Parcelable {
 
     /**
      * Construct a new {@link SigningResponse}
+     *
      * @param signatures the set of signatures for this {@link SigningResponse}
+     * @param resolvedDerivationPaths list of normalized bip32 paths.
      */
     public SigningResponse(@NonNull List<byte[]> signatures,
                            @NonNull List<Uri> resolvedDerivationPaths) {
@@ -78,8 +80,9 @@ public class SigningResponse implements Parcelable {
 
     /**
      * Get the set of signatures for this {@link SigningResponse}
+     *
      * @return a {@link List} of signatures, corresponding to the BIP derivation paths specified in
-     *      the {@link SigningRequest}
+     * the {@link SigningRequest}
      */
     public List<byte[]> getSignatures() {
         return Collections.unmodifiableList(mSignatures);
@@ -89,6 +92,7 @@ public class SigningResponse implements Parcelable {
      * Get the set of resolved derivation paths corresponding to each signature. These are fully
      * resolved to the canonical representation for the {@code WalletContractV1.PURPOSE_*} and key
      * derivation scheme.
+     *
      * @return a {@link List} of resolved derivation paths, corresponding to each signature
      */
     public List<Uri> getResolvedDerivationPaths() {
@@ -100,8 +104,15 @@ public class SigningResponse implements Parcelable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SigningResponse that = (SigningResponse) o;
-        return mSignatures.equals(that.mSignatures)
-                && mResolvedDerivationPaths.equals(that.mResolvedDerivationPaths);
+        if (mSignatures.size() != that.mSignatures.size()) return false;
+
+        for (int i = 0; i < mSignatures.size(); i++) {
+            if (!Arrays.equals(mSignatures.get(i), that.mSignatures.get(i))) {
+                return false;
+            }
+        }
+
+        return mResolvedDerivationPaths.equals(that.mResolvedDerivationPaths);
     }
 
     @Override
