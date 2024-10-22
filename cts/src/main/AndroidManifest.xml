@@ -22,7 +22,6 @@
             android:theme="@style/Theme.WalletAPISDK">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -36,6 +35,42 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
+        <!-- This activity exists to catch unhandled Intents and ensure that they return immediately
+             with RESULT_CANCELED. Any proper implementation of Seed Vault will have higher priority
+             handling of these, and so these should never be used. -->
+        <activity
+            android:name=".UnhandledIntentActivity"
+            android:exported="true">
+            <intent-filter android:priority="-100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_AUTHORIZE_SEED_ACCESS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter android:priority="-100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_TRANSACTION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter android:priority="-100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter android:priority="-100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_GET_PUBLIC_KEY" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter android:priority="-100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_CREATE_SEED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter android:priority="-100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_IMPORT_SEED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter android:priority="-100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SEED_SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

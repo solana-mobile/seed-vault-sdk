@@ -78,7 +78,7 @@ internal object TestCorpusProvider {
             signatureRequestsExceedLimitTestCase,
             denySignTransactionTestCase,
             incorrectPinSignTransactionFailureTestCase,
-            cannotShowSeedSettingsTestCase.takeIf { isGenericBuild },
+            cannotShowSeedSettingsTestCase.takeIf { isGenericBuild && !isSaga },
             showSeedSettingsTestCase.takeIf { !isGenericBuild },
             deauthorizeSeed12TestCase.takeIf { isGenericBuild },
             hasUnauthorizedSeedsContentProviderTestCase.takeIf { isGenericBuild },
