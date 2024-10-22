@@ -61,6 +61,7 @@ fun SeedDetails(
     onSignMessage: (Seed, Account) -> Unit,
     onAccountNameUpdated: (Seed, Account, String) -> Unit,
     onDeauthorizeSeed: (Seed) -> Unit,
+    onShowSeedSettings: (Seed) -> Unit,
     onRequestPublicKeys: (Seed) -> Unit,
     onRequestOpenPublicKeys: (Seed) -> Unit,
     onSignMaxTransactionsWithMaxSignatures: (Seed) -> Unit,
@@ -90,6 +91,13 @@ fun SeedDetails(
                 IconButton(onClick = { onDeauthorizeSeed(seed) }) {
                     Icon(
                         painter = painterResource(id = android.R.drawable.ic_delete),
+                        contentDescription = null
+                    )
+                }
+            } else {
+                IconButton(onClick = { onShowSeedSettings(seed) }) {
+                    Icon(
+                        painter = painterResource(id = android.R.drawable.ic_menu_edit),
                         contentDescription = null
                     )
                 }
