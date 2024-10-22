@@ -130,6 +130,9 @@ class MainActivity : ComponentActivity() {
                                         onDeauthorizeSeed = { seed ->
                                             viewModel.deauthorizeSeed(seed.authToken)
                                         },
+                                        onShowSeedSettings = { seed ->
+                                            viewModel.showSeedSettings(seed.authToken)
+                                        },
                                         onRequestPublicKeys = { seed ->
                                             viewModel.requestPublicKeys(seed.authToken)
                                         },
@@ -237,6 +240,13 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        is ViewModelEvent.ShowSeedSettings -> {
+                            val i = Wallet.showSeedSettings(event.authToken)
+                            requestCode = REQUEST_SHOW_SEED_SETTINGS
+                            seedVaultActivityResultLauncher.launch(i)
+                            pendingEvent = event
+                        }
+
                         is ViewModelEvent.UpdateAccountName -> {
                             try {
                                 Wallet.updateAccountName(
@@ -330,6 +340,18 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                REQUEST_SHOW_SEED_SETTINGS -> {
+                    check(event is ViewModelEvent.ShowSeedSettings)
+                    try {
+                        Wallet.onShowSeedSettingsResult(resultCode, data)
+                        Log.d(TAG, "Seed settings shown")
+                        viewModel.onShowSeedSettingsSuccess(event)
+                    } catch (e: Wallet.ActionFailedException) {
+                        Log.e(TAG, "Seed settings not shown", e)
+                        viewModel.onShowSeedSettingsFailure(event, resultCode)
+                    }
+                }
+
                 REQUEST_SIGN_TRANSACTIONS -> {
                     check(event is ViewModelEvent.SignTransactions)
                     try {
@@ -378,9 +400,10 @@ class MainActivity : ComponentActivity() {
         private const val REQUEST_AUTHORIZE_SEED_ACCESS = 0
         private const val REQUEST_CREATE_NEW_SEED = 1
         private const val REQUEST_IMPORT_EXISTING_SEED = 2
-        private const val REQUEST_SIGN_TRANSACTIONS = 3
-        private const val REQUEST_SIGN_MESSAGES = 4
-        private const val REQUEST_GET_PUBLIC_KEYS = 5
+        private const val REQUEST_SHOW_SEED_SETTINGS = 3
+        private const val REQUEST_SIGN_TRANSACTIONS = 4
+        private const val REQUEST_SIGN_MESSAGES = 5
+        private const val REQUEST_GET_PUBLIC_KEYS = 6
         private const val KEY_PENDING_EVENT = "pendingEvent"
     }
 }

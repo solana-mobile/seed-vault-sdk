@@ -7,6 +7,7 @@ package com.solanamobile.seedvaultimpl.ui.seeddetail
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Account
 import com.solanamobile.seedvaultimpl.model.Authorization
@@ -69,6 +70,11 @@ class SeedDetailViewModel @Inject constructor(
             )
             mode = EditSeedMode(seedId)
         }
+    }
+
+    fun editSeed(@WalletContractV1.AuthToken authToken: Long, requestorUid: Int): Boolean {
+        val authKey = SeedRepository.AuthorizationKey(requestorUid, authToken)
+        return seedRepository.authorizations.value[authKey]?.apply { editSeed(id) } != null
     }
 
     fun setSeedPhraseLength(phraseLength: SeedDetailUiState.SeedPhraseLength) {

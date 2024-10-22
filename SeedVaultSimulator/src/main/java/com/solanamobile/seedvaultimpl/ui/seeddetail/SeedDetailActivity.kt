@@ -134,6 +134,32 @@ class SeedDetailActivity : AppCompatActivity() {
                 }
             }
 
+            WalletContractV1.ACTION_SEED_SETTINGS -> {
+                // Mapping callingActivity (if one exists) to UID
+                val packageName = callingActivity?.packageName ?: ""
+                val uid = try {
+                    val pmUid = packageManager.getPackageUid(packageName, 0)
+                    Log.d(TAG, "Mapped package $packageName to UID $pmUid")
+                    pmUid
+                } catch (e: PackageManager.NameNotFoundException) {
+                    Log.e(TAG, "Requester package UID not found", e)
+                    setResult(RESULT_CANCELED)
+                    finish()
+                    return
+                }
+
+                val authToken = intent.getLongExtra(WalletContractV1.EXTRA_AUTH_TOKEN, -1L)
+                if (authToken == -1L || !viewModel.editSeed(authToken, uid)) {
+                    Log.e(
+                        TAG,
+                        "Invalid or no auth token $authToken specified for UID $uid, terminating..."
+                    )
+                    setResult(WalletContractV1.RESULT_INVALID_AUTH_TOKEN)
+                    finish()
+                    return
+                }
+            }
+
             ACTION_EDIT_SEED -> {
                 val seedId = intent.getLongExtra(EXTRA_SEED_ID, -1L)
                 if (seedId != -1L) {
@@ -198,7 +224,7 @@ class SeedDetailActivity : AppCompatActivity() {
                                         onClick = {
                                             lifecycleScope.launch {
                                                 viewModel.saveSeed()?.let { authToken ->
-                                                    val intent = if (authToken != -1L)
+                                                    val intent = if (seedDetails.isCreateMode && authToken != -1L)
                                                         Intent().putExtra(
                                                             WalletContractV1.EXTRA_AUTH_TOKEN,
                                                             authToken

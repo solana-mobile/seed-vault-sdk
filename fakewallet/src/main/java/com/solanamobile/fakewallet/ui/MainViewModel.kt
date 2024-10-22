@@ -218,12 +218,29 @@ class MainViewModel(
         }
     }
 
+    fun showSeedSettings(authToken: Long) {
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.ShowSeedSettings(authToken)
+            )
+        }
+    }
+
     @Suppress("UNUSED_PARAMETER")
     fun onDeauthorizeSeedSuccess(event: ViewModelEvent.DeauthorizeSeed) {
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun onDeauthorizeSeedFailure(event: ViewModelEvent.DeauthorizeSeed, resultCode: Int) {
+        showErrorMessage(resultCode)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onShowSeedSettingsSuccess(event: ViewModelEvent.ShowSeedSettings) {
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onShowSeedSettingsFailure(event: ViewModelEvent.ShowSeedSettings, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -637,6 +654,23 @@ sealed interface ViewModelEvent : Parcelable {
         companion object CREATOR : Parcelable.Creator<DeauthorizeSeed> {
             override fun createFromParcel(parcel: Parcel) = DeauthorizeSeed(parcel)
             override fun newArray(size: Int): Array<DeauthorizeSeed?> = arrayOfNulls(size)
+        }
+    }
+
+    data class ShowSeedSettings(
+        @WalletContractV1.AuthToken val authToken: Long
+    ) : ViewModelEvent {
+        constructor(p: Parcel) : this(p.readLong())
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeLong(authToken)
+        }
+
+        override fun describeContents(): Int = 0
+
+        companion object CREATOR : Parcelable.Creator<ShowSeedSettings> {
+            override fun createFromParcel(parcel: Parcel) = ShowSeedSettings(parcel)
+            override fun newArray(size: Int): Array<ShowSeedSettings?> = arrayOfNulls(size)
         }
     }
 

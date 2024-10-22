@@ -54,6 +54,9 @@
             android:parentActivityName=".ui.seeds.SeedsActivity"
             android:theme="@style/Theme.SeedVaultImpl.NoActionBar" />
 
+        <!-- NOTE: intent-filter order set below that of the privileged alias in case an app holds
+             both permissions. Apps normally should hold only one of the two permissions, but the
+             Seed Vault should gracefully handle the case where an app is granted both. -->
         <activity-alias
             android:name=".seedDetailsGenericAlias"
             android:exported="true"
@@ -80,6 +83,10 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_IMPORT_SEED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter android:priority="100">
+                <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SEED_SETTINGS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity-alias>

@@ -236,6 +236,7 @@ class RunCtsTestsOnSimulator {
     internal inner class SignatureRequestsExceedLimitTestCase(override val id: String = "srel") : CtsTestCase
     internal inner class SigningRequestsExceedLimitTestCase(override val id: String = "trel") : CtsTestCase
     internal inner class DeauthorizeSeed24TestCase(override val id: String = "ds24") : CtsTestCase
+    internal inner class CannotShowSeedSettingsTestCase(override val id: String = "csss") : CtsTestCase
 
     internal inner class AcquireSeedVaultPermissionTestCase : CtsTestCase {
         override val id = "asvp"
@@ -408,15 +409,16 @@ class RunCtsTestsOnSimulator {
         }
     }
 
-    internal inner class DenySignTransactionTestCase : CtsTestCase {
-        override val id = "dst"
-
+    internal abstract inner class WaitForNewWindowAndNavigateBackTestCase : CtsTestCase {
         override fun createClickAndWaitCondition(): ClickAndWaitCondition = ClickAndWaitConditionEvent(Until.newWindow())
 
         override suspend fun performAndroidDeviceInteractions() {
             device.pressBack()
         }
     }
+
+    internal inner class DenySignTransactionTestCase(override val id: String = "dst") : WaitForNewWindowAndNavigateBackTestCase()
+    internal inner class ShowSeedSettingsTestCase(override val id: String = "sss") : WaitForNewWindowAndNavigateBackTestCase()
 
     internal inner class IncorrectPinSignTransactionFailureTestCase : CtsTestCase {
         override val id: String = "ipstf"
@@ -503,6 +505,8 @@ class RunCtsTestsOnSimulator {
         SignatureRequestsExceedLimitTestCase(),
         DenySignTransactionTestCase(),
         IncorrectPinSignTransactionFailureTestCase(),
+        CannotShowSeedSettingsTestCase().takeIf { IS_GENERIC_BUILD },
+        ShowSeedSettingsTestCase().takeIf { !IS_GENERIC_BUILD },
         DeauthorizeSeed12TestCase().takeIf { IS_GENERIC_BUILD },
         HasUnauthorizedSeedsContentProviderTestCase().takeIf { IS_GENERIC_BUILD },
         ReauthorizeSeed12TestCase().takeIf { IS_GENERIC_BUILD },

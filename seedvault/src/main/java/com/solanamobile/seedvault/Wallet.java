@@ -185,6 +185,43 @@ public final class Wallet {
     }
 
     /**
+     * Request that the Seed Vault show the settings UI for the specified seed. The returned
+     * {@link Intent} should be used with {@link Activity#startActivityForResult(Intent, int)}, and
+     * the result (as returned to {@link Activity#onActivityResult(int, int, Intent)} should be used
+     * as a parameter to {@link #onAuthorizeSeedResult(int, Intent)}.
+     * <p>NOTE: only wallets holding the
+     * {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission are allowed to
+     * send this {@link Intent}.</p>
+     * @param authToken the auth token for the seed for which to show the settings UI
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     */
+    @NonNull
+    public static Intent showSeedSettings(
+            @WalletContractV1.AuthToken long authToken) {
+        return new Intent()
+                .setAction(WalletContractV1.ACTION_SEED_SETTINGS)
+                .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+    }
+
+    /**
+     * Process the result of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
+     * invocation of {@link #showSeedSettings(long)})
+     * @param resultCode resultCode from {@code onActivityResult}
+     * @param result intent from {@code onActivityResult}
+     * @throws ActionFailedException if showing the seed settings UI failed
+     */
+    public static void onShowSeedSettingsResult(
+            int resultCode,
+            @Nullable Intent result) throws ActionFailedException {
+        if (resultCode != Activity.RESULT_OK && resultCode != Activity.RESULT_CANCELED) {
+            throw new ActionFailedException("showSeedSettings failed with result=" + resultCode);
+        } else if (result == null) {
+            throw new ActionFailedException("showSeedSettings failed to return a result");
+        }
+    }
+
+    /**
      * Request that the provided transaction be signed (with whatever method is appropriate for the
      * purpose originally specified for this auth token). The returned {@link Intent} should be used
      * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to

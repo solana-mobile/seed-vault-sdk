@@ -221,6 +221,20 @@ public final class WalletContractV1 {
      */
     public static final String ACTION_IMPORT_SEED = AUTHORITY_WALLET + ".ACTION_IMPORT_SEED";
 
+    /**
+     * Intent action to launch the Seed Vault settings UI for a particular seed. The Intent should
+     * contain an {@link #EXTRA_AUTH_TOKEN} extra, specifying the seed for which to display the
+     * settings UI. This Intent must be sent with
+     * {@link android.app.Activity#startActivityForResult(Intent, int)}.
+     * <p>Attempts to send this Intent without holding the privileged permission will throw a
+     * {@link java.lang.SecurityException}.</p>
+     * <p>If the specified auth token is not valid, {@link #RESULT_INVALID_AUTH_TOKEN} will be
+     * returned.</p>
+     * <p>NOTE: this action should be used with an implicit Intent; it should not specify
+     * {@link #PACKAGE_SEED_VAULT}.</p>
+     */
+    public static final String ACTION_SEED_SETTINGS = AUTHORITY_WALLET + ".ACTION_SEED_SETTINGS";
+
     /** An unspecified error occurred in response to one of the {@code ACTION_*} actions */
     public static final int RESULT_UNSPECIFIED_ERROR = RESULT_FIRST_USER + 1000;
 
