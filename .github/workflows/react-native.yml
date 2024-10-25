@@ -3,10 +3,10 @@ name: React-Native CI
 on:
   push:
     branches: [ main, next ]
-    paths: [ 'fakewalletreact/**', 'js/**' ]
+    paths: [ '.github/**', 'fakewalletreact/**', 'js/**' ]
   pull_request:
     branches: [ main, next ]
-    paths: [ 'fakewalletreact/**', 'js/**' ]
+    paths: [ '.github/**', 'fakewalletreact/**', 'js/**' ]
   release:
     types: [ published ]
 
