@@ -120,6 +120,8 @@ jobs:
             ./gradlew :SeedVaultSimulator:installDebug
             ./gradlew :cts:connectedGenericDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.solanamobile.seedvault.cts.SeedVaultSimulatorSetup
             ./gradlew :cts:connectedGenericDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.solanamobile.seedvault.cts.RunCtsTestsOnSimulator
+            ./gradlew :cts:connectedPrivilegedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.solanamobile.seedvault.cts.SeedVaultSimulatorSetup
+            ./gradlew :cts:connectedPrivilegedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.solanamobile.seedvault.cts.RunCtsTestsOnSimulator
 
       ##########################################################################
       # Upload test artifacts
