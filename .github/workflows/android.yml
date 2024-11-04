@@ -11,7 +11,7 @@ on:
     types: [ published ]
 
 env:
-  AVD_ANDROID_API_LEVEL: '34'
+  AVD_ANDROID_API_LEVEL: '35'
   AVD_ANDROID_ARCH: 'x86_64'
   AVD_ANDROID_TARGET: 'google_atd'
 
