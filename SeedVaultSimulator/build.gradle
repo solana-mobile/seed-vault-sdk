@@ -14,7 +14,7 @@ plugins {
 
 android {
     namespace 'com.solanamobile.seedvaultimpl'
-    compileSdk 34
+    compileSdk 35
 
     signingConfigs {
         create("simulator") {
@@ -28,7 +28,7 @@ android {
     defaultConfig {
         applicationId "com.solanamobile.seedvaultimpl"
         minSdk 31
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
