@@ -15,7 +15,8 @@ export const SeedVaultEventType = {
     ImportExistingSeed: "ExistingSeedImported",
     PayloadsSigned: "PayloadsSigned",
     GetPublicKeys: "PublicKeysEvent",
-    ContentChange: "SeedVaultContentChange"
+    ContentChange: "SeedVaultContentChange",
+    SeedSettingsShown: "SeedSettingsShown"
 } as const;
 export type SeedVaultEventType = typeof SeedVaultEventType[keyof typeof SeedVaultEventType]
 
@@ -93,9 +94,18 @@ export type SeedVaultContentChangeNotification = Readonly<{
 
 export type SeedVaultContentChange = SeedVaultContentChangeNotification
 
+// Show Seed Settings
+export type SeedSettingsShownNotification = Readonly<{
+    __type: typeof SeedVaultEventType.SeedSettingsShown;
+}> &
+    ISeedVaultEvent;
+
+export type SeedSettingsShown = SeedSettingsShownNotification
+
 export type SeedVaultEvent = 
     | AuthorizeSeedAccessEvent 
     | CreateNewSeedEvent 
     | ImportExistingSeedEvent
     | SignPayloadsEvent
     | PublicKeyEvent
+    | SeedSettingsShown

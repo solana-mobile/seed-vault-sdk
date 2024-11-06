@@ -27,10 +27,12 @@ const SolanaMobileSeedVaultLib =
               },
           );
 
-export const SeedVaultPermissionAndroid = 'com.solanamobile.seedvault.ACCESS_SEED_VAULT' as Permission
+export const SeedVaultPermissionAndroid = 'com.solanamobile.seedvault.ACCESS_SEED_VAULT' as Permission;
+export const SeedVaultPrivilegedPermissionAndroid = 'com.solanamobile.seedvault.ACCESS_SEED_VAULT_PRIVILEGED' as Permission;
 
 const checkSeedVaultPermission = async () => {
-    const granted = await PermissionsAndroid.check(SeedVaultPermissionAndroid)
+    const granted = await PermissionsAndroid.check(SeedVaultPermissionAndroid) 
+        || await PermissionsAndroid.check(SeedVaultPrivilegedPermissionAndroid);
 
     if (!granted) {
         throw new Error(

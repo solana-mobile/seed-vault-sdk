@@ -97,6 +97,10 @@ interface SeedVaultAvailabilityAPI {
     isSeedVaultAvailable(allowSimulated: boolean): boolean
 }
 
+interface ShowSeedSettingsAPI {
+    showSeedSettings(authToken: AuthToken): void
+}
+
 export interface SeedVaultAPI 
     extends AuthorizeSeedAPI,
         AccountAPI,
@@ -105,4 +109,5 @@ export interface SeedVaultAPI
         PublicKeyAPI,
         SeedVaultAvailabilityAPI,
         SignMessagesAPI, 
-        SignTransactionsAPI {}
+        SignTransactionsAPI,
+        ShowSeedSettingsAPI {}
