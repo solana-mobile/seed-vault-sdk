@@ -265,7 +265,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun showSeedSettings(authToken: String, promise: Promise) {
         showSeedSettingsAsync(authToken) { error ->
-            error?.let { promise.reject(it) } ?: promise.resolve()
+            error?.let { promise.reject(it) } ?: promise.resolve(null)
         }
     }
 
