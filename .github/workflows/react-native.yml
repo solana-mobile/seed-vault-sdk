@@ -34,6 +34,9 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
+      - name: '[js] remove node_modules folder'
+        working-directory: 'js/'
+        run: rm -rf node_modules
       - name: '[js] Install yarn dependencies'
         working-directory: 'js/'
         run: yarn install --frozen-lockfile
