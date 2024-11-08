@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "engines": {
-    "node": ">=18.20.2"
+    "node": ">=18"
   },
   "scripts": {
     "android": "react-native run-android",
