@@ -21,7 +21,6 @@ export default function MainScreen() {
         } else {
           setSeedVaultPermission('none');
         }
-        console.log(seedVaultPermission);
       } catch (err) {
         console.warn(err);
       }
