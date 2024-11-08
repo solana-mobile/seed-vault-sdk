@@ -95,13 +95,13 @@ android {
             keyPassword 'android'
         }        
         create("generic") {
-            storeFile = file("../testkeystore/GenericKey")
+            storeFile = file("../../../testkeystore/GenericKey")
             storePassword = 'generic123'
             keyAlias = 'generic'
             keyPassword = 'generic456'
         }
         create("privileged") {
-            storeFile = file("../testkeystore/PrivilegedKey")
+            storeFile = file("../../../testkeystore/PrivilegedKey")
             storePassword = 'privileged123'
             keyAlias = 'privileged'
             keyPassword = 'privileged456'
@@ -120,8 +120,9 @@ android {
     }
     
     buildTypes {
+        // See https://stackoverflow.com/a/75481789/2531686
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig null
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
