@@ -36,7 +36,7 @@ jobs:
 
       - name: '[js] Install yarn dependencies'
         working-directory: 'js/'
-        run: node -v && yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile
       - name: '[js] Lint'
         working-directory: 'js/'
         run: yarn lint
