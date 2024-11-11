@@ -4,8 +4,6 @@
 
 package com.solanamobile.seedvault;
 
-import android.os.Build;
-
 import androidx.annotation.RequiresApi;
 
 /**
@@ -14,7 +12,7 @@ import androidx.annotation.RequiresApi;
  * account index. These derivation paths have a special meaning when an app holds the
  * {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission.
  */
-@RequiresApi(api = Build.VERSION_CODES.M)
+@RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
 public final class PermissionedAccount {
     private PermissionedAccount() {}
 

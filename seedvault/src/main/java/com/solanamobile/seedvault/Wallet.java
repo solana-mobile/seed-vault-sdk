@@ -196,6 +196,7 @@ public final class Wallet {
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
      */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
     @NonNull
     public static Intent showSeedSettings(
             @WalletContractV1.AuthToken long authToken) {
@@ -211,6 +212,7 @@ public final class Wallet {
      * @param result intent from {@code onActivityResult}
      * @throws ActionFailedException if showing the seed settings UI failed
      */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
     public static void onShowSeedSettingsResult(
             int resultCode,
             @Nullable Intent result) throws ActionFailedException {

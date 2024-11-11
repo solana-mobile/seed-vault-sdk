@@ -126,18 +126,20 @@ fun SeedDetails(
                 )
             )
         }
-        TextButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Sizes.dp8),
-            onClick = { onRequestOpenPublicKeys(seed) },
-            colors = ButtonDefaults.buttonColors()
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.action_get_open_public_keys,
+        if (BuildConfig.FLAVOR == "Privileged") {
+            TextButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Sizes.dp8),
+                onClick = { onRequestOpenPublicKeys(seed) },
+                colors = ButtonDefaults.buttonColors()
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.action_get_open_public_keys,
+                    )
                 )
-            )
+            }
         }
         TextButton(
             modifier = Modifier
@@ -154,20 +156,22 @@ fun SeedDetails(
                 )
             )
         }
-        TextButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Sizes.dp8),
-            onClick = { onSignPermissionedAccountTransactions(seed) },
-            colors = ButtonDefaults.buttonColors()
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.action_sign_no_auth_transactions,
-                    implementationLimits.maxSigningRequests,
-                    implementationLimits.maxRequestedSignatures
+        if (BuildConfig.FLAVOR == "Privileged") {
+            TextButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Sizes.dp8),
+                onClick = { onSignPermissionedAccountTransactions(seed) },
+                colors = ButtonDefaults.buttonColors()
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.action_sign_no_auth_transactions,
+                        implementationLimits.maxSigningRequests,
+                        implementationLimits.maxRequestedSignatures
+                    )
                 )
-            )
+            }
         }
         TextButton(
             modifier = Modifier
@@ -184,20 +188,22 @@ fun SeedDetails(
                 )
             )
         }
-        TextButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Sizes.dp8),
-            onClick = { onSignPermissionedAccountMessages(seed) },
-            colors = ButtonDefaults.buttonColors()
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.action_sign_no_auth_messages,
-                    implementationLimits.maxSigningRequests,
-                    implementationLimits.maxRequestedSignatures
+        if (BuildConfig.FLAVOR == "Privileged") {
+            TextButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Sizes.dp8),
+                onClick = { onSignPermissionedAccountMessages(seed) },
+                colors = ButtonDefaults.buttonColors()
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.action_sign_no_auth_messages,
+                        implementationLimits.maxSigningRequests,
+                        implementationLimits.maxRequestedSignatures
+                    )
                 )
-            )
+            }
         }
         seed.accounts.forEach { account ->
             AccountComposable(

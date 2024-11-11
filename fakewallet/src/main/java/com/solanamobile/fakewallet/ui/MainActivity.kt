@@ -5,6 +5,7 @@
 package com.solanamobile.fakewallet.ui
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -36,6 +37,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.solanamobile.fakewallet.R
+import com.solanamobile.seedvault.SeedVault
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.ui.apptheme.Sizes
@@ -241,6 +243,9 @@ class MainActivity : ComponentActivity() {
                         }
 
                         is ViewModelEvent.ShowSeedSettings -> {
+                            if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+                                throw IllegalStateException("ShowSeedSettings not available")
+                            }
                             val i = Wallet.showSeedSettings(event.authToken)
                             requestCode = REQUEST_SHOW_SEED_SETTINGS
                             seedVaultActivityResultLauncher.launch(i)
@@ -342,6 +347,9 @@ class MainActivity : ComponentActivity() {
 
                 REQUEST_SHOW_SEED_SETTINGS -> {
                     check(event is ViewModelEvent.ShowSeedSettings)
+                    if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+                        throw IllegalStateException("ShowSeedSettings not available")
+                    }
                     try {
                         Wallet.onShowSeedSettingsResult(resultCode, data)
                         Log.d(TAG, "Seed settings shown")
