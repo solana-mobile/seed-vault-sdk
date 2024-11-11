@@ -272,16 +272,22 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     private fun showSeedSettingsAsync(authToken: String, callback: (error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting Seed Settings to be shown...")
         val intent = Wallet.showSeedSettings(authToken.toLong())
-        registerForActivityResult(intent, REQUEST_SHOW_SEED_SETTINGS) { resultCode, data ->
-            try {
-                val result = Wallet.onShowSeedSettingsResult(resultCode, data)
-                Log.d(TAG, "Seed settings shown")
-
-                callback(null)
-            } catch (e: Wallet.ActionFailedException) {
-                Log.e(TAG, "Show seed settings failed", e)
-                callback(e)
+        try {
+            registerForActivityResult(intent, REQUEST_SHOW_SEED_SETTINGS) { resultCode, data ->
+                if (resultCode != Activity.RESULT_CANCELED) {
+                    try {
+                        Wallet.onShowSeedSettingsResult(resultCode, data)
+                        Log.d(TAG, "Seed settings shown")
+                        callback(null)
+                    } catch (e: Wallet.ActionFailedException) {
+                        Log.e(TAG, "Show seed settings failed", e)
+                        callback(e)
+                    }
+                }
             }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Show seed settings failed, permision denied")
+            callback(e)
         }
     }
 

@@ -2,8 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { Account, Seed, SeedVault, useSeedVault } from "@solana-mobile/seed-vault-lib";
+import { SeedVaultPermission } from '../screens/MainScreen';
 
-export default function SeedVaultExampleUsage() {
+type Props = Readonly<{
+  permissionLevel: SeedVaultPermission
+}>
+
+export default function SeedVaultExampleUsage({permissionLevel}: Props) {
     const [hasUnauthorizedSeeds, setHasUnauthorizedSeeds] = useState(false);
     const [authorizedSeeds, setAuthorizedSeeds] = useState<Seed[]>([]);
 
@@ -45,7 +50,7 @@ export default function SeedVaultExampleUsage() {
 
     return (
         <View>
-          <Text>I'm a Wallet! (with seedvault!)</Text>
+          <Text>I'm a Wallet! (with {permissionLevel === 'privileged' ? 'privileged ' : null}seedvault!)</Text>
           {hasUnauthorizedSeeds ? <Button
             onPress={async () => {
                 const result = await SeedVault.authorizeNewSeed();
@@ -138,6 +143,18 @@ export default function SeedVaultExampleUsage() {
                 }
             }}>
             Sign Transactions
+          </Button> : null}
+          {permissionLevel === 'privileged' && authorizedSeeds.length ? <Button
+            onPress={async () => {
+                const seed = authorizedSeeds[0]
+                try {
+                  await SeedVault.showSeedSettings(seed.authToken);
+                  console.log("Seed Settings Shown");
+                } catch (error) {
+                  console.log("Show Seed Settings Failed: " + error);
+                }
+            }}>
+            Show Seed Settings UI
           </Button> : null}
         </View>
     )

@@ -1,19 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, PermissionsAndroid } from 'react-native';
 import { Appbar, Button, Text } from 'react-native-paper';
-import { SeedVault, SeedVaultPermissionAndroid } from "@solana-mobile/seed-vault-lib";
+import { SeedVault, SeedVaultPermissionAndroid, SeedVaultPrivilegedPermissionAndroid } from "@solana-mobile/seed-vault-lib";
 import SeedVaultExampleUsage from '../components/SeedVaultExampleUsage';
+
+export type SeedVaultPermission = 'none' | 'allowed' | 'privileged';
 
 export default function MainScreen() {
   const [seedVaultAvailable, setSeedVaultAvailable] = useState(false);
-  const [seedVaultPermissionGranted, setSeedVaultPermissionGranted] = useState(false);
+  const [seedVaultPermission, setSeedVaultPermission] = useState<SeedVaultPermission>('none');
 
   useEffect(() => {
 
     async function checkSeedVaultPermission() {
       try {
-        const granted = await PermissionsAndroid.check(SeedVaultPermissionAndroid);
-        setSeedVaultPermissionGranted(granted)
+        if (await PermissionsAndroid.check(SeedVaultPrivilegedPermissionAndroid)) {
+          setSeedVaultPermission('privileged');
+        } else if (await PermissionsAndroid.check(SeedVaultPermissionAndroid)) {
+          setSeedVaultPermission('allowed');
+        } else {
+          setSeedVaultPermission('none');
+        }
       } catch (err) {
         console.warn(err);
       }
@@ -42,10 +49,22 @@ export default function MainScreen() {
           <Text style={styles.text}>
 			Seed Vault is not available on this device, please install the seed vault simulator
           </Text>
-        : !seedVaultPermissionGranted ? 
+        : seedVaultPermission === 'none' ? 
           <Button onPress={async () => {
             try {
-              const granted = await PermissionsAndroid.request(
+              if (await PermissionsAndroid.request(
+                SeedVaultPrivilegedPermissionAndroid,
+                {
+                  title: 'Seed Vault Permission',
+                  message:
+                    'This app needs your permission to access Seed Vault',
+                  buttonNeutral: 'Ask Me Later',
+                  buttonNegative: 'Cancel',
+                  buttonPositive: 'OK',
+                },
+              ) === PermissionsAndroid.RESULTS.GRANTED) {
+                setSeedVaultPermission('privileged')
+              } else if (await PermissionsAndroid.request(
                 SeedVaultPermissionAndroid,
                 {
                   title: 'Seed Vault Permission',
@@ -55,15 +74,16 @@ export default function MainScreen() {
                   buttonNegative: 'Cancel',
                   buttonPositive: 'OK',
                 },
-              );
-              setSeedVaultPermissionGranted(granted === PermissionsAndroid.RESULTS.GRANTED)
+              ) === PermissionsAndroid.RESULTS.GRANTED) {
+                setSeedVaultPermission('allowed')
+              }
             } catch (err) {
               console.warn(err);
             }
           }}>
             Grant Seed Vault Permission
           </Button> 
-        : <SeedVaultExampleUsage/>}
+        : <SeedVaultExampleUsage permissionLevel={seedVaultPermission}/>}
       </View>
     </>
   );
