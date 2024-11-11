@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId "com.solanamobile.seedvault.cts"
-        minSdk 33
+        minSdk 33 // Seed Vault privileged access requires API 33 or higher
         targetSdk 35
         versionCode 1
         versionName "1.0"

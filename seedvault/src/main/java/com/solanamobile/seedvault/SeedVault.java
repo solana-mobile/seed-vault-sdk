@@ -22,6 +22,17 @@ public class SeedVault {
     private SeedVault() {}
 
     /**
+     * Implementations of Seed Vault that support the
+     * {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions must necessarily
+     * use &lt;intent-filter&gt;s with varying order attributes to properly check for the two
+     * possible permissions. Pre-API 33 (Android 13), ResolverActivity would end up stripping
+     * Parcelable extras from {@link android.content.Intent}s where the parceled type is unknown to
+     * the system before forwarding to the correct handling {@link android.app.Activity}. As such,
+     * privileged Seed Vault implementations are only possible starting with Android 13.
+     */
+    public static final int MIN_API_FOR_SEED_VAULT_PRIVILEGED = Build.VERSION_CODES.TIRAMISU;
+
+    /**
      * The different levels of access that an app can be granted to the Seed Vault
      */
     public enum AccessType {

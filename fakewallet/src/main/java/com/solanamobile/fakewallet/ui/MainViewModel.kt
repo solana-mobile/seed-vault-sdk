@@ -7,6 +7,7 @@ package com.solanamobile.fakewallet.ui
 import android.app.Application
 import android.database.ContentObserver
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Parcel
 import android.os.Parcelable
@@ -288,6 +289,10 @@ class MainViewModel(
     fun signPermissionedAccountTransactions(
         @WalletContractV1.AuthToken authToken: Long,
     ) {
+        if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+            throw IllegalStateException("PermissionedAccount not available")
+        }
+
         val signingRequests = (0 until maxSigningRequests).map { i ->
             val derivationPaths = (0 until maxRequestedSignatures).map { j ->
                 PermissionedAccount.getPermissionedAccountDerivationPath(i * maxRequestedSignatures + j)
@@ -369,6 +374,10 @@ class MainViewModel(
     fun signPermissionedAccountMessages(
         @WalletContractV1.AuthToken authToken: Long,
     ) {
+        if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+            throw IllegalStateException("PermissionedAccount not available")
+        }
+
         val signingRequests = (0 until maxSigningRequests).map { i ->
             val derivationPaths = (0 until maxRequestedSignatures).map { j ->
                 PermissionedAccount.getPermissionedAccountDerivationPath(i * maxRequestedSignatures + j)
@@ -436,6 +445,10 @@ class MainViewModel(
     fun requestPermissionedPublicKeys(
         @WalletContractV1.AuthToken authToken: Long,
     ) {
+        if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+            throw IllegalStateException("PermissionedAccount not available")
+        }
+
         val derivationPaths = (0 until maxRequestedPublicKeys).map { i ->
             PermissionedAccount.getPermissionedAccountDerivationPath(i).toUri()
         }

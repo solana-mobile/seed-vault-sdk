@@ -39,6 +39,7 @@ public final class WalletContractV1 {
      * either the {@link #PERMISSION_ACCESS_SEED_VAULT} or the
      * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission, but not both.</p>
      */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
     public static final String PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED = "com.solanamobile.seedvault.ACCESS_SEED_VAULT_PRIVILEGED";
 
     /**
@@ -233,6 +234,7 @@ public final class WalletContractV1 {
      * <p>NOTE: this action should be used with an implicit Intent; it should not specify
      * {@link #PACKAGE_SEED_VAULT}.</p>
      */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
     public static final String ACTION_SEED_SETTINGS = AUTHORITY_WALLET + ".ACTION_SEED_SETTINGS";
 
     /** An unspecified error occurred in response to one of the {@code ACTION_*} actions */
@@ -368,6 +370,7 @@ public final class WalletContractV1 {
      *
      * @see PermissionedAccount
      */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
     public static final int PERMISSIONED_BIP44_ACCOUNT = 10000;
 
     /**
@@ -378,6 +381,7 @@ public final class WalletContractV1 {
      *
      * @see PermissionedAccount
      */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
     public static final int PERMISSIONED_BIP44_CHANGE = 0;
 
     /**

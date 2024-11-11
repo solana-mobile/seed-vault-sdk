@@ -27,7 +27,11 @@ android {
 
     defaultConfig {
         applicationId "com.solanamobile.seedvaultimpl"
-        minSdk 31
+        // In SDK versions < 33, the ResolverActivity implementation (which is used to disambiguate
+        // which <activity-alias> to launch, generic or privileged) will strip unknown Parcelable
+        // classes from the Intent. This strips the array of Parcelable payloads from signing
+        // intents. Limit SeedVaultSimulator to >= 33 to avoid this issue.
+        minSdk 33
         targetSdk 35
         versionCode 1
         versionName "1.0"
