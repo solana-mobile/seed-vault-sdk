@@ -10,6 +10,7 @@ import android.content.Context
 import android.database.Cursor
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
+import com.solanamobile.seedvault.cts.PrivilegedSeedVaultChecker
 import com.solanamobile.seedvault.cts.data.ConditionChecker
 import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
@@ -30,6 +31,7 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
     private val ctx: Context,
     private val logger: TestSessionLogger,
     private val sagaChecker: SagaChecker,
+    private val privilegedSeedVaultChecker: PrivilegedSeedVaultChecker,
 ) : TestCaseImpl(
     preConditions = preConditions
 ) {
@@ -165,6 +167,7 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
         action: ((index: Int, authToken: Long) -> Unit)? = null
     ): Boolean {
         if (c.count != authorizedSeeds.size) return false
+        if (!validateAuthorizedSeedsCursor(c)) return false
 
         val found = BooleanArray(authorizedSeeds.size)
         while (c.moveToNext()) {
@@ -209,7 +212,8 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
         expectedAuthToken: Long,
         expectedName: String
     ): Boolean {
-        return c.count == 1 && // Current implementations only define a single PURPOSE_* value
+        return validateAuthorizedSeedsCursor(c) &&
+                c.count == 1 && // Current implementations only define a single PURPOSE_* value
                 c.moveToNext() &&
                 c.getLong(0) == expectedAuthToken &&
                 c.getInt(1) == WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION &&
@@ -275,7 +279,8 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
     }
 
     private fun validateUnknownAuthTokenFilteredCursor(c: Cursor): Boolean {
-        return c.count == 0
+        return validateAuthorizedSeedsCursor(c) &&
+                c.count == 0
     }
 
     private fun testTableIdFilterUnknownAuthToken(): Boolean {
@@ -320,6 +325,7 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
 
     private fun validatePurposeFilteredCursor(c: Cursor): Boolean {
         if (c.count != authTokens.size) return false
+        if (!validateAuthorizedSeedsCursor(c)) return false
 
         val found = BooleanArray(authTokens.size)
         while (c.moveToNext()) {
@@ -359,7 +365,8 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
     }
 
     private fun validateUnknownPurposeFilteredCursor(c: Cursor): Boolean {
-        return c.count == 0
+        return validateAuthorizedSeedsCursor(c) &&
+                c.count == 0
     }
 
     private fun testTableExpressionFilterUnknownPurpose(): Boolean {
@@ -386,7 +393,8 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
         expectedAuthToken: Long,
         expectedName: String
     ): Boolean {
-        return c.count == 1 &&
+        return validateAuthorizedSeedsCursor(c) &&
+                c.count == 1 &&
                 c.moveToFirst() &&
                 c.getLong(0) == expectedAuthToken &&
                 c.getInt(1) == WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION &&
@@ -417,7 +425,7 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
     }
 
     private fun validateUnknownNameFilteredCursor(c: Cursor): Boolean {
-        return c.count == 0
+        return validateAuthorizedSeedsCursor(c) && c.count == 0
     }
 
     private fun testTableExpressionFilterUnknownName(): Boolean {
@@ -438,6 +446,41 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
             "NoSeedShouldExistWithThisName"
         )?.use { c -> validateUnknownNameFilteredCursor(c) } ?: false
     }
+
+    private fun validateAuthorizedSeedsCursor(c: Cursor): Boolean {
+        val authTokenIdx = c.getColumnIndex(WalletContractV1.AUTHORIZED_SEEDS_AUTH_TOKEN)
+        val authPurposeIdx = c.getColumnIndex(WalletContractV1.AUTHORIZED_SEEDS_AUTH_PURPOSE)
+        val seedNameIdx = c.getColumnIndex(WalletContractV1.AUTHORIZED_SEEDS_SEED_NAME)
+        val isBackedUpIdx = c.getColumnIndex(WalletContractV1.AUTHORIZED_SEEDS_IS_BACKED_UP)
+
+        // Ensure all required columns are present
+        if (authTokenIdx == -1 ||
+            authPurposeIdx == -1 ||
+            seedNameIdx == -1 ||
+            if (privilegedSeedVaultChecker.isPrivileged()) {
+                isBackedUpIdx == -1
+            } else {
+                isBackedUpIdx != -1
+            }) return false
+
+        // Check the data type of every record
+        val originalPosition = c.position
+        c.moveToPosition(-1)
+        var result = true
+        while (c.moveToNext()) {
+            if (c.getType(authTokenIdx) != Cursor.FIELD_TYPE_INTEGER ||
+                c.getType(authPurposeIdx) != Cursor.FIELD_TYPE_INTEGER ||
+                c.getType(seedNameIdx) != Cursor.FIELD_TYPE_STRING ||
+                (isBackedUpIdx != -1 && c.getType(isBackedUpIdx) != Cursor.FIELD_TYPE_INTEGER)
+            ) {
+                result = false
+                break
+            }
+        }
+        c.moveToPosition(originalPosition)
+
+        return result
+    }
     
     companion object {
         private const val UNKNOWN_AUTH_TOKEN = 7394872231938472276L // if this random value matches, ¯\_(ツ)_/¯
@@ -449,13 +492,15 @@ internal class NoAuthorizedSeedsContentProviderTestCase @Inject constructor(
     noAuthorizedSeedsChecker: NoAuthorizedSeedsChecker,
     @ApplicationContext private val ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker
+    sagaChecker: SagaChecker,
+    privilegedSeedVaultChecker: PrivilegedSeedVaultChecker
 ) : AuthorizedSeedsContentProviderTestCase(
     emptyList(),
     preConditions = listOf(hasSeedVaultPermissionChecker, noAuthorizedSeedsChecker),
     ctx,
     logger,
-    sagaChecker
+    sagaChecker,
+    privilegedSeedVaultChecker
 ) {
     override val id: String = "nascp"
     override val description: String = "Verify content provider behavior for ${WalletContractV1.AUTHORIZED_SEEDS_TABLE} when no seeds are authorized"
@@ -468,7 +513,8 @@ internal class HasAuthorizedSeedsContentProviderTestCase @Inject constructor(
     knownSeed24AuthorizedChecker: KnownSeed24AuthorizedChecker,
     @ApplicationContext private val ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker
+    sagaChecker: SagaChecker,
+    privilegedSeedVaultChecker: PrivilegedSeedVaultChecker
 ) : AuthorizedSeedsContentProviderTestCase(
     listOf(KnownSeed12.SEED_NAME, KnownSeed24.SEED_NAME),
     preConditions = listOf(
@@ -478,7 +524,8 @@ internal class HasAuthorizedSeedsContentProviderTestCase @Inject constructor(
     ),
     ctx,
     logger,
-    sagaChecker
+    sagaChecker,
+    privilegedSeedVaultChecker
 ) {
     override val id: String = "hascp"
     override val description: String = "Verify content provider behavior for ${WalletContractV1.AUTHORIZED_SEEDS_TABLE} when two seeds are authorized"

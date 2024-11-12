@@ -204,7 +204,7 @@ class WalletContentProvider : ContentProvider() {
                     auth.purpose.toWalletContractConstant(),                    // WalletContractV1.AUTHORIZED_SEEDS_AUTH_PURPOSE
                     seed.details.name ?: "",                                    // WalletContractV1.AUTHORIZED_SEEDS_SEED_NAME
                     if (seed.details.isBackedUp) 1.toShort() else 0.toShort(),  // WalletContractV1.AUTHORIZED_SEEDS_IS_BACKED_UP
-                )
+                ).sliceArray(defaultProjection.indices)
 
                 if (auth.uid == uid
                     && (authToken == null || auth.authToken == authToken)
