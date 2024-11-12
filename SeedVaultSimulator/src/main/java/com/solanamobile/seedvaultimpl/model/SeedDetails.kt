@@ -10,6 +10,7 @@ data class SeedDetails(
     val name: String? = null,
     val pin: String,
     val unlockWithBiometrics: Boolean = false,
+    val isBackedUp: Boolean = false,
 ) {
     companion object {
         const val ENTROPY_SHORT = 128
@@ -45,6 +46,7 @@ data class SeedDetails(
         if (name != other.name) return false
         if (pin != other.pin) return false
         if (unlockWithBiometrics != other.unlockWithBiometrics) return false
+        if (isBackedUp != other.isBackedUp) return false
 
         return true
     }
@@ -55,6 +57,7 @@ data class SeedDetails(
         result = 31 * result + (name?.hashCode() ?: 0)
         result = 31 * result + pin.hashCode()
         result = 31 * result + unlockWithBiometrics.hashCode()
+        result = 31 * result + isBackedUp.hashCode()
         return result
     }
 }

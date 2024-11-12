@@ -9,6 +9,7 @@ message SeedEntry {
   string name = 3;
   string pin = 4;
   bool unlock_with_biometrics = 5;
+  bool is_backed_up = 6;
 }
 
 message AuthorizationEntry {

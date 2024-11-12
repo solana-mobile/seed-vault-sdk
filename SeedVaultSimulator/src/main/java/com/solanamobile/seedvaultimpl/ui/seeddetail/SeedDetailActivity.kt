@@ -290,7 +290,7 @@ class SeedDetailActivity : AppCompatActivity() {
                             }
 
                             Row(
-                                modifier = Modifier.padding(vertical = Sizes.dp16),
+                                modifier = Modifier.padding(top = Sizes.dp16),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -310,6 +310,31 @@ class SeedDetailActivity : AppCompatActivity() {
                                     checked = seedDetails.enableBiometrics,
                                     onCheckedChange = {
                                         viewModel.enableBiometrics(it)
+                                    }
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.padding(top = Sizes.dp4, bottom = Sizes.dp16),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    modifier = Modifier
+                                        .padding(end = Sizes.dp16)
+                                        .weight(1f),
+                                    text = stringResource(id = R.string.label_is_seed_backed_up),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Switch(
+                                    modifier = Modifier.semantics {
+                                        testTag = "IsBackedUp"
+                                    },
+                                    checked = seedDetails.isBackedUp,
+                                    onCheckedChange = {
+                                        viewModel.setSeedIsBackedUp(it)
                                     }
                                 )
                             }
