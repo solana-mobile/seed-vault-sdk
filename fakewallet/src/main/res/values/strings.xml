@@ -5,6 +5,7 @@
 <resources>
     <string name="app_name">FakeWalletGeneric</string>
     <string name="label_seed_purpose">Purpose:</string>
+    <string name="label_seed_is_backed_up">Backed Up:</string>
     <string name="label_account_name">Account:</string>
     <string name="label_public_key">Public Key:</string>
     <string name="label_derivation_path">Path:</string>
