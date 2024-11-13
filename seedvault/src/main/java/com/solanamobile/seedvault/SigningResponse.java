@@ -49,7 +49,12 @@ public class SigningResponse implements Parcelable {
         for (int i = 0; i < size; i++) {
             mSignatures.add(in.createByteArray());
         }
-        mResolvedDerivationPaths = in.createTypedArrayList(Uri.CREATOR);
+        final ArrayList<Uri> rdp = in.createTypedArrayList(Uri.CREATOR);
+        if (rdp != null) {
+            mResolvedDerivationPaths = rdp;
+        } else {
+            mResolvedDerivationPaths = new ArrayList<>();
+        }
     }
 
     @Override
@@ -66,7 +71,7 @@ public class SigningResponse implements Parcelable {
         return 0;
     }
 
-    public static final Creator<SigningResponse> CREATOR = new Creator<SigningResponse>() {
+    public static final Creator<SigningResponse> CREATOR = new Creator<>() {
         @Override
         public SigningResponse createFromParcel(Parcel in) {
             return new SigningResponse(in);

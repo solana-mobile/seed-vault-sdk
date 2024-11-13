@@ -194,7 +194,7 @@ public class Bip44DerivationPath extends BipDerivationPath {
             throw new UnsupportedOperationException("BIP44 URI must be hierarchical");
         }
 
-        if (!bip44Uri.isAbsolute() || !bip44Uri.getScheme().equals(WalletContractV1.BIP44_URI_SCHEME)) {
+        if (!bip44Uri.isAbsolute() || !WalletContractV1.BIP44_URI_SCHEME.equals(bip44Uri.getScheme())) {
             throw new UnsupportedOperationException("BIP44 URI must be absolute with scheme " + WalletContractV1.BIP44_URI_SCHEME);
         }
 
@@ -211,7 +211,8 @@ public class Bip44DerivationPath extends BipDerivationPath {
         }
 
         final List<String> path = bip44Uri.getPathSegments();
-        if (path.size() < 1 || path.size() > 3) {
+        final int pathLength = path.size();
+        if (pathLength < 1 || pathLength > 3) {
             throw new UnsupportedOperationException("BIP44 URI path must contain between 1 and 3 elements");
         }
 

@@ -123,7 +123,7 @@ public class Bip32DerivationPath extends BipDerivationPath {
             throw new UnsupportedOperationException("BIP32 URI must be hierarchical");
         }
 
-        if (bip32Uri.isAbsolute() && !bip32Uri.getScheme().equals(WalletContractV1.BIP32_URI_SCHEME)) {
+        if (bip32Uri.isAbsolute() && !WalletContractV1.BIP32_URI_SCHEME.equals(bip32Uri.getScheme())) {
             throw new UnsupportedOperationException("BIP32 URI absolute scheme must be " + WalletContractV1.BIP32_URI_SCHEME);
         }
 

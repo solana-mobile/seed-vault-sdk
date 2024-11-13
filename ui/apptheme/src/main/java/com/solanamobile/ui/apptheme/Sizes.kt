@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Solana Mobile Inc.
+ */
+
 package com.solanamobile.ui.apptheme
 
 import androidx.compose.ui.unit.dp

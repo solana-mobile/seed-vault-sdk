@@ -44,8 +44,19 @@ public class SigningRequest implements Parcelable {
     }
 
     protected SigningRequest(Parcel in) {
-        payload = in.createByteArray();
-        mRequestedSignatures = in.createTypedArrayList(Uri.CREATOR);
+        final byte[] p = in.createByteArray();
+        if (p != null) {
+            payload = p;
+        } else {
+            payload = new byte[0];
+        }
+
+        final ArrayList<Uri> rs = in.createTypedArrayList(Uri.CREATOR);
+        if (rs != null) {
+            mRequestedSignatures = rs;
+        } else {
+            mRequestedSignatures = new ArrayList<>();
+        }
     }
 
     @Override
@@ -59,7 +70,7 @@ public class SigningRequest implements Parcelable {
         return 0;
     }
 
-    public static final Creator<SigningRequest> CREATOR = new Creator<SigningRequest>() {
+    public static final Creator<SigningRequest> CREATOR = new Creator<>() {
         @Override
         public SigningRequest createFromParcel(Parcel in) {
             return new SigningRequest(in);

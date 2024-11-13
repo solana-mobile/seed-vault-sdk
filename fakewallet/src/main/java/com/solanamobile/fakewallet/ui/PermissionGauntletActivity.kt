@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Solana Mobile Inc.
+ */
+
 package com.solanamobile.fakewallet.ui
 
 import android.content.Intent
