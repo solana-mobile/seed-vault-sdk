@@ -605,7 +605,7 @@ public final class Wallet {
                 WalletContractV1.UNAUTHORIZED_SEEDS_ALL_COLUMNS,
                 null,
                 null);
-        if (!c.moveToFirst()) {
+        if (c == null || !c.moveToFirst()) {
             throw new IllegalStateException("Cursor does not contain expected data");
         }
         boolean hasUnauthorizedSeeds = (c.getShort(1) != 0);
@@ -834,7 +834,7 @@ public final class Wallet {
                 WalletContractV1.IMPLEMENTATION_LIMITS_ALL_COLUMNS,
                 null,
                 null);
-        if (!c.moveToNext()) {
+        if (c == null || !c.moveToNext()) {
             throw new UnsupportedOperationException("Failed to get implementation limits");
         }
         final ArrayMap<String, Long> implementationLimitsMap = new ArrayMap<>(3);

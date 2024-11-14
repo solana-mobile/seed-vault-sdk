@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Solana Mobile Inc.
+ */
+
 package com.solanamobile.seedvault;
 
 import static android.content.pm.PermissionInfo.PROTECTION_FLAG_PRIVILEGED;
@@ -93,9 +97,11 @@ public class SeedVault {
             return true;
         }
 
-        for (PermissionInfo permission : pi.permissions) {
-            if (WalletContractV1.PERMISSION_SEED_VAULT_IMPL.equals(permission.name)) {
-                return hasPrivilegedProtectionFlag(permission);
+        if (pi.permissions != null) {
+            for (PermissionInfo permission : pi.permissions) {
+                if (WalletContractV1.PERMISSION_SEED_VAULT_IMPL.equals(permission.name)) {
+                    return hasPrivilegedProtectionFlag(permission);
+                }
             }
         }
 

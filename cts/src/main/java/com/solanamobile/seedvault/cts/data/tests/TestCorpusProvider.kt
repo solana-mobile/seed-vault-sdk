@@ -18,14 +18,15 @@ import dagger.hilt.android.components.ActivityRetainedComponent
 internal object TestCorpusProvider {
     @Provides
     fun provideTestCorpus(
-        noPermissionsContentProviderCheck: NoPermissionsContentProviderCheck,
         acquireSeedVaultPermissionTestCase: AcquireSeedVaultPermissionTestCase,
         acquireSeedVaultPrivilegedPermissionTestCase: AcquireSeedVaultPrivilegedPermissionTestCase,
+        authorizeSeed12SagaTestCase: AuthorizeSeed12SagaTestCase,
+        authorizeSeed24SagaTestCase: AuthorizeSeed24SagaTestCase,
         cannotShowSeedSettingsTestCase: CannotShowSeedSettingsTestCase,
         createNewSeedTestCase: CreateNewSeedTestCase,
         deauthorizeSeed12TestCase: DeauthorizeSeed12TestCase,
+        deauthorizeSeed24TestCase: DeauthorizeSeed24TestCase,
         denySignTransactionTestCase: DenySignTransactionTestCase,
-        permissionedAccountFetchPubKeysTestCase: PermissionedAccountFetchPubKeysTestCase,
         fetch10PubKeyTestCase: Fetch10PubKeyTestCase,
         fetch11PubKeyTestCase: Fetch11PubKeyTestCase,
         fetch1PubKeyTestCase: Fetch1PubKeyTestCase,
@@ -37,8 +38,9 @@ internal object TestCorpusProvider {
         incorrectPinSignTransactionFailureTestCase: IncorrectPinSignTransactionFailureTestCase,
         initialConditionsTestCase: InitialConditionsTestCase,
         noAuthorizedSeedsContentProviderTestCase: NoAuthorizedSeedsContentProviderTestCase,
+        noPermissionsContentProviderCheck: NoPermissionsContentProviderCheck,
         noUnauthorizedSeedsContentProviderTestCase: NoUnauthorizedSeedsContentProviderTestCase,
-        authorizeSeed12SagaTestCase: AuthorizeSeed12SagaTestCase,
+        permissionedAccountFetchPubKeysTestCase: PermissionedAccountFetchPubKeysTestCase,
         reauthorizeSeed12TestCase: ReauthorizeSeed12TestCase,
         seed12AccountsContentProviderTestCase: KnownSeed12AccountsContentProviderTestCase,
         seed24AccountsContentProviderTestCase: KnownSeed24AccountsContentProviderTestCase,
@@ -47,8 +49,6 @@ internal object TestCorpusProvider {
         signMaxTransactionWithMaxSignatureTestCase: SignMaxTransactionWithMaxSignatureTestCase,
         signatureRequestsExceedLimitTestCase: SignatureRequestsExceedLimitTestCase,
         signingRequestsExceedLimitTestCase: SigningRequestsExceedLimitTestCase,
-        deauthorizeSeed24TestCase: DeauthorizeSeed24TestCase,
-        authorizeSeed24SagaTestCase: AuthorizeSeed24SagaTestCase,
         logger: TestSessionLogger,
         sagaChecker: SagaChecker,
     ): TestCorpus {
