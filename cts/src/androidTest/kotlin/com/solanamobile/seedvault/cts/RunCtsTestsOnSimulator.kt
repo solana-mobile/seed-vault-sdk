@@ -357,6 +357,7 @@ class RunCtsTestsOnSimulator {
     internal inner class ReauthorizeSeed12TestCase(override val id: String = "rs12") : AuthorizeWithBiometricsTestCase()
     internal inner class Sign1TransactionWith1SignatureTestCase(override val id: String = "s1t1s") : AuthorizeWithBiometricsTestCase()
     internal inner class SignMaxTransactionWithMaxSignatureTestCase(override val id: String = "smaxtmaxs") : AuthorizeWithBiometricsTestCase()
+    internal inner class SignMaxTransactionWithMaxSignatureBip44TestCase(override val id: String = "smaxtmaxsb44") : AuthorizeWithBiometricsTestCase()
 
     internal inner class CreateNewSeedTestCase : CtsTestCase {
         override val id = "cns"
@@ -501,6 +502,7 @@ class RunCtsTestsOnSimulator {
         Fetch11PubKeyTestCase(),
         Sign1TransactionWith1SignatureTestCase(),
         SignMaxTransactionWithMaxSignatureTestCase(),
+        SignMaxTransactionWithMaxSignatureBip44TestCase(),
         SigningRequestsExceedLimitTestCase(),
         SignatureRequestsExceedLimitTestCase(),
         DenySignTransactionTestCase(),
