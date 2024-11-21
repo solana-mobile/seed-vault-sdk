@@ -35,7 +35,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CompletableDeferred
 
-internal abstract class SignNTransactionsMSignaturesTestCase(
+internal abstract class SignNMessagesMSignaturesTestCase(
     preConditions: List<ConditionChecker>,
     private val authorizedSeedsChecker: AuthorizedSeedsChecker,
     private val logger: TestSessionLogger,
@@ -45,47 +45,47 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
 ) : TestCaseImpl(
     preConditions = preConditions
 ), ActivityLauncherTestCase {
-    private lateinit var launcher: ActivityResultLauncher<SignTransactionsInput>
+    private lateinit var launcher: ActivityResultLauncher<SignMessagesInput>
     private var completionSignal: CompletableDeferred<ArrayList<SigningResponse>>? = null
 
-    data class SignTransactionsInput(
+    data class SignMessagesInput(
         @AuthToken val authToken: Long,
         val requests: ArrayList<SigningRequest>
     )
 
-    class SignTransactionIntentContract :
-        ActivityResultContract<SignTransactionsInput, Result<ArrayList<SigningResponse>>>() {
+    class SignMessageIntentContract :
+        ActivityResultContract<SignMessagesInput, Result<ArrayList<SigningResponse>>>() {
 
-        override fun createIntent(context: Context, input: SignTransactionsInput): Intent =
-            Wallet.signTransactions(input.authToken, input.requests)
+        override fun createIntent(context: Context, input: SignMessagesInput): Intent =
+            Wallet.signMessages(input.authToken, input.requests)
 
         override fun parseResult(
             resultCode: Int,
             intent: Intent?
         ): Result<ArrayList<SigningResponse>> {
             return try {
-                val result = onSignTransactionsResult(resultCode, intent)
-                Log.d(TAG, "Transaction signed: signatures=$result")
+                val result = onSignMessagesResult(resultCode, intent)
+                Log.d(TAG, "Message signed: signatures=$result")
                 Result.success(result)
             } catch (e: ActionFailedException) {
-                Log.e(TAG, "Transaction signing failed", e)
+                Log.e(TAG, "Message signing failed", e)
                 Result.failure(e)
             } catch (e: EmptyResponseException) {
-                Log.e(TAG, "Transaction signing failed", e)
+                Log.e(TAG, "Message signing failed", e)
                 Result.failure(e)
             } catch (e: NoResultException) {
-                Log.e(TAG, "Transaction signing failed", e)
+                Log.e(TAG, "Message signing failed", e)
                 Result.failure(e)
             }
         }
 
         @Throws(ActionFailedException::class)
-        fun onSignTransactionsResult(
+        fun onSignMessagesResult(
             resultCode: Int,
             result: Intent?
         ): ArrayList<SigningResponse> {
             if (resultCode != Activity.RESULT_OK) {
-                throw ActionFailedException("Sign Transaction", resultCode)
+                throw ActionFailedException("Sign Message", resultCode)
             } else if (result == null) {
                 throw NoResultException()
             }
@@ -103,13 +103,13 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
         }
 
         companion object {
-            const val TAG = "SignTransactionIntentContract"
+            const val TAG = "SignMessageIntentContract"
         }
     }
 
     override fun registerActivityLauncher(arc: ActivityResultCaller) {
         launcher =
-            arc.registerForActivityResult(SignTransactionIntentContract()) { signingResponse ->
+            arc.registerForActivityResult(SignMessageIntentContract()) { signingResponse ->
                 completionSignal?.run {
                     completionSignal = null
                     signingResponse.fold(
@@ -135,7 +135,7 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
     override suspend fun doExecute(): TestResult {
         @AuthToken val authToken = authorizedSeedsChecker.findMatchingSeed()
         if (authToken == null) {
-            logger.warn("$id: Failed locating seed for `signTransactions`")
+            logger.warn("$id: Failed locating seed for `signMessages`")
             return TestResult.FAIL
         }
 
@@ -144,12 +144,12 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
         completionSignal = signal
 
         val requests = signingRequests()
-        launcher.launch(SignTransactionsInput(authToken, requests))
+        launcher.launch(SignMessagesInput(authToken, requests))
 
         try {
             signal.await()
         } catch (e: Exception) {
-            Log.e("SignTransactionTestCase", "Transaction failed", e)
+            Log.e("SignMessageTestCase", "Message failed", e)
             if (expectedException == null) {
                 return TestResult.FAIL
             }
@@ -184,10 +184,10 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
         }
 
         @JvmStatic
-        protected fun signMTransactionsWithNSignatures(
+        protected fun signMMessagesWithNSignatures(
             context: Context,
-            transactions: Int,
-            signaturesPerTransaction: Int,
+            messages: Int,
+            signaturesPerMessage: Int,
             useBip44DerivationPaths: Boolean
         ): ArrayList<SigningRequest> {
             val implementationLimits = Wallet.getImplementationLimitsForPurpose(
@@ -197,8 +197,8 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
             val maxRequestedSignatures =
                 implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES]!!.toInt()
 
-            val signingRequests = (0 until transactions).map { i ->
-                val derivationPaths = (0 until signaturesPerTransaction).map { j ->
+            val signingRequests = (0 until messages).map { i ->
+                val derivationPaths = (0 until signaturesPerMessage).map { j ->
                     if (useBip44DerivationPaths) {
                         Bip44DerivationPath.newBuilder()
                             .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
@@ -210,32 +210,32 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
                             .build().toUri()
                     }
                 }
-                SigningRequest(createFakeTransaction(i), derivationPaths)
+                SigningRequest(createFakeMessage(i), derivationPaths)
             }
 
             return ArrayList(signingRequests)
         }
 
         @JvmStatic
-        protected fun createFakeTransaction(i: Int): ByteArray {
-            return ByteArray(TRANSACTION_SIZE) { i.toByte() }
+        protected fun createFakeMessage(i: Int): ByteArray {
+            return ByteArray(MESSAGE_SIZE) { i.toByte() }
         }
 
-        protected const val TRANSACTION_SIZE = 512
+        protected const val MESSAGE_SIZE = 512
     }
 }
 
-internal class Sign1TransactionWith1SignatureTestCase @Inject constructor(
+internal class Sign1MessageWith1SignatureTestCase @Inject constructor(
     @ApplicationContext context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-) : SignNTransactionsMSignaturesTestCase(
+) : SignNMessagesMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
-        signMTransactionsWithNSignatures(context, 1, 1, false)
+        signMMessagesWithNSignatures(context, 1, 1, false)
     },
     expectedSignatures = arrayListOf(
         SigningResponse(
@@ -255,23 +255,23 @@ internal class Sign1TransactionWith1SignatureTestCase @Inject constructor(
         )
     )
 ), ActivityLauncherTestCase {
-    override val id: String = "s1t1s"
-    override val description: String = "Sign 1 transaction with 1 signature"
-    override val instructions: String = "Approve transaction when prompted."
+    override val id: String = "s1m1s"
+    override val description: String = "Sign 1 message with 1 signature"
+    override val instructions: String = "Approve message when prompted."
 }
 
-internal class SignMaxTransactionWithMaxSignatureTestCase @Inject constructor(
+internal class SignMaxMessageWithMaxSignatureTestCase @Inject constructor(
     @ApplicationContext private val context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-) : SignNTransactionsMSignaturesTestCase(
+) : SignNMessagesMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
-        signMTransactionsWithNSignatures(context, limits.first, limits.second, false)
+        signMMessagesWithNSignatures(context, limits.first, limits.second, false)
     },
     expectedSignatures = arrayListOf(
         SigningResponse(
@@ -312,27 +312,27 @@ internal class SignMaxTransactionWithMaxSignatureTestCase @Inject constructor(
         )
     )
 ), ActivityLauncherTestCase {
-    override val id: String = "smaxtmaxs"
+    override val id: String = "smaxmmaxs"
     override val description: String
         get() {
             val limits = getLimits(context)
-            return "Sign ${limits.first} transaction with ${limits.second} signature"
+            return "Sign ${limits.first} message with ${limits.second} signature"
         }
-    override val instructions: String = "Approve transaction when prompted."
+    override val instructions: String = "Approve message when prompted."
 }
 
-internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject constructor(
+internal class SignMaxMessageWithMaxSignatureBip44TestCase @Inject constructor(
     @ApplicationContext private val context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-) : SignNTransactionsMSignaturesTestCase(
+) : SignNMessagesMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
-        signMTransactionsWithNSignatures(context, limits.first, limits.second, true)
+        signMMessagesWithNSignatures(context, limits.first, limits.second, true)
     },
     expectedSignatures = arrayListOf(
         SigningResponse(
@@ -373,61 +373,61 @@ internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject construct
         )
     )
 ), ActivityLauncherTestCase {
-    override val id: String = "smaxtmaxsb44"
+    override val id: String = "smaxmmaxsb44"
     override val description: String
         get() {
             val limits = getLimits(context)
-            return "Sign ${limits.first} transaction with ${limits.second} signature using BIP-44 derivation paths"
+            return "Sign ${limits.first} message with ${limits.second} signature using BIP-44 derivation paths"
         }
-    override val instructions: String = "Approve transaction when prompted."
+    override val instructions: String = "Approve message when prompted."
 }
 
-internal class SignTransactionRequestsExceedLimitTestCase @Inject constructor(
+internal class SignMessageRequestsExceedLimitTestCase @Inject constructor(
     @ApplicationContext private val context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-) : SignNTransactionsMSignaturesTestCase(
+) : SignNMessagesMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
-        signMTransactionsWithNSignatures(context, limits.first + 1, 1, false)
+        signMMessagesWithNSignatures(context, limits.first + 1, 1, false)
     },
     expectedException = ActionFailedException(
-        "Sign Transaction",
+        "Sign Message",
         WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED
     ),
 ), ActivityLauncherTestCase {
-    override val id: String = "strel"
+    override val id: String = "smrel"
     override val description: String
         get() {
             val limits = getLimits(context)
-            return "Sign ${limits.first + 1} transactions"
+            return "Sign ${limits.first + 1} messages"
         }
     override val instructions: String = ""
 }
 
-internal class SignTransactionSignaturesExceedLimitTestCase @Inject constructor(
+internal class SignMessageSignaturesExceedLimitTestCase @Inject constructor(
     @ApplicationContext private val context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-) : SignNTransactionsMSignaturesTestCase(
+) : SignNMessagesMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
-        signMTransactionsWithNSignatures(context, 1, limits.second + 1, false)
+        signMMessagesWithNSignatures(context, 1, limits.second + 1, false)
     },
     expectedException = ActionFailedException(
-        "Sign Transaction",
+        "Sign Message",
         WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED
     ),
 ), ActivityLauncherTestCase {
-    override val id: String = "stsel"
+    override val id: String = "smsel"
     override val description: String
         get() {
             val limits = getLimits(context)
@@ -436,43 +436,43 @@ internal class SignTransactionSignaturesExceedLimitTestCase @Inject constructor(
     override val instructions: String = ""
 }
 
-internal class DenySignTransactionTestCase @Inject constructor(
+internal class DenySignMessageTestCase @Inject constructor(
     @ApplicationContext context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-) : SignNTransactionsMSignaturesTestCase(
+) : SignNMessagesMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
-        signMTransactionsWithNSignatures(context, 1, 1, false)
+        signMMessagesWithNSignatures(context, 1, 1, false)
     },
-    expectedException = ActionFailedException("Sign Transaction", Activity.RESULT_CANCELED),
+    expectedException = ActionFailedException("Sign Message", Activity.RESULT_CANCELED),
 ), ActivityLauncherTestCase {
-    override val id: String = "dst"
+    override val id: String = "dsm"
     override val description: String = "Signature denial flow"
-    override val instructions: String = "Deny transaction when prompted."
+    override val instructions: String = "Deny message when prompted."
 }
 
-internal class IncorrectPinSignTransactionFailureTestCase @Inject constructor(
+internal class IncorrectPinSignMessageFailureTestCase @Inject constructor(
     @ApplicationContext context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-) : SignNTransactionsMSignaturesTestCase(
+) : SignNMessagesMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
-        signMTransactionsWithNSignatures(context, 1, 1, false)
+        signMMessagesWithNSignatures(context, 1, 1, false)
     },
     expectedException = ActionFailedException(
-        "Sign Transaction",
+        "Sign Message",
         WalletContractV1.RESULT_AUTHENTICATION_FAILED
     ),
 ), ActivityLauncherTestCase {
-    override val id: String = "ipstf"
-    override val description: String = "Incorrect pin on transaction approval flow"
+    override val id: String = "ipsmf"
+    override val description: String = "Incorrect pin on message approval flow"
     override val instructions: String = "Enter incorrect pin 5 times."
 }
