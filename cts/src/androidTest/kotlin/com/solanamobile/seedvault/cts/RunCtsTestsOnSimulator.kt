@@ -233,6 +233,8 @@ class RunCtsTestsOnSimulator {
     internal inner class InitialConditionsTestCase(override val id: String = "ic") : CtsTestCase
     internal inner class NoAuthorizedSeedsContentProviderTestCase(override val id: String = "nascp") : CtsTestCase
     internal inner class NoUnauthorizedSeedsContentProviderTestCase(override val id: String = "nuascp") : CtsTestCase
+    internal inner class SignMessageRequestsExceedLimitTestCase(override val id: String = "smrel") : CtsTestCase
+    internal inner class SignMessageSignaturesExceedLimitTestCase(override val id: String = "smsel") : CtsTestCase
     internal inner class SignTransactionRequestsExceedLimitTestCase(override val id: String = "strel") : CtsTestCase
     internal inner class SignTransactionSignaturesExceedLimitTestCase(override val id: String = "stsel") : CtsTestCase
     internal inner class DeauthorizeSeed24TestCase(override val id: String = "ds24") : CtsTestCase
@@ -355,9 +357,12 @@ class RunCtsTestsOnSimulator {
     internal inner class Fetch1PubKeyTestCase(override val id: String = "f1pk") : AuthorizeWithBiometricsTestCase()
     internal inner class Fetch10PubKeyTestCase(override val id: String = "f10pk") : AuthorizeWithBiometricsTestCase()
     internal inner class ReauthorizeSeed12TestCase(override val id: String = "rs12") : AuthorizeWithBiometricsTestCase()
+    internal inner class Sign1MessageWith1SignatureTestCase(override val id: String = "s1m1s") : AuthorizeWithBiometricsTestCase()
     internal inner class Sign1TransactionWith1SignatureTestCase(override val id: String = "s1t1s") : AuthorizeWithBiometricsTestCase()
-    internal inner class SignMaxTransactionWithMaxSignatureTestCase(override val id: String = "smaxtmaxs") : AuthorizeWithBiometricsTestCase()
+    internal inner class SignMaxMessageWithMaxSignatureBip44TestCase(override val id: String = "smaxmmaxsb44") : AuthorizeWithBiometricsTestCase()
+    internal inner class SignMaxMessageWithMaxSignatureTestCase(override val id: String = "smaxmmaxs") : AuthorizeWithBiometricsTestCase()
     internal inner class SignMaxTransactionWithMaxSignatureBip44TestCase(override val id: String = "smaxtmaxsb44") : AuthorizeWithBiometricsTestCase()
+    internal inner class SignMaxTransactionWithMaxSignatureTestCase(override val id: String = "smaxtmaxs") : AuthorizeWithBiometricsTestCase()
 
     internal inner class CreateNewSeedTestCase : CtsTestCase {
         override val id = "cns"
@@ -418,12 +423,11 @@ class RunCtsTestsOnSimulator {
         }
     }
 
+    internal inner class DenySignMessageTestCase(override val id: String = "dsm") : WaitForNewWindowAndNavigateBackTestCase()
     internal inner class DenySignTransactionTestCase(override val id: String = "dst") : WaitForNewWindowAndNavigateBackTestCase()
     internal inner class ShowSeedSettingsTestCase(override val id: String = "sss") : WaitForNewWindowAndNavigateBackTestCase()
 
-    internal inner class IncorrectPinSignTransactionFailureTestCase : CtsTestCase {
-        override val id: String = "ipstf"
-
+    internal abstract inner class DenyAuthorizationWithIncorrectPinTestCase : CtsTestCase {
         override fun createClickAndWaitCondition(): ClickAndWaitCondition = ClickAndWaitConditionEvent(Until.newWindow())
 
         override suspend fun performAndroidDeviceInteractions() {
@@ -487,6 +491,9 @@ class RunCtsTestsOnSimulator {
         }
     }
 
+    internal inner class IncorrectPinSignMessageFailureTestCase(override val id: String = "ipsmf") : DenyAuthorizationWithIncorrectPinTestCase()
+    internal inner class IncorrectPinSignTransactionFailureTestCase(override val id: String = "ipstf") : DenyAuthorizationWithIncorrectPinTestCase()
+
     private val testCases = listOfNotNull(
         NoPermissionsContentProviderCheck().takeIf { IS_GENERIC_BUILD },
         AcquireSeedVaultPrivilegedPermissionTestCase().takeIf { IS_GENERIC_BUILD },
@@ -507,6 +514,13 @@ class RunCtsTestsOnSimulator {
         SignTransactionSignaturesExceedLimitTestCase(),
         DenySignTransactionTestCase(),
         IncorrectPinSignTransactionFailureTestCase(),
+        Sign1MessageWith1SignatureTestCase(),
+        SignMaxMessageWithMaxSignatureTestCase(),
+        SignMaxMessageWithMaxSignatureBip44TestCase(),
+        SignMessageRequestsExceedLimitTestCase(),
+        SignMessageSignaturesExceedLimitTestCase(),
+        DenySignMessageTestCase(),
+        IncorrectPinSignMessageFailureTestCase(),
         CannotShowSeedSettingsTestCase().takeIf { IS_GENERIC_BUILD },
         ShowSeedSettingsTestCase().takeIf { !IS_GENERIC_BUILD },
         DeauthorizeSeed12TestCase().takeIf { IS_GENERIC_BUILD },
