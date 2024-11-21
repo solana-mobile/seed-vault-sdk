@@ -233,8 +233,8 @@ class RunCtsTestsOnSimulator {
     internal inner class InitialConditionsTestCase(override val id: String = "ic") : CtsTestCase
     internal inner class NoAuthorizedSeedsContentProviderTestCase(override val id: String = "nascp") : CtsTestCase
     internal inner class NoUnauthorizedSeedsContentProviderTestCase(override val id: String = "nuascp") : CtsTestCase
-    internal inner class SignatureRequestsExceedLimitTestCase(override val id: String = "srel") : CtsTestCase
-    internal inner class SigningRequestsExceedLimitTestCase(override val id: String = "trel") : CtsTestCase
+    internal inner class SignTransactionRequestsExceedLimitTestCase(override val id: String = "strel") : CtsTestCase
+    internal inner class SignTransactionSignaturesExceedLimitTestCase(override val id: String = "stsel") : CtsTestCase
     internal inner class DeauthorizeSeed24TestCase(override val id: String = "ds24") : CtsTestCase
     internal inner class CannotShowSeedSettingsTestCase(override val id: String = "csss") : CtsTestCase
 
@@ -503,8 +503,8 @@ class RunCtsTestsOnSimulator {
         Sign1TransactionWith1SignatureTestCase(),
         SignMaxTransactionWithMaxSignatureTestCase(),
         SignMaxTransactionWithMaxSignatureBip44TestCase(),
-        SigningRequestsExceedLimitTestCase(),
-        SignatureRequestsExceedLimitTestCase(),
+        SignTransactionRequestsExceedLimitTestCase(),
+        SignTransactionSignaturesExceedLimitTestCase(),
         DenySignTransactionTestCase(),
         IncorrectPinSignTransactionFailureTestCase(),
         CannotShowSeedSettingsTestCase().takeIf { IS_GENERIC_BUILD },

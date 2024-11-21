@@ -25,9 +25,9 @@ import com.solanamobile.seedvault.cts.data.ConditionChecker
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
+import com.solanamobile.seedvault.cts.data.conditioncheckers.AuthorizedSeedsChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
-import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.tests.helper.ActionFailedException
 import com.solanamobile.seedvault.cts.data.tests.helper.EmptyResponseException
 import com.solanamobile.seedvault.cts.data.tests.helper.NoResultException
@@ -37,7 +37,7 @@ import kotlinx.coroutines.CompletableDeferred
 
 internal abstract class SignNTransactionsMSignaturesTestCase(
     preConditions: List<ConditionChecker>,
-    private val knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    private val authorizedSeedsChecker: AuthorizedSeedsChecker,
     private val logger: TestSessionLogger,
     private val expectedException: Exception? = null,
     private val signingRequests: () -> ArrayList<SigningRequest>,
@@ -45,8 +45,6 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
 ) : TestCaseImpl(
     preConditions = preConditions
 ), ActivityLauncherTestCase {
-
-
     private lateinit var launcher: ActivityResultLauncher<SignTransactionsInput>
     private var completionSignal: CompletableDeferred<ArrayList<SigningResponse>>? = null
 
@@ -135,9 +133,9 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
     }
 
     override suspend fun doExecute(): TestResult {
-        @AuthToken val authToken = knownSeed12AuthorizedChecker.findMatchingSeed()
+        @AuthToken val authToken = authorizedSeedsChecker.findMatchingSeed()
         if (authToken == null) {
-            logger.warn("$id: Failed locating seed `${KnownSeed12.SEED_NAME}` to `signMessage`")
+            logger.warn("$id: Failed locating seed for `signTransactions`")
             return TestResult.FAIL
         }
 
@@ -151,7 +149,7 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
         try {
             signal.await()
         } catch (e: Exception) {
-            Log.e("SingTransactionTestCase", "Transaction failed", e)
+            Log.e("SignTransactionTestCase", "Transaction failed", e)
             if (expectedException == null) {
                 return TestResult.FAIL
             }
@@ -169,6 +167,62 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
 
         return if (expectedException == null) TestResult.PASS else TestResult.FAIL
     }
+
+    companion object {
+        @JvmStatic
+        protected fun getLimits(context: Context): Pair<Int, Int> {
+            val implementationLimits = Wallet.getImplementationLimitsForPurpose(
+                context,
+                WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+            )
+            val maxSigningRequests =
+                implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS]!!.toInt()
+            val maxRequestedSignatures =
+                implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES]!!.toInt()
+
+            return maxSigningRequests to maxRequestedSignatures
+        }
+
+        @JvmStatic
+        protected fun signMTransactionsWithNSignatures(
+            context: Context,
+            transactions: Int,
+            signaturesPerTransaction: Int,
+            useBip44DerivationPaths: Boolean
+        ): ArrayList<SigningRequest> {
+            val implementationLimits = Wallet.getImplementationLimitsForPurpose(
+                context,
+                WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+            )
+            val maxRequestedSignatures =
+                implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES]!!.toInt()
+
+            val signingRequests = (0 until transactions).map { i ->
+                val derivationPaths = (0 until signaturesPerTransaction).map { j ->
+                    if (useBip44DerivationPaths) {
+                        Bip44DerivationPath.newBuilder()
+                            .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
+                    } else {
+                        Bip32DerivationPath.newBuilder()
+                            .appendLevel(BipLevel(44, true))
+                            .appendLevel(BipLevel(501, true))
+                            .appendLevel(BipLevel(i * maxRequestedSignatures + j, true))
+                            .build().toUri()
+                    }
+                }
+                SigningRequest(createFakeTransaction(i), derivationPaths)
+            }
+
+            return ArrayList(signingRequests)
+        }
+
+        @JvmStatic
+        protected fun createFakeTransaction(i: Int): ByteArray {
+            return ByteArray(TRANSACTION_SIZE) { i.toByte() }
+        }
+
+        protected const val TRANSACTION_SIZE = 512
+    }
 }
 
 internal class Sign1TransactionWith1SignatureTestCase @Inject constructor(
@@ -178,7 +232,7 @@ internal class Sign1TransactionWith1SignatureTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
-    knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         signMTransactionsWithNSignatures(context, 1, 1, false)
@@ -213,7 +267,7 @@ internal class SignMaxTransactionWithMaxSignatureTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
-    knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
@@ -274,7 +328,7 @@ internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject construct
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
-    knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
@@ -328,14 +382,14 @@ internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject construct
     override val instructions: String = "Approve transaction when prompted."
 }
 
-internal class SigningRequestsExceedLimitTestCase @Inject constructor(
+internal class SignTransactionRequestsExceedLimitTestCase @Inject constructor(
     @ApplicationContext private val context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
-    knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
@@ -346,7 +400,7 @@ internal class SigningRequestsExceedLimitTestCase @Inject constructor(
         WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED
     ),
 ), ActivityLauncherTestCase {
-    override val id: String = "trel"
+    override val id: String = "strel"
     override val description: String
         get() {
             val limits = getLimits(context)
@@ -355,14 +409,14 @@ internal class SigningRequestsExceedLimitTestCase @Inject constructor(
     override val instructions: String = ""
 }
 
-internal class SignatureRequestsExceedLimitTestCase @Inject constructor(
+internal class SignTransactionSignaturesExceedLimitTestCase @Inject constructor(
     @ApplicationContext private val context: Context,
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
-    knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         val limits = getLimits(context)
@@ -373,7 +427,7 @@ internal class SignatureRequestsExceedLimitTestCase @Inject constructor(
         WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED
     ),
 ), ActivityLauncherTestCase {
-    override val id: String = "srel"
+    override val id: String = "stsel"
     override val description: String
         get() {
             val limits = getLimits(context)
@@ -389,7 +443,7 @@ internal class DenySignTransactionTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
-    knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         signMTransactionsWithNSignatures(context, 1, 1, false)
@@ -408,7 +462,7 @@ internal class IncorrectPinSignTransactionFailureTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
-    knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    authorizedSeedsChecker = knownSeed12AuthorizedChecker,
     logger = logger,
     signingRequests = {
         signMTransactionsWithNSignatures(context, 1, 1, false)
@@ -422,54 +476,3 @@ internal class IncorrectPinSignTransactionFailureTestCase @Inject constructor(
     override val description: String = "Incorrect pin on transaction approval flow"
     override val instructions: String = "Enter incorrect pin 5 times."
 }
-
-private fun getLimits(context: Context): Pair<Int, Int> {
-    val implementationLimits = Wallet.getImplementationLimitsForPurpose(
-        context,
-        WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
-    )
-    val maxSigningRequests =
-        implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS]!!.toInt()
-    val maxRequestedSignatures =
-        implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES]!!.toInt()
-
-    return maxSigningRequests to maxRequestedSignatures
-}
-
-private fun signMTransactionsWithNSignatures(
-    context: Context,
-    transactions: Int,
-    signaturesPerTransaction: Int,
-    useBip44DerivationPaths: Boolean
-): ArrayList<SigningRequest> {
-    val implementationLimits = Wallet.getImplementationLimitsForPurpose(
-        context,
-        WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
-    )
-    val maxRequestedSignatures =
-        implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES]!!.toInt()
-
-    val signingRequests = (0 until transactions).map { i ->
-        val derivationPaths = (0 until signaturesPerTransaction).map { j ->
-            if (useBip44DerivationPaths) {
-                Bip44DerivationPath.newBuilder()
-                    .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
-            } else {
-                Bip32DerivationPath.newBuilder()
-                    .appendLevel(BipLevel(44, true))
-                    .appendLevel(BipLevel(501, true))
-                    .appendLevel(BipLevel(i * maxRequestedSignatures + j, true))
-                    .build().toUri()
-            }
-        }
-        SigningRequest(createFakeTransaction(i), derivationPaths)
-    }
-
-    return ArrayList(signingRequests)
-}
-
-private fun createFakeTransaction(i: Int): ByteArray {
-    return ByteArray(TRANSACTION_SIZE) { i.toByte() }
-}
-
-private const val TRANSACTION_SIZE = 512
