@@ -14,6 +14,7 @@ import android.os.Parcelable
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.solanamobile.fakewallet.BuildConfig
 import com.solanamobile.fakewallet.usecase.VerifyEd25519SignatureUseCase
 import com.solanamobile.seedvault.*
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,14 @@ class MainViewModel(
         viewModelScope.launch {
             observeSeedVaultContentChanges()
             refreshUiState()
+
+            // Privileged wallets do not manually authorize individual seeds, so check on startup
+            // that accounts have been marked as user wallets.
+            if (BuildConfig.FLAVOR == "Privileged") {
+                _uiState.value.seeds.forEach { seed ->
+                    markAccountsAsUserWallets(seed.authToken)
+                }
+            }
         }
     }
 
@@ -169,6 +178,10 @@ class MainViewModel(
 
     @Suppress("UNUSED_PARAMETER")
     fun onAddSeedSuccess(event: ViewModelEvent.AddSeedViewModelEvent, authToken: Long) {
+        markAccountsAsUserWallets(authToken)
+    }
+
+    private fun markAccountsAsUserWallets(authToken: Long) {
         // Mark two accounts as user wallets. This simulates a real wallet app exploring each
         // account and marking them as containing user funds.
         viewModelScope.launch {
