@@ -549,20 +549,24 @@ class WalletContentProvider : ContentProvider() {
                             SeedRepository.ChangeNotification.Type.CREATE ->
                                 listOf(
                                     WalletContractV1.UNAUTHORIZED_SEEDS_CONTENT_URI,
-                                    ContentUris.withAppendedId(
-                                        WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
-                                        change.id!!.toLong()
-                                    )
+                                    change.id?.let {
+                                        ContentUris.withAppendedId(
+                                            WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
+                                            change.id.toLong()
+                                        )
+                                    } ?: WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI
                                 )
                             SeedRepository.ChangeNotification.Type.UPDATE ->
                                 throw AssertionError("Authorizations are not expected to be updated")
                             SeedRepository.ChangeNotification.Type.DELETE ->
                                 listOf(
                                     WalletContractV1.UNAUTHORIZED_SEEDS_CONTENT_URI,
-                                    ContentUris.withAppendedId(
-                                        WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
-                                        change.id!!.toLong()
-                                    ),
+                                    change.id?.let {
+                                        ContentUris.withAppendedId(
+                                            WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
+                                            change.id.toLong()
+                                        )
+                                    } ?: WalletContractV1.AUTHORIZED_SEEDS_CONTENT_URI,
                                     WalletContractV1.ACCOUNTS_CONTENT_URI
                                 )
                         }
@@ -572,10 +576,12 @@ class WalletContentProvider : ContentProvider() {
                             SeedRepository.ChangeNotification.Type.CREATE,
                             SeedRepository.ChangeNotification.Type.UPDATE ->
                                 listOf(
-                                    ContentUris.withAppendedId(
-                                        WalletContractV1.ACCOUNTS_CONTENT_URI,
-                                        change.id!!.toLong()
-                                    )
+                                    change.id?.let {
+                                        ContentUris.withAppendedId(
+                                            WalletContractV1.ACCOUNTS_CONTENT_URI,
+                                            change.id.toLong()
+                                        )
+                                    } ?: WalletContractV1.ACCOUNTS_CONTENT_URI
                                 )
                             SeedRepository.ChangeNotification.Type.DELETE ->
                                 throw AssertionError("Accounts are not expected to be deleted")

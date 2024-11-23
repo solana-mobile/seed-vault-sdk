@@ -133,14 +133,17 @@ class SeedDetailViewModel @Inject constructor(
             when (val mode = mode) { // immutable snapshot of mode
                 is NewSeedMode -> {
                     val seedId = seedRepository.createSeed(seedDetails)
+
+                    // Pre-populate known accounts for all purposes
+                    val seed = seedRepository.seeds.value[seedId]!!
+                    PrepopulateKnownAccountsUseCase(seedRepository).apply {
+                        for (purpose in Authorization.Purpose.entries) {
+                            populateKnownAccounts(seed, purpose)
+                        }
+                    }
+
                     mode.authorize?.let { authorize ->
-                        val authToken = seedRepository.authorizeSeedForUid(seedId, authorize.uid, authorize.purpose)
-
-                        // Ensure that the seed vault contains appropriate known accounts for this authorization purpose
-                        val seed = seedRepository.seeds.value[seedId]!!
-                        PrepopulateKnownAccountsUseCase(seedRepository).populateKnownAccounts(seed, authorize.purpose)
-
-                        authToken
+                        seedRepository.authorizeSeedForUid(seedId, authorize.uid, authorize.purpose)
                     } ?: -1L
                 }
                 is EditSeedMode -> {

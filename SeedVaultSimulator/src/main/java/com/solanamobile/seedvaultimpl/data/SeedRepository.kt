@@ -162,8 +162,11 @@ class SeedRepository @Inject constructor(
                 check(!seeds.value.containsKey(nextSeedId)) { "Seed repository already contains an entry for seed $nextSeedId" }
                 newSeedRecordBuilder.seedId = nextSeedId
                 id = nextSeedId
+                val changeNotification = ChangeNotification(
+                    ChangeNotification.Category.SEED, ChangeNotification.Type.CREATE, id
+                )
 
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     it.toBuilder().addSeeds(newSeedRecordBuilder).apply {
                         nextId = ++nextSeedId
                     }.build()
@@ -171,14 +174,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.SEED,
-                    ChangeNotification.Type.CREATE,
-                    id
-                )
-            )
         }
 
         Log.d(TAG, "EXIT createSeed: $details -> $id")
@@ -196,8 +191,11 @@ class SeedRepository @Inject constructor(
             val newSeedEntryBuilder = createSeedEntryBuilderFromSeed(details)
 
             val updateCompleteJob: Job
+            val changeNotification = ChangeNotification(
+                ChangeNotification.Category.SEED, ChangeNotification.Type.UPDATE, id
+            )
             mutex.withLock {
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     val i = it.seedsList.indexOfFirst { seed -> seed.seedId == id }
                     check(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     val newSeedRecordBuilder =
@@ -207,14 +205,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.SEED,
-                    ChangeNotification.Type.UPDATE,
-                    id
-                )
-            )
         }
 
         Log.d(TAG, "EXIT updateSeed: $details")
@@ -229,8 +219,11 @@ class SeedRepository @Inject constructor(
         // in the event of cancellation of the originating context.
         withContext(repositoryOwnerScope.coroutineContext) {
             val updateCompleteJob: Job
+            val changeNotification = ChangeNotification(
+                ChangeNotification.Category.SEED, ChangeNotification.Type.DELETE, id
+            )
             mutex.withLock {
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     val i = it.seedsList.indexOfFirst { seed -> seed.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     it.toBuilder().removeSeeds(i).build()
@@ -238,14 +231,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.SEED,
-                    ChangeNotification.Type.DELETE,
-                    id
-                )
-            )
         }
 
         Log.d(TAG, "EXIT deleteSeed: $id")
@@ -260,21 +245,16 @@ class SeedRepository @Inject constructor(
         // in the event of cancellation of the originating context.
         withContext(repositoryOwnerScope.coroutineContext) {
             val updateCompleteJob: Job
+            val changeNotification = ChangeNotification(
+                ChangeNotification.Category.SEED, ChangeNotification.Type.DELETE, null
+            )
             mutex.withLock {
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     it.toBuilder().clearSeeds().build()
                 }
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.SEED,
-                    ChangeNotification.Type.DELETE,
-                    null
-                )
-            )
         }
 
         Log.d(TAG, "EXIT deleteAllSeeds")
@@ -301,8 +281,13 @@ class SeedRepository @Inject constructor(
             mutex.withLock {
                 var assignedAuthToken = nextAuthToken
                 newAuthorizationEntryBuilder.authToken = nextAuthToken
+                val changeNotification = ChangeNotification(
+                    ChangeNotification.Category.AUTHORIZATION,
+                    ChangeNotification.Type.CREATE,
+                    assignedAuthToken
+                )
 
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     val existingAuthRecord =
@@ -323,14 +308,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.AUTHORIZATION,
-                    ChangeNotification.Type.CREATE,
-                    authToken
-                )
-            )
         }
 
         Log.d(TAG, "EXIT authorizeSeedForUid: $id/$uid -> $authToken")
@@ -346,9 +323,11 @@ class SeedRepository @Inject constructor(
         // in the event of cancellation of the originating context.
         withContext(repositoryOwnerScope.coroutineContext) {
             val updateAllSeedsJob: Job
-            val approvedAuthTokens = mutableListOf<Long>()
+            val changeNotification = ChangeNotification(
+                ChangeNotification.Category.AUTHORIZATION, ChangeNotification.Type.CREATE, null
+            )
             mutex.withLock {
-                updateAllSeedsJob = updateSeedCollectionDataStore { seedCollection ->
+                updateAllSeedsJob = updateSeedCollectionDataStore(changeNotification) { seedCollection ->
                     val newSeedCollection = seedCollection.toBuilder()
                     seedCollection.seedsList.forEachIndexed { index, seedRecord ->
                         val existingAuthRecord =
@@ -360,7 +339,6 @@ class SeedRepository @Inject constructor(
                                     this.purpose = purpose.ordinal
                                     this.authToken = nextAuthToken++
                                 }
-                            approvedAuthTokens.add(newAuthorizationEntryBuilder.authToken)
                             val newSeedRecordBuilder = seedRecord.toBuilder()
                                 .addAuthorizations(newAuthorizationEntryBuilder)
                             newSeedRecordBuilder.build()
@@ -375,15 +353,6 @@ class SeedRepository @Inject constructor(
                 }
             }
             updateAllSeedsJob.join()
-            approvedAuthTokens.forEach {
-                _changes.emit(
-                    ChangeNotification(
-                        ChangeNotification.Category.AUTHORIZATION,
-                        ChangeNotification.Type.CREATE,
-                        it
-                    )
-                )
-            }
         }
         Log.d(TAG, "EXIT authorizeAllSeedsForUid")
     }
@@ -397,8 +366,11 @@ class SeedRepository @Inject constructor(
         // in the event of cancellation of the originating context.
         withContext(repositoryOwnerScope.coroutineContext) {
             val updateCompleteJob: Job
+            val changeNotification = ChangeNotification(
+                ChangeNotification.Category.AUTHORIZATION, ChangeNotification.Type.DELETE, authToken
+            )
             mutex.withLock {
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     val j =
@@ -410,14 +382,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.AUTHORIZATION,
-                    ChangeNotification.Type.DELETE,
-                    authToken
-                )
-            )
         }
 
         Log.d(TAG, "EXIT deauthorizeSeed: $id/$authToken")
@@ -450,8 +414,13 @@ class SeedRepository @Inject constructor(
             mutex.withLock {
                 var assignedAccountId = nextAccountId
                 newKnownAccountEntryBuilder.accountId = nextAccountId
+                val changeNotification = ChangeNotification(
+                    ChangeNotification.Category.ACCOUNT,
+                    ChangeNotification.Type.CREATE,
+                    assignedAccountId
+                )
 
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     val bip32Uri = account.bip32DerivationPathUri.toString()
@@ -475,14 +444,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.ACCOUNT,
-                    ChangeNotification.Type.CREATE,
-                    accountId
-                )
-            )
         }
 
         Log.d(TAG, "EXIT addKnownAccountForSeed")
@@ -499,8 +460,11 @@ class SeedRepository @Inject constructor(
         // in the event of cancellation of the originating context.
         withContext(repositoryOwnerScope.coroutineContext) {
             val updateCompleteJob: Job
+            val changeNotification = ChangeNotification(
+                ChangeNotification.Category.ACCOUNT, ChangeNotification.Type.DELETE, null
+            )
             mutex.withLock {
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     val newSeedRecordBuilder =
@@ -510,13 +474,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.ACCOUNT,
-                    ChangeNotification.Type.DELETE,
-                    null
-                )
-            )
         }
 
         Log.d(TAG, "EXIT removeAllKnownAccountForSeed")
@@ -544,8 +501,11 @@ class SeedRepository @Inject constructor(
             }
 
             val updateCompleteJob: Job
+            val changeNotification = ChangeNotification(
+                ChangeNotification.Category.ACCOUNT, ChangeNotification.Type.UPDATE, account.id
+            )
             mutex.withLock {
-                updateCompleteJob = updateSeedCollectionDataStore {
+                updateCompleteJob = updateSeedCollectionDataStore(changeNotification) {
                     val i = it.seedsList.indexOfFirst { sr -> sr.seedId == id }
                     require(i != -1) { "Seed repository does not contain an entry for seed $id" }
                     val j =
@@ -558,14 +518,6 @@ class SeedRepository @Inject constructor(
             }
 
             updateCompleteJob.join()
-
-            _changes.emit(
-                ChangeNotification(
-                    ChangeNotification.Category.ACCOUNT,
-                    ChangeNotification.Type.UPDATE,
-                    account.id
-                )
-            )
         }
 
         Log.d(TAG, "EXIT updateKnownAccountForSeed")
@@ -583,12 +535,16 @@ class SeedRepository @Inject constructor(
         }
 
     // NOTE: should be called with mutex held
-    private suspend fun updateSeedCollectionDataStore(transform: suspend (t: SeedCollection) -> SeedCollection): Job {
+    private suspend fun updateSeedCollectionDataStore(
+        changeNotification: ChangeNotification,
+        transform: suspend (t: SeedCollection) -> SeedCollection
+    ): Job {
         // Launch undispatched, so that the first element of seedCollection (which is a replay of
         // the last emitted value) is collected immediately.
         val updateCompleteJob = repositoryOwnerScope.launch(start = CoroutineStart.UNDISPATCHED) {
             withTimeout(CHANGE_PROPAGATION_TIMEOUT_MS) {
                 seedCollection.take(2).collect()
+                _changes.emit(changeNotification)
             }
         }
 
