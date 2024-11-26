@@ -54,7 +54,7 @@ class WalletContentProvider : ContentProvider() {
     }
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
-        enforcePermission()
+        enforceCallerPermission()
         checkDependencyInjection()
 
         return when (method) {
@@ -115,7 +115,7 @@ class WalletContentProvider : ContentProvider() {
         queryArgs: Bundle?,
         cancellationSignal: CancellationSignal?
     ): Cursor {
-        enforcePermission()
+        enforceCallerPermission()
         checkDependencyInjection()
 
         val match = uriMatcher.match(uri)
@@ -175,7 +175,12 @@ class WalletContentProvider : ContentProvider() {
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
-        val defaultProjection = WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS.toSet()
+        val callerIsPrivileged =
+            callerHasPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED)
+        // Only privileged wallets can retrieve the AUTHORIZED_SEEDS_IS_BACKED_UP column
+        val defaultProjection = WalletContractV1.AUTHORIZED_SEEDS_ALL_COLUMNS.filter { column ->
+            callerIsPrivileged || column != WalletContractV1.AUTHORIZED_SEEDS_IS_BACKED_UP
+        }.toSet()
         val queryParser = makeQueryParser(defaultProjection, queryArgs)
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
@@ -184,10 +189,9 @@ class WalletContentProvider : ContentProvider() {
         runBlocking {
             seedRepository.delayUntilDataValid()
 
-            if (requireContext().checkCallingPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED) == PackageManager.PERMISSION_GRANTED) {
+            if (callerIsPrivileged) {
                 seedRepository.authorizeAllSeedsForUid(
-                    uid,
-                    Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS
+                    uid, Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS
                 )
             }
         }
@@ -196,10 +200,11 @@ class WalletContentProvider : ContentProvider() {
             seed.authorizations.forEach { auth ->
                 // Note: must be in the same order as defaultProjection
                 val values = arrayOf(
-                    auth.authToken,                             // WalletContractV1.AUTHORIZED_SEEDS_AUTH_TOKEN
-                    auth.purpose.toWalletContractConstant(),    // WalletContractV1.AUTHORIZED_SEEDS_AUTH_PURPOSE
-                    seed.details.name ?: ""                     // WalletContractV1.AUTHORIZED_SEEDS_SEED_NAME
-                )
+                    auth.authToken,                                             // WalletContractV1.AUTHORIZED_SEEDS_AUTH_TOKEN
+                    auth.purpose.toWalletContractConstant(),                    // WalletContractV1.AUTHORIZED_SEEDS_AUTH_PURPOSE
+                    seed.details.name ?: "",                                    // WalletContractV1.AUTHORIZED_SEEDS_SEED_NAME
+                    if (seed.details.isBackedUp) 1.toShort() else 0.toShort(),  // WalletContractV1.AUTHORIZED_SEEDS_IS_BACKED_UP
+                ).sliceArray(defaultProjection.indices)
 
                 if (auth.uid == uid
                     && (authToken == null || auth.authToken == authToken)
@@ -222,6 +227,8 @@ class WalletContentProvider : ContentProvider() {
         projection: Array<out String>?,
         queryArgs: Bundle?
     ): Cursor {
+        val callerIsPrivileged =
+            callerHasPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED)
         val purposeAsEnum = purpose?.let { Authorization.Purpose.fromWalletContractConstant(it) }
         val defaultProjection = WalletContractV1.UNAUTHORIZED_SEEDS_ALL_COLUMNS.toSet()
         val queryParser = makeQueryParser(defaultProjection, queryArgs)
@@ -231,10 +238,9 @@ class WalletContentProvider : ContentProvider() {
         val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
-            if (requireContext().checkCallingPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED) == PackageManager.PERMISSION_GRANTED) {
+            if (callerIsPrivileged) {
                 seedRepository.authorizeAllSeedsForUid(
-                    uid,
-                    Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS
+                    uid, Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS
                 )
             }
         }
@@ -378,7 +384,7 @@ class WalletContentProvider : ContentProvider() {
         uri: Uri,
         extras: Bundle?
     ): Int {
-        enforcePermission()
+        enforceCallerPermission()
         checkDependencyInjection()
 
         val match = uriMatcher.match(uri)
@@ -434,7 +440,7 @@ class WalletContentProvider : ContentProvider() {
         values: ContentValues?,
         extras: Bundle?
     ): Int {
-        enforcePermission()
+        enforceCallerPermission()
         checkDependencyInjection()
 
         val match = uriMatcher.match(uri)
@@ -599,9 +605,12 @@ class WalletContentProvider : ContentProvider() {
         }
     }
 
-    private fun enforcePermission() {
-        if (requireContext().checkCallingPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT) == PackageManager.PERMISSION_GRANTED  ||
-            requireContext().checkCallingPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED) == PackageManager.PERMISSION_GRANTED) {
+    private fun callerHasPermission(permission: String): Boolean =
+        requireContext().checkCallingPermission(permission) == PackageManager.PERMISSION_GRANTED
+
+    private fun enforceCallerPermission() {
+        if (callerHasPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT) ||
+            callerHasPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED)) {
             return
         }
         throw SecurityException("Permission Denial:: opening provider $TAG requires ${WalletContractV1.PERMISSION_ACCESS_SEED_VAULT} or ${WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED}")

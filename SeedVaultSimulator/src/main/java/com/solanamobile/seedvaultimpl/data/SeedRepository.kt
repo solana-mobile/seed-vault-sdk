@@ -104,7 +104,8 @@ class SeedRepository @Inject constructor(
                 sr.seed.seedPhraseWordIndicesList,
                 sr.seed.name.ifEmpty { null },
                 sr.seed.pin,
-                sr.seed.unlockWithBiometrics
+                sr.seed.unlockWithBiometrics,
+                sr.seed.isBackedUp
             )
             val authorizations = sr.authorizationsList.map { ae ->
                 Authorization(ae.uid, ae.authToken, Authorization.Purpose.entries[ae.purpose])
@@ -532,6 +533,7 @@ class SeedRepository @Inject constructor(
             }
             pin = details.pin
             unlockWithBiometrics = details.unlockWithBiometrics
+            isBackedUp = details.isBackedUp
         }
 
     // NOTE: should be called with mutex held

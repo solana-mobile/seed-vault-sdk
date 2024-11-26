@@ -65,6 +65,7 @@ class SeedDetailViewModel @Inject constructor(
                 },
                 pin = seed.details.pin,
                 enableBiometrics = seed.details.unlockWithBiometrics,
+                isBackedUp = seed.details.isBackedUp,
                 accounts = seed.accounts,
                 authorizedApps = seed.authorizations
             )
@@ -109,6 +110,11 @@ class SeedDetailViewModel @Inject constructor(
         _seedDetailUiState.update { it.copy(enableBiometrics = en) }
     }
 
+    fun setSeedIsBackedUp(isBackedUp: Boolean) {
+        Log.d(TAG, "setSeedIsBackedUp($isBackedUp)")
+        _seedDetailUiState.update { it.copy(isBackedUp = isBackedUp) }
+    }
+
     private fun setErrorMessage(message: String?) {
         _seedDetailUiState.update { it.copy(errorMessage = message) }
     }
@@ -126,7 +132,14 @@ class SeedDetailViewModel @Inject constructor(
                     Bip39PhraseUseCase.toIndex(w)
                 }
                 val seedBytes = Bip39PhraseUseCase.toSeed(phrase)
-                SeedDetails(seedBytes, phrase, it.name.ifBlank { null }, it.pin, it.enableBiometrics)
+                SeedDetails(
+                    seedBytes,
+                    phrase,
+                    it.name.ifBlank { null },
+                    it.pin,
+                    it.enableBiometrics,
+                    it.isBackedUp
+                )
             }
 
             Log.i(TAG, "Successfully created Seed $seedDetails; committing to SeedRepository")
@@ -209,6 +222,7 @@ data class SeedDetailUiState(
     val phrase: List<String> = List(SeedPhraseLength.SEED_PHRASE_24_WORDS.length) { "" },
     val pin: String = "",
     val enableBiometrics: Boolean = false,
+    val isBackedUp: Boolean = false,
     val accounts: List<Account> = listOf(),
     val authorizedApps: List<Authorization> = listOf(),
     val errorMessage: String? = null,

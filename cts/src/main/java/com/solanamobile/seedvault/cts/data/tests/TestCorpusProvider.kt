@@ -5,6 +5,7 @@
 package com.solanamobile.seedvault.cts.data.tests
 
 import com.solanamobile.seedvault.cts.BuildConfig
+import com.solanamobile.seedvault.cts.PrivilegedSeedVaultChecker
 import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCorpus
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
@@ -59,14 +60,13 @@ internal object TestCorpusProvider {
         signTransactionSignaturesExceedLimitTestCase: SignTransactionSignaturesExceedLimitTestCase,
         logger: TestSessionLogger,
         sagaChecker: SagaChecker,
+        privilegedSeedVaultChecker: PrivilegedSeedVaultChecker,
     ): TestCorpus {
         val isSaga = sagaChecker.isSaga()
         if (isSaga) {
             logger.warn("Running additional bypass for Saga only.")
         }
-        @Suppress("KotlinConstantConditions")
-        val isGenericBuild = BuildConfig.FLAVOR == "Generic"
-        @Suppress("KotlinConstantConditions")
+        val isGenericBuild = !privilegedSeedVaultChecker.isPrivileged()
         return listOfNotNull(
             noPermissionsContentProviderCheck.takeIf { isGenericBuild },
             acquireSeedVaultPrivilegedPermissionTestCase.takeIf { isGenericBuild },

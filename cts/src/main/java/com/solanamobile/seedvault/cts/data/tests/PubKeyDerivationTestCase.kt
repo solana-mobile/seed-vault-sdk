@@ -21,6 +21,7 @@ import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.WalletContractV1.AuthToken
 import com.solanamobile.seedvault.cts.BuildConfig
+import com.solanamobile.seedvault.cts.PrivilegedSeedVaultChecker
 import com.solanamobile.seedvault.cts.data.ActivityLauncherTestCase
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
@@ -324,6 +325,7 @@ internal class PermissionedAccountFetchPubKeysTestCase @Inject constructor(
     logger: TestSessionLogger,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    private val privilegedSeedVaultChecker: PrivilegedSeedVaultChecker,
 ) : PubKeyDerivationTestCase(
     context = context,
     knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
@@ -387,9 +389,8 @@ internal class PermissionedAccountFetchPubKeysTestCase @Inject constructor(
 ) {
     override val id: String = "pafpktc"
     override val description: String = "Fetch 10 permissioned pubkeys."
-    @Suppress("KotlinConstantConditions")
     override val instructions: String get() {
-        return if (BuildConfig.FLAVOR == "Privileged") {
+        return if (privilegedSeedVaultChecker.isPrivileged()) {
             "This should be done without any user interaction. If an auth dialog is shown, the test fails."
         } else {
             "This should should required a user authorization. If keys are fetched without user authorization, then the test fails."

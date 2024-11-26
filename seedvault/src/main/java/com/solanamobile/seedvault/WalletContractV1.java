@@ -426,9 +426,17 @@ public final class WalletContractV1 {
     /** Type: {@code String} (may be blank) */
     public static final String AUTHORIZED_SEEDS_SEED_NAME = "AuthorizedSeeds_SeedName";
 
+    /**
+     * Type: {@code short} (1 for true, 0 for false)
+     * <p>NOTE: this column will only be included in the result if the app holds the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission</p>
+     */
+    public static final String AUTHORIZED_SEEDS_IS_BACKED_UP = "AuthorizedSeeds_IsBackedUp";
+
     /** All columns for the Wallet content provider authorized seeds table */
     public static final String[] AUTHORIZED_SEEDS_ALL_COLUMNS = {
-            AUTHORIZED_SEEDS_AUTH_TOKEN, AUTHORIZED_SEEDS_AUTH_PURPOSE, AUTHORIZED_SEEDS_SEED_NAME};
+            AUTHORIZED_SEEDS_AUTH_TOKEN, AUTHORIZED_SEEDS_AUTH_PURPOSE, AUTHORIZED_SEEDS_SEED_NAME,
+            AUTHORIZED_SEEDS_IS_BACKED_UP};
 
     /** Wallet content provider unauthorized seeds table name */
     public static final String UNAUTHORIZED_SEEDS_TABLE = "unauthorizedseeds";

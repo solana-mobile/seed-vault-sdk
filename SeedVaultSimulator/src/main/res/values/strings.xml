@@ -30,6 +30,7 @@
     <string name="hint_pin">4 to 20 characters</string>
     <string name="error_invalid_pin">PIN must be between 4 and 20 characters</string>
     <string name="label_enable_biometrics_for_seed">Enable biometrics for this seed</string>
+    <string name="label_is_seed_backed_up">Mark seed as backed up</string>
     <string name="label_authorized_apps">Authorized wallet apps</string>
 
     <!-- Seed phrase word RecyclerView item strings -->

@@ -4,13 +4,16 @@
 
 package com.solanamobile.fakewallet.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -69,6 +72,8 @@ fun SeedDetails(
     onSignMaxMessagesWithMaxSignatures: (Seed) -> Unit,
     onSignPermissionedAccountMessages: (Seed) -> Unit
 ) {
+    val isSeedVaultPrivileged = BuildConfig.FLAVOR == "Privileged"
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -87,7 +92,7 @@ fun SeedDetails(
                 color = MaterialTheme.colorScheme.onSurface,
                 text = seed.name,
             )
-            if (BuildConfig.FLAVOR != "Privileged") {
+            if (!isSeedVaultPrivileged) {
                 IconButton(onClick = { onDeauthorizeSeed(seed) }) {
                     Icon(
                         painter = painterResource(id = android.R.drawable.ic_delete),
@@ -111,6 +116,22 @@ fun SeedDetails(
                 seed.purpose
             )
         )
+        if (isSeedVaultPrivileged) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier.padding(vertical = Sizes.dp8),
+                    text = stringResource(id = R.string.label_seed_is_backed_up)
+                )
+                Icon(
+                    modifier = Modifier.padding(Sizes.dp4),
+                    painter = painterResource(id = if (seed.isBackedUp) android.R.drawable.ic_secure else android.R.drawable.ic_delete),
+                    contentDescription = null
+                )
+            }
+        }
         TextButton(
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,7 +147,7 @@ fun SeedDetails(
                 )
             )
         }
-        if (BuildConfig.FLAVOR == "Privileged") {
+        if (isSeedVaultPrivileged) {
             TextButton(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -156,7 +177,7 @@ fun SeedDetails(
                 )
             )
         }
-        if (BuildConfig.FLAVOR == "Privileged") {
+        if (isSeedVaultPrivileged) {
             TextButton(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -188,7 +209,7 @@ fun SeedDetails(
                 )
             )
         }
-        if (BuildConfig.FLAVOR == "Privileged") {
+        if (isSeedVaultPrivileged) {
             TextButton(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -243,8 +264,7 @@ fun AccountComposable(
                         .fillMaxWidth()
                         .height(Sizes.dp48)
                         .background(
-                            MaterialTheme.colorScheme.inverseOnSurface,
-                            CircleShape
+                            MaterialTheme.colorScheme.inverseOnSurface, CircleShape
                         ),
                     value = TextFieldValue(
                         accountName.value,

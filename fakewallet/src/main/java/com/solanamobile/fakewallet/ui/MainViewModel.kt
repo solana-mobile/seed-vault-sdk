@@ -95,6 +95,8 @@ class MainViewModel(
             val authToken = authorizedSeedsCursor.getLong(0)
             val authPurpose = authorizedSeedsCursor.getInt(1)
             val seedName = authorizedSeedsCursor.getString(2)
+            val isBackedUp =
+                if (authorizedSeedsCursor.columnCount == 4) authorizedSeedsCursor.getShort(3) else 0.toShort()
             val accounts = mutableListOf<Account>()
 
             val accountsCursor = withContext(Dispatchers.Default) {
@@ -114,7 +116,13 @@ class MainViewModel(
             accountsCursor.close()
 
             seeds.add(
-                Seed(authToken, seedName.ifBlank { authToken.toString() }, authPurpose, accounts)
+                Seed(
+                    authToken,
+                    seedName.ifBlank { authToken.toString() },
+                    authPurpose,
+                    isBackedUp == 1.toShort(),
+                    accounts
+                )
             )
         }
         authorizedSeedsCursor.close()
@@ -614,6 +622,7 @@ data class Seed(
     @WalletContractV1.AuthToken val authToken: Long,
     val name: String,
     @WalletContractV1.Purpose val purpose: Int,
+    val isBackedUp: Boolean,
     val accounts: List<Account> = listOf()
 )
 
