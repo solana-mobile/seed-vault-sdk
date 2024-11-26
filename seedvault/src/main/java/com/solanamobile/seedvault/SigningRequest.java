@@ -20,8 +20,6 @@ import java.util.Objects;
 
 /**
  * A request to sign a payload with the specified BIP derivation paths
- *
- * @version 0.3.0
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class SigningRequest implements Parcelable {

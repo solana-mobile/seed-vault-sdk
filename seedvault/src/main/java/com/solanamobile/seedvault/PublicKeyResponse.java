@@ -19,8 +19,6 @@ import java.util.Objects;
 /**
  * The account public key generated in response to an {@link WalletContractV1#ACTION_GET_PUBLIC_KEY}
  * request.
- *
- * @version 0.3.0
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class PublicKeyResponse implements Parcelable {
