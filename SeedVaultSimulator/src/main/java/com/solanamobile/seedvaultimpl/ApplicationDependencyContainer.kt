@@ -4,22 +4,16 @@
 
 package com.solanamobile.seedvaultimpl
 
-import android.content.Context
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
-import kotlinx.coroutines.CoroutineScope
 import java.nio.charset.StandardCharsets
 
 /**
  * Dependency injection container scoped to the Application. Contents will be lazily initialized
  * where possible.
  */
-class ApplicationDependencyContainer(private val applicationContext: Context) {
-
-    val seedRepository: SeedRepository by lazy {
-        SeedRepository(applicationContext)
-    }
+class ApplicationDependencyContainer(val seedRepository: SeedRepository) {
 
     // The companion object contains dependencies which should be globally available, but logically
     // are still application dependencies

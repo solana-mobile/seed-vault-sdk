@@ -218,8 +218,6 @@ public final class Wallet {
             @Nullable Intent result) throws ActionFailedException {
         if (resultCode != Activity.RESULT_OK && resultCode != Activity.RESULT_CANCELED) {
             throw new ActionFailedException("showSeedSettings failed with result=" + resultCode);
-        } else if (result == null) {
-            throw new ActionFailedException("showSeedSettings failed to return a result");
         }
     }
 

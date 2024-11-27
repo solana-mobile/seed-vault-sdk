@@ -231,12 +231,15 @@ internal class ShowSeedSettingsTestCase @Inject constructor(
 
         try {
             Wallet.onShowSeedSettingsResult(Activity.RESULT_OK, null)
-            logger.warn("Expected an exception when intent is null")
-            return false
-        } catch (_: Wallet.ActionFailedException) {
-            // No-op; fall through to next test case
         } catch (e: Exception) {
-            logger.warn("Unexpected exception when intent is null", e)
+            logger.warn("Unexpected exception for result ${Activity.RESULT_OK} when intent is null", e)
+            return false
+        }
+
+        try {
+            Wallet.onShowSeedSettingsResult(Activity.RESULT_CANCELED, null)
+        } catch (e: Exception) {
+            logger.warn("Unexpected exception for result ${Activity.RESULT_CANCELED} when intent is null", e)
             return false
         }
 
