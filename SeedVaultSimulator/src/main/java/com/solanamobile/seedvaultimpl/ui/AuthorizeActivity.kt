@@ -12,6 +12,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,6 +61,8 @@ class AuthorizeActivity : ComponentActivity() {
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
                     navController = navController,
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None },
                     startDestination = "auth"
                 ) {
                     composable("auth") {

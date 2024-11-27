@@ -102,7 +102,7 @@
             android:name=".ui.AuthorizeActivity"
             android:finishOnCloseSystemDialogs="true"
             android:noHistory="true"
-            android:theme="@style/Theme.SeedVaultImpl.Transparent" />
+            android:theme="@style/Theme.SeedVaultImpl.NoActionBar.Transparent" />
 
         <!-- NOTE: Order set below that of the privileged alias in case an app holds both
              permissions. Apps normally should hold only one of the two permissions, but the

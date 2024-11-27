@@ -450,6 +450,7 @@ fun NonPrivilegedAuthorizeContents(
                 testTagsAsResourceId = true
             },
         sheetState = sheetState,
+        scrimColor = Color.Transparent, // scrim provided at window level by backgroundDimEnabled in theme
         contentWindowInsets = { BottomSheetDefaults.windowInsets.only(WindowInsetsSides.Top) },
         onDismissRequest = onCancel
     ) {
