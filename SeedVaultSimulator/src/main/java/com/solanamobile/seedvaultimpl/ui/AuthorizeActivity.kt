@@ -25,29 +25,29 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.solanamobile.seedvault.WalletContractV1
-import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.ui.authorize.AuthorizeContents
+import com.solanamobile.seedvaultimpl.ui.authorize.AuthorizeViewModel
 import com.solanamobile.seedvaultimpl.ui.authorizeinfo.AuthorizeInfoContents
 import com.solanamobile.seedvaultimpl.ui.selectseed.SelectSeedContents
 import com.solanamobile.seedvaultimpl.ui.selectseed.SelectSeedViewModel
 import com.solanamobile.ui.apptheme.SolanaTheme
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.withCreationCallback
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class AuthorizeActivity : ComponentActivity() {
-    private val activityViewModel: AuthorizeViewModel by viewModels()
-    private val authorizeViewModel: com.solanamobile.seedvaultimpl.ui.authorize.AuthorizeViewModel by viewModels {
-        com.solanamobile.seedvaultimpl.ui.authorize.AuthorizeViewModel.provideFactory(
-            (application as SeedVaultImplApplication).dependencyContainer.seedRepository,
-            activityViewModel,
-            application
-        )
-    }
-    private val selectSeedViewModel: SelectSeedViewModel by viewModels {
-        SelectSeedViewModel.provideFactory(
-            (application as SeedVaultImplApplication).dependencyContainer.seedRepository,
-            activityViewModel
-        )
-    }
+    private val authorizeCommonViewModel: AuthorizeCommonViewModel by viewModels()
+    private val authorizeViewModel: AuthorizeViewModel by viewModels(extrasProducer = {
+        defaultViewModelCreationExtras.withCreationCallback<AuthorizeViewModel.Factory> { factory ->
+            factory.create(authorizeCommonViewModel)
+        }
+    })
+    private val selectSeedViewModel: SelectSeedViewModel by viewModels(extrasProducer = {
+        defaultViewModelCreationExtras.withCreationCallback<SelectSeedViewModel.Factory> { factory ->
+            factory.create(authorizeCommonViewModel)
+        }
+    })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,7 +106,7 @@ class AuthorizeActivity : ComponentActivity() {
                                 navController.navigateUp()
                             },
                             completeAuthorizationWithError = {
-                                activityViewModel.completeAuthorizationWithError(
+                                authorizeCommonViewModel.completeAuthorizationWithError(
                                     WalletContractV1.RESULT_UNSPECIFIED_ERROR
                                 )
                             },
@@ -134,10 +134,10 @@ class AuthorizeActivity : ComponentActivity() {
             null
         }
 
-        activityViewModel.setRequest(callingActivity, uid, intent)
+        authorizeCommonViewModel.setRequest(callingActivity, uid, intent)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                activityViewModel.events.collect { event ->
+                authorizeCommonViewModel.events.collect { event ->
                     when (event.event) {
                         AuthorizeEventType.COMPLETE -> {
                             Log.i(TAG, "Returning result=${event.resultCode}/intent=${event.data} from AuthorizeActivity")

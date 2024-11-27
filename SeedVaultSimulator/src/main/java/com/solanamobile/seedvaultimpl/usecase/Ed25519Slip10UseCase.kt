@@ -6,15 +6,18 @@ package com.solanamobile.seedvaultimpl.usecase
 
 import android.util.Log
 import androidx.annotation.Size
+import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.exceptions.SodiumException
 import com.solanamobile.seedvault.Bip32DerivationPath
 import com.solanamobile.seedvault.WalletContractV1
-import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
 import com.solanamobile.seedvaultimpl.model.SeedDetails
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object Ed25519Slip10UseCase {
+@Singleton
+class Ed25519Slip10UseCase @Inject constructor(private val sodium: LazySodiumAndroid) {
     private data class KeyDerivationMaterial(
         @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE) val k: ByteArray,
         @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE) val c: ByteArray,
@@ -38,10 +41,12 @@ object Ed25519Slip10UseCase {
         }
     }
 
-    private val TAG = Ed25519Slip10UseCase::class.simpleName
+    companion object {
+        private val TAG = Ed25519Slip10UseCase::class.simpleName
 
-    private const val MASTER_SECRET_MAC_KEY = "ed25519 seed"
-    private const val MAC = "HmacSHA512"
+        private const val MASTER_SECRET_MAC_KEY = "ed25519 seed"
+        private const val MAC = "HmacSHA512"
+    }
 
     @Size(SignPayloadUseCase.ED25519_SECRET_KEY_SIZE)
     fun derivePrivateKey(
@@ -51,7 +56,7 @@ object Ed25519Slip10UseCase {
         Log.d(TAG, "Deriving private key from root")
         val kdm = deriveSecretKey(seed, bip32DerivationPath)
         val keyPair = try {
-            ApplicationDependencyContainer.sodium.cryptoSignSeedKeypair(kdm.k)
+            sodium.cryptoSignSeedKeypair(kdm.k)
         } catch (_: SodiumException) {
             throw BipDerivationUseCase.KeyDoesNotExistException("Key does not exist for $bip32DerivationPath")
         }
@@ -67,7 +72,7 @@ object Ed25519Slip10UseCase {
         Log.d(TAG, "Deriving public key from derivationRoot=${if (derivationRoot != null) "partial" else "root"}")
         val kdm = deriveSecretKey(seed, bip32DerivationPath, derivationRoot as KeyDerivationMaterial?)
         val keyPair = try {
-            ApplicationDependencyContainer.sodium.cryptoSignSeedKeypair(kdm.k)
+            sodium.cryptoSignSeedKeypair(kdm.k)
         } catch (_: SodiumException) {
             throw BipDerivationUseCase.KeyDoesNotExistException("Key does not exist for $bip32DerivationPath")
         }

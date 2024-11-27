@@ -6,21 +6,25 @@ package com.solanamobile.seedvaultimpl.ui.selectseed
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.Seed
 import com.solanamobile.seedvaultimpl.ui.AuthorizeRequestType
-import com.solanamobile.seedvaultimpl.ui.AuthorizeViewModel
+import com.solanamobile.seedvaultimpl.ui.AuthorizeCommonViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class SelectSeedViewModel private constructor(
+@HiltViewModel(assistedFactory = SelectSeedViewModel.Factory::class)
+class SelectSeedViewModel @AssistedInject constructor(
     private val seedRepository: SeedRepository,
-    private val activityViewModel: AuthorizeViewModel
+    @Assisted private val authorizeCommonViewModel: AuthorizeCommonViewModel
 ) : ViewModel() {
     private val _selectSeedUiState: MutableStateFlow<SelectSeedUiState> = MutableStateFlow(SelectSeedUiState())
     val selectSeedUiState = _selectSeedUiState.asStateFlow()
@@ -30,7 +34,7 @@ class SelectSeedViewModel private constructor(
 
     init {
         viewModelScope.launch {
-            activityViewModel.requests.collect { request ->
+            authorizeCommonViewModel.requests.collect { request ->
                 if (request.type !is AuthorizeRequestType.Seed) {
                     // Any other request types should only be observed transiently, whilst the
                     // activity state is being updated.
@@ -48,7 +52,7 @@ class SelectSeedViewModel private constructor(
 
         if (uid == Authorization.INVALID_UID) {
             Log.e(TAG, "No UID provided; canceling authorization")
-            activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_UNSPECIFIED_ERROR)
+            authorizeCommonViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_UNSPECIFIED_ERROR)
             return
         } else if (this.uid == uid) {
             return // no change in UID, return without (re-)creating the relevant coroutine job
@@ -72,7 +76,7 @@ class SelectSeedViewModel private constructor(
                 }
                 if (seeds.isEmpty()) {
                     Log.w(TAG, "No non-authorized seeds remaining for UID $uid; aborting...")
-                    activityViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_NO_AVAILABLE_SEEDS)
+                    authorizeCommonViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_NO_AVAILABLE_SEEDS)
                     return@collect
                 }
                 val selectedSeedId = seeds.find { seed -> seed.id == currentSeedId }?.id ?: seeds[0].id
@@ -98,21 +102,16 @@ class SelectSeedViewModel private constructor(
 
         Log.d(TAG, "setSelectedSeed for seedId=$selectedSeedId/uid=$uid")
 
-        activityViewModel.updateAuthorizeSeedRequestWithSeedId(selectedSeedId)
+        authorizeCommonViewModel.updateAuthorizeSeedRequestWithSeedId(selectedSeedId)
     }
 
     companion object {
         private val TAG = SelectSeedViewModel::class.simpleName
+    }
 
-        fun provideFactory(
-            seedRepository: SeedRepository,
-            activityViewModel: AuthorizeViewModel
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SelectSeedViewModel(seedRepository, activityViewModel) as T
-            }
-        }
+    @AssistedFactory
+    interface Factory {
+        fun create(activityViewModel: AuthorizeCommonViewModel): SelectSeedViewModel
     }
 }
 

@@ -19,7 +19,6 @@ import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
-import com.solanamobile.seedvault.cts.data.tests.ShowSeedSettingsTestCase.ShowSeedSettingsIntentContract
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.time.withTimeout
 import java.time.Duration

@@ -390,7 +390,7 @@ class SeedRepository @Inject constructor(
 
     @WalletContractV1.AccountId
     suspend fun addKnownAccountForSeed(id: Long, account: Account): Long {
-        require(account.id == Account.INVALID_ACCOUNT_ID) { "Accound ID must be invalid" }
+        require(account.id == Account.INVALID_ACCOUNT_ID) { "Account ID must be invalid" }
         Log.d(TAG, "ENTER addKnownAccountForSeed")
 
         @WalletContractV1.AccountId val accountId: Long

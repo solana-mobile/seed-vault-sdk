@@ -5,14 +5,19 @@
 package com.solanamobile.seedvaultimpl.usecase
 
 import androidx.annotation.Size
-import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
+import com.goterl.lazysodium.LazySodiumAndroid
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.goterl.lazysodium.interfaces.Sign
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object SignPayloadUseCase {
-    const val ED25519_SECRET_KEY_SIZE = Sign.ED25519_SECRETKEYBYTES.toLong()
-    const val ED25519_PUBLIC_KEY_SIZE = Sign.ED25519_PUBLICKEYBYTES.toLong()
-    const val ED25519_SIGNATURE_SIZE = Sign.ED25519_BYTES.toLong()
+@Singleton
+class SignPayloadUseCase @Inject constructor(private val sodium: LazySodiumAndroid) {
+    companion object {
+        const val ED25519_SECRET_KEY_SIZE = Sign.ED25519_SECRETKEYBYTES.toLong()
+        const val ED25519_PUBLIC_KEY_SIZE = Sign.ED25519_PUBLICKEYBYTES.toLong()
+        const val ED25519_SIGNATURE_SIZE = Sign.ED25519_BYTES.toLong()
+    }
 
     fun signTransaction(
         purpose: Authorization.Purpose,
@@ -52,8 +57,7 @@ object SignPayloadUseCase {
         @Size(min=1) transaction: ByteArray
     ): ByteArray {
         val signature = ByteArray(Sign.ED25519_BYTES)
-        ApplicationDependencyContainer.sodium.cryptoSignDetached(signature, transaction,
-            transaction.size.toLong(), key)
+        sodium.cryptoSignDetached(signature, transaction, transaction.size.toLong(), key)
         return signature
     }
 }

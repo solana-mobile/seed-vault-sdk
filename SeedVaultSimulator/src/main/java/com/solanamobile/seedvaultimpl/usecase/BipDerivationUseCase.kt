@@ -8,11 +8,15 @@ import com.solanamobile.seedvault.Bip32DerivationPath
 import com.solanamobile.seedvault.BipLevel
 import com.solanamobile.seedvault.Bip44DerivationPath
 import com.solanamobile.seedvault.BipDerivationPath
-import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.Seed
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class BipDerivationUseCase(private val seedRepository: SeedRepository) {
+@Singleton
+class BipDerivationUseCase @Inject constructor(
+    private val ed25519Slip10UseCase: Ed25519Slip10UseCase
+) {
     // TODO: also support Ed25519Bip32 derivations
 
     // Opaque object representing a partial derivation from a BIP32 path. Further derivations can
@@ -29,7 +33,7 @@ class BipDerivationUseCase(private val seedRepository: SeedRepository) {
         derivationPath: Bip32DerivationPath
     ): ByteArray {
         return when (purpose) {
-            Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS -> Ed25519Slip10UseCase.derivePrivateKey(
+            Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS -> ed25519Slip10UseCase.derivePrivateKey(
                 seed.details, derivationPath)
         }
     }
@@ -42,7 +46,7 @@ class BipDerivationUseCase(private val seedRepository: SeedRepository) {
     ): ByteArray {
         return when (purpose) {
             Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS ->
-                Ed25519Slip10UseCase.derivePublicKey(seed.details, derivationPath, partialPublicDerivation)
+                ed25519Slip10UseCase.derivePublicKey(seed.details, derivationPath, partialPublicDerivation)
         }
     }
 
@@ -53,7 +57,7 @@ class BipDerivationUseCase(private val seedRepository: SeedRepository) {
     ): PartialPublicDerivation {
         return when (purpose) {
             Authorization.Purpose.SIGN_SOLANA_TRANSACTIONS ->
-                Ed25519Slip10UseCase.derivePublicKeyPartialDerivation(seed.details, derivationPath)
+                ed25519Slip10UseCase.derivePublicKeyPartialDerivation(seed.details, derivationPath)
         }
     }
 }
