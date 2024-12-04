@@ -24,7 +24,8 @@ import kotlin.random.Random
 
 @HiltViewModel
 class SeedDetailViewModel @Inject constructor(
-    private val seedRepository: SeedRepository
+    private val seedRepository: SeedRepository,
+    private val prepopulateKnownAccountsUseCase: PrepopulateKnownAccountsUseCase,
 ) : ViewModel() {
     private val _seedDetailUiState: MutableStateFlow<SeedDetailUiState> = MutableStateFlow(SeedDetailUiState())
     val seedDetailUiState = _seedDetailUiState.asStateFlow()
@@ -149,10 +150,8 @@ class SeedDetailViewModel @Inject constructor(
 
                     // Pre-populate known accounts for all purposes
                     val seed = seedRepository.seeds.value[seedId]!!
-                    PrepopulateKnownAccountsUseCase(seedRepository).apply {
-                        for (purpose in Authorization.Purpose.entries) {
-                            populateKnownAccounts(seed, purpose)
-                        }
+                    for (purpose in Authorization.Purpose.entries) {
+                        prepopulateKnownAccountsUseCase.populateKnownAccounts(seed, purpose)
                     }
 
                     mode.authorize?.let { authorize ->

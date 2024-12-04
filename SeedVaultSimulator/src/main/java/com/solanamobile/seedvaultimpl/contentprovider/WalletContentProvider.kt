@@ -16,14 +16,16 @@ import android.util.Log
 import com.solanamobile.seedvault.BipDerivationPath
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.WalletContractV1.AUTHORITY_WALLET_PROVIDER
-import com.solanamobile.seedvaultimpl.ApplicationDependencyContainer
-import com.solanamobile.seedvaultimpl.SeedVaultImplApplication
 import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.usecase.Base58EncodeUseCase
 import com.solanamobile.seedvaultimpl.usecase.RequestLimitsUseCase
 import com.solanamobile.seedvaultimpl.usecase.normalize
 import com.solanamobile.seedvaultimpl.usecase.toBip32DerivationPath
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,7 +33,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class WalletContentProvider : ContentProvider() {
-    private lateinit var dependencyContainer: ApplicationDependencyContainer
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    interface WalletContentProviderHiltEntryPoint {
+        fun provideSeedRepository(): SeedRepository
+    }
+
+    private lateinit var seedRepository: SeedRepository
 
     override fun onCreate(): Boolean {
         // NOTE: this occurs before the Application instance is created, so we can't do our
@@ -91,7 +99,6 @@ class WalletContentProvider : ContentProvider() {
 
     // NOTE: A real Seed Vault implementation should NOT provide this method
     private fun callResetSeedVaultSimulator(): Bundle? {
-        val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
             seedRepository.deleteAllSeeds()
@@ -185,7 +192,6 @@ class WalletContentProvider : ContentProvider() {
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
 
-        val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
 
@@ -235,7 +241,6 @@ class WalletContentProvider : ContentProvider() {
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
 
-        val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
             if (callerIsPrivileged) {
@@ -290,7 +295,6 @@ class WalletContentProvider : ContentProvider() {
         val filteredProjection = projection?.intersect(defaultProjection) ?: defaultProjection
         val cursor = MatrixCursor(filteredProjection.toTypedArray())
 
-        val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
         }
@@ -405,7 +409,6 @@ class WalletContentProvider : ContentProvider() {
         uid: Int,
         @WalletContractV1.AuthToken authToken: Long
     ): Int {
-        val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
         }
@@ -464,7 +467,6 @@ class WalletContentProvider : ContentProvider() {
         @WalletContractV1.AccountId accountId: Long,
         values: ContentValues?
     ): Int {
-        val seedRepository = dependencyContainer.seedRepository
         runBlocking {
             seedRepository.delayUntilDataValid()
         }
@@ -512,12 +514,11 @@ class WalletContentProvider : ContentProvider() {
     private fun checkDependencyInjection() {
         // Note: this can be executed in an arbitrary thread context. Use double-checked locking
         // pattern to safely initialize it.
-        if (!this::dependencyContainer.isInitialized) {
-            val didInitialization = synchronized(this::dependencyContainer) {
-                if (!this::dependencyContainer.isInitialized) {
-                    dependencyContainer =
-                        (requireContext().applicationContext as SeedVaultImplApplication)
-                            .dependencyContainer
+        if (!this::seedRepository.isInitialized) {
+            val didInitialization = synchronized(this::seedRepository) {
+                if (!this::seedRepository.isInitialized) {
+                    val hiltEntryPoint = EntryPointAccessors.fromApplication(requireContext().applicationContext, WalletContentProviderHiltEntryPoint::class.java)
+                    seedRepository = hiltEntryPoint.provideSeedRepository()
                     true
                 } else {
                     false
@@ -533,7 +534,7 @@ class WalletContentProvider : ContentProvider() {
     private fun observeSeedRepositoryChanges() {
         val repositoryOwnerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         repositoryOwnerScope.launch {
-            dependencyContainer.seedRepository.changes.collect { change ->
+            seedRepository.changes.collect { change ->
                 // NOTE: this is overeager; we aren't checking, e.g., if deleting a particular seed
                 // will affect an observer watching a particular account.
                 val uris: List<Uri> = when (change.category) {

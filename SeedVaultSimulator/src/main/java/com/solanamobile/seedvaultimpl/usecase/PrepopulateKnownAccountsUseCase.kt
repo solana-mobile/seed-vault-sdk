@@ -11,8 +11,14 @@ import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Account
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.Seed
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository) {
+@Singleton
+class PrepopulateKnownAccountsUseCase @Inject constructor(
+    private val seedRepository: SeedRepository,
+    private val ed25519Slip10UseCase: Ed25519Slip10UseCase
+) {
     suspend fun populateKnownAccounts(
         seed: Seed,
         purpose: Authorization.Purpose
@@ -23,7 +29,7 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                     .appendLevel(BipLevel(BIP44_PURPOSE, true))
                     .appendLevel(BipLevel(BIP44_COIN_TYPE_SOLANA, true))
                     .build().normalize(purpose)
-                val derivationRoot = Ed25519Slip10UseCase.derivePublicKeyPartialDerivation(
+                val derivationRoot = ed25519Slip10UseCase.derivePublicKeyPartialDerivation(
                     seed.details, derivationRootPath
                 )
                 val knownAccounts = mutableListOf<Account>()
@@ -47,7 +53,7 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                             .normalize(purpose)
 
                         try {
-                            val publicKey = Ed25519Slip10UseCase.derivePublicKey(
+                            val publicKey = ed25519Slip10UseCase.derivePublicKey(
                                 seed.details,
                                 partialPath,
                                 derivationRoot
@@ -78,7 +84,7 @@ class PrepopulateKnownAccountsUseCase(private val seedRepository: SeedRepository
                             .appendLevels(type2Levels)
                             .build()
                         try {
-                            val publicKey = Ed25519Slip10UseCase.derivePublicKey(
+                            val publicKey = ed25519Slip10UseCase.derivePublicKey(
                                 seed.details,
                                 partialPath,
                                 derivationRoot

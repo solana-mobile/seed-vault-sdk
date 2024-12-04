@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class AuthorizeViewModel @Inject constructor() : ViewModel() {
+class AuthorizeCommonViewModel @Inject constructor() : ViewModel() {
     private val _requests = MutableSharedFlow<AuthorizeRequest>(replay = 1)
     val requests = _requests.asSharedFlow()
 
@@ -187,7 +187,7 @@ class AuthorizeViewModel @Inject constructor() : ViewModel() {
     }
 
     companion object {
-        private val TAG = AuthorizeViewModel::class.simpleName
+        private val TAG = AuthorizeCommonViewModel::class.simpleName
     }
 }
 
