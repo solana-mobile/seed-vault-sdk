@@ -181,91 +181,9 @@ fun PrivilegedAuthorizeContents(
 ) {
     val context = LocalContext.current
     if (authorizationViewState.enablePIN) {
-        val pin = rememberSaveable { mutableStateOf("") }
-        AlertDialog(
-            modifier = Modifier
-                .padding(horizontal = Sizes.dp16)
-                .semantics {
-                    testTagsAsResourceId = true
-                },
-            title = {
-                Text(text = stringResource(id = R.string.label_enter_pin))
-            },
-            text = {
-                val keyboardController =
-                    LocalSoftwareKeyboardController.current
-
-                BasicTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(Sizes.dp48)
-                        .background(
-                            MaterialTheme.colorScheme.inverseOnSurface,
-                            CircleShape
-                        )
-                        .semantics {
-                            testTag = "PinEntryField"
-                        },
-                    value = pin.value,
-                    onValueChange = {
-                        pin.value = it
-                    },
-                    textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.NumberPassword
-                    ),
-                    keyboardActions = KeyboardActions(onDone = {
-                        onCheckEnteredPIN(pin.value)
-                        keyboardController?.hide()
-                    }),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                    singleLine = true,
-                    maxLines = 1,
-                    decorationBox = { innerTextField ->
-                        Row(
-                            modifier = Modifier
-                                .height(Sizes.dp48)
-                                .padding(
-                                    start = Sizes.dp16
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = Sizes.dp16)
-                                    .weight(1f),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                innerTextField()
-                            }
-                        }
-                    }
-                )
-            },
-            onDismissRequest = onCancel,
-            confirmButton = {
-                TextButton(
-                    enabled = pin.value.length >= 4,
-                    onClick = {
-                        onCheckEnteredPIN(pin.value)
-                    }
-                ) {
-                    Text(text = stringResource(id = android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = onCancel
-                ) {
-                    Text(text = stringResource(id = android.R.string.cancel))
-                }
-            }
+        PinEntryDialog(
+            onCheckEnteredPIN = onCheckEnteredPIN,
+            onCancel = onCancel
         )
     }
 
@@ -353,95 +271,9 @@ fun NonPrivilegedAuthorizeContents(
     )
     var showPinDialog by remember { mutableStateOf(false) }
     if (showPinDialog) {
-        val pin = rememberSaveable { mutableStateOf("") }
-        AlertDialog(
-            modifier = Modifier
-                .padding(horizontal = Sizes.dp16)
-                .semantics {
-                    testTagsAsResourceId = true
-                },
-            title = {
-                Text(text = stringResource(id = R.string.label_enter_pin))
-            },
-            text = {
-                val keyboardController =
-                    LocalSoftwareKeyboardController.current
-
-                BasicTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(Sizes.dp48)
-                        .background(
-                            MaterialTheme.colorScheme.inverseOnSurface,
-                            CircleShape
-                        )
-                        .semantics {
-                            testTag = "PinEntryField"
-                        },
-                    value = pin.value,
-                    onValueChange = {
-                        pin.value = it
-                    },
-                    textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.NumberPassword
-                    ),
-                    keyboardActions = KeyboardActions(onDone = {
-                        onCheckEnteredPIN(pin.value)
-                        keyboardController?.hide()
-                    }),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                    singleLine = true,
-                    maxLines = 1,
-                    decorationBox = { innerTextField ->
-                        Row(
-                            modifier = Modifier
-                                .height(Sizes.dp48)
-                                .padding(
-                                    start = Sizes.dp16
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = Sizes.dp16)
-                                    .weight(1f),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                innerTextField()
-                            }
-                        }
-                    }
-                )
-            },
-            onDismissRequest = {
-                showPinDialog = false
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = pin.value.length >= 4,
-                    onClick = {
-                        onCheckEnteredPIN(pin.value)
-                    }
-                ) {
-                    Text(text = stringResource(id = android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showPinDialog = false
-                    }
-                ) {
-                    Text(text = stringResource(id = android.R.string.cancel))
-                }
-            }
+        PinEntryDialog(
+            onCheckEnteredPIN = onCheckEnteredPIN,
+            onCancel = { showPinDialog = false }
         )
     }
     ModalBottomSheet(
@@ -695,4 +527,97 @@ fun NonPrivilegedAuthorizeContents(
             }
         }
     }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun PinEntryDialog(
+    onCheckEnteredPIN: (String) -> Unit,
+    onCancel: () -> Unit,
+) {
+    val pin = rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        modifier = Modifier
+            .padding(horizontal = Sizes.dp16)
+            .semantics {
+                testTagsAsResourceId = true
+            },
+        title = {
+            Text(text = stringResource(id = R.string.label_enter_pin))
+        },
+        text = {
+            val keyboardController =
+                LocalSoftwareKeyboardController.current
+
+            BasicTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(Sizes.dp48)
+                    .background(
+                        MaterialTheme.colorScheme.inverseOnSurface, CircleShape
+                    )
+                    .semantics {
+                        testTag = "PinEntryField"
+                    },
+                value = pin.value,
+                onValueChange = {
+                    pin.value = it
+                },
+                textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.NumberPassword
+                ),
+                keyboardActions = KeyboardActions(onDone = {
+                    onCheckEnteredPIN(pin.value)
+                    keyboardController?.hide()
+                }),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                singleLine = true,
+                maxLines = 1,
+                decorationBox = { innerTextField ->
+                    Row(
+                        modifier = Modifier
+                            .height(Sizes.dp48)
+                            .padding(
+                                start = Sizes.dp16
+                            ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                        Box(
+                            modifier = Modifier
+                                .padding(start = Sizes.dp16)
+                                .weight(1f),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            innerTextField()
+                        }
+                    }
+                }
+            )
+        },
+        onDismissRequest = onCancel,
+        confirmButton = {
+            TextButton(
+                enabled = pin.value.length >= 4,
+                onClick = {
+                    onCheckEnteredPIN(pin.value)
+                }
+            ) {
+                Text(text = stringResource(id = android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onCancel
+            ) {
+                Text(text = stringResource(id = android.R.string.cancel))
+            }
+        }
+    )
 }
