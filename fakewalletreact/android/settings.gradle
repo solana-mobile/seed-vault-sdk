@@ -1,4 +1,4 @@
-pluginManagement { 
+pluginManagement {
     includeBuild("../node_modules/@react-native/gradle-plugin")
     repositories {
         google {
@@ -12,9 +12,9 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-plugins { 
-    id "com.android.library" version "8.7.2" apply false
-    id("com.facebook.react.settings") 
+plugins {
+    id "com.android.library" version "8.7.3" apply false
+    id("com.facebook.react.settings")
 }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 dependencyResolutionManagement {
