@@ -25,7 +25,7 @@ jobs:
       # Setup
       ##########################################################################
 
-      - uses: solana-mobile/gha-free-disk-space-for-android-build-and-test@v2
+      - uses: solana-mobile/gha-free-disk-space-for-android-build-and-test@v3
 
       - uses: actions/checkout@v4
 
