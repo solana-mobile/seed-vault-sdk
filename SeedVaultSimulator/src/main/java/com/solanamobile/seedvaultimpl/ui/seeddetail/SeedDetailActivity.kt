@@ -5,6 +5,8 @@
 package com.solanamobile.seedvaultimpl.ui.seeddetail
 
 import android.app.Activity
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -215,6 +217,31 @@ class SeedDetailActivity : AppCompatActivity() {
                             TopAppBar(
                                 title = { Text(text = "Create Seed") },
                                 actions = {
+                                    IconButton(
+                                        modifier = Modifier
+                                            .size(Sizes.dp48)
+                                            .semantics {
+                                                testTag = "Paste"
+                                            },
+                                        onClick = {
+                                            lifecycleScope.launch {
+                                                getTextFromClipboard(context)
+                                                    ?.let(viewModel::pasteSeed)
+                                                    ?.also { success ->
+                                                        if (!success) {
+                                                            val msg = resources.getString(R.string.error_no_phrase_to_paste)
+                                                            snackbarHostState.showSnackbar(msg)
+                                                        }
+                                                    }
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = android.R.drawable.ic_menu_set_as),
+                                            tint = MaterialTheme.colorScheme.onSurface,
+                                            contentDescription = stringResource(id = R.string.label_paste_seed)
+                                        )
+                                    }
                                     IconButton(
                                         modifier = Modifier
                                             .size(Sizes.dp48)
@@ -587,6 +614,16 @@ class SeedDetailActivity : AppCompatActivity() {
         const val ACTION_EDIT_SEED =
             "com.solanamobile.seedvaultimpl.ui.seeddetail.ACTION_EDIT_SEED"
         const val EXTRA_SEED_ID = "seed_id"
+
+        private fun getTextFromClipboard(context: Context): String? {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            return clipboard
+                .primaryClip
+                ?.takeIf { it.itemCount > 0 }
+                ?.getItemAt(0)
+                ?.text
+                ?.toString()
+        }
     }
 }
 

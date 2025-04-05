@@ -32,6 +32,7 @@
     <string name="label_enable_biometrics_for_seed">Enable biometrics for this seed</string>
     <string name="label_is_seed_backed_up">Mark seed as backed up</string>
     <string name="label_authorized_apps">Authorized wallet apps</string>
+    <string name="error_no_phrase_to_paste">No valid seed phrase to paste</string>
 
     <!-- Seed phrase word RecyclerView item strings -->
     <string name="error_invalid_seed_word">Word not recognized</string>
@@ -40,6 +41,7 @@
     <string name="label_select_seed_title">Choose a seed to establish a connection with:</string>
     <string name="label_select_seed">Seeds</string>
     <string name="label_save_seed">Save</string>
+    <string name="label_paste_seed">Paste seed phrase</string>
 
     <!-- Authorize fragment -->
     <string name="label_authorize_title">Seed Vault™</string>
