@@ -12,6 +12,10 @@ import com.solanamobile.seedvaultimpl.data.SeedRepository
 import com.solanamobile.seedvaultimpl.model.Account
 import com.solanamobile.seedvaultimpl.model.Authorization
 import com.solanamobile.seedvaultimpl.model.SeedDetails
+import com.solanamobile.seedvaultimpl.model.SeedDetails.Companion.SEED_PHRASE_WORD_COUNT_LONG
+import com.solanamobile.seedvaultimpl.model.SeedDetails.Companion.SEED_PHRASE_WORD_COUNT_SHORT
+import com.solanamobile.seedvaultimpl.ui.seeddetail.SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_12_WORDS
+import com.solanamobile.seedvaultimpl.ui.seeddetail.SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS
 import com.solanamobile.seedvaultimpl.usecase.Bip39PhraseUseCase
 import com.solanamobile.seedvaultimpl.usecase.PrepopulateKnownAccountsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,11 +36,11 @@ class SeedDetailViewModel @Inject constructor(
     private var mode: SeedDetailMode = UninitializedMode
 
     fun createNewSeed(authorize: PreAuthorizeSeed? = null) {
-        val phrase = List(SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS.length) {
+        val phrase = List(SEED_PHRASE_24_WORDS.length) {
             Bip39PhraseUseCase.bip39EnglishWordlist[Random.nextInt(Bip39PhraseUseCase.bip39EnglishWordlist.size)]
         }
         _seedDetailUiState.value = SeedDetailUiState(
-            phraseLength = SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_12_WORDS,
+            phraseLength = SEED_PHRASE_12_WORDS,
             phrase = phrase
         )
         mode = NewSeedMode(authorize)
@@ -51,16 +55,16 @@ class SeedDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val seed = seedRepository.seeds.value[seedId]
             require(seed != null) { "Seed $seedId not found" }
-            val seedPhraseLength = if (seed.details.seedPhraseWordIndices.size == SeedDetails.SEED_PHRASE_WORD_COUNT_SHORT) {
-                SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_12_WORDS
+            val seedPhraseLength = if (seed.details.seedPhraseWordIndices.size == SEED_PHRASE_WORD_COUNT_SHORT) {
+                SEED_PHRASE_12_WORDS
             } else {
-                SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS
+                SEED_PHRASE_24_WORDS
             }
             _seedDetailUiState.value = SeedDetailUiState(
                 isCreateMode = false,
                 name = seed.details.name ?: "",
                 phraseLength = seedPhraseLength,
-                phrase = List(SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS.length) {
+                phrase = List(SEED_PHRASE_24_WORDS.length) {
                     seed.details.seedPhraseWordIndices.getOrNull(it)?.let { Bip39PhraseUseCase.toWord(it) } ?: ""
                 },
                 pin = seed.details.pin,
@@ -89,7 +93,7 @@ class SeedDetailViewModel @Inject constructor(
     }
 
     fun setSeedPhraseWord(index: Int, word: String) {
-        require(index in 0 until SeedDetailUiState.SeedPhraseLength.SEED_PHRASE_24_WORDS.length)
+        require(index in 0 until SEED_PHRASE_24_WORDS.length)
         Log.d(TAG, "setSeedPhraseWord($index, $word)")
         _seedDetailUiState.update { current ->
             val newPhrase = current.phrase.toMutableList().also {
@@ -189,6 +193,30 @@ class SeedDetailViewModel @Inject constructor(
         }
     }
 
+    fun pasteSeed(rawCopy: String): Boolean {
+        val seedPhrase = isValidSeedPhrase(rawCopy)
+        return if (seedPhrase.isNotEmpty()) {
+            _seedDetailUiState.update {
+                it.copy(
+                    phraseLength = when {
+                        seedPhrase.size == SEED_PHRASE_WORD_COUNT_SHORT -> SEED_PHRASE_12_WORDS
+                        else -> SEED_PHRASE_24_WORDS
+                    },
+                    phrase = List(24) {
+                        i -> if (i < seedPhrase.size) {
+                            seedPhrase[i]
+                        } else {
+                            ""
+                        }
+                    }
+                )
+            }
+            true
+        } else {
+            false
+        }
+    }
+
     private sealed interface SeedDetailMode
     private data object UninitializedMode : SeedDetailMode
     private data class NewSeedMode(val authorize: PreAuthorizeSeed?) : SeedDetailMode
@@ -196,14 +224,35 @@ class SeedDetailViewModel @Inject constructor(
 
     companion object {
         private val TAG = SeedDetailViewModel::class.simpleName
+
+        private fun isValidSeedPhrase(seedPhrase: String) =
+            seedPhrase
+                .trim()
+                .split("\\s+".toRegex())
+                .takeIf(::isValidSeedPhraseLength)
+                ?.takeIf(::isValidSeedPhraseWords)
+                ?: emptyList()
+
+        private fun isValidSeedPhraseLength(seedPhrase: List<String>) =
+            seedPhrase.size in SEED_PHRASE_WORD_COUNT_SHORT..SEED_PHRASE_WORD_COUNT_LONG
+
+        private fun isValidSeedPhraseWords(seedPhrase: List<String>) =
+            seedPhrase.all {
+                try {
+                    Bip39PhraseUseCase.toIndex(it)
+                    true
+                } catch (ex: IllegalArgumentException) {
+                    false
+                }
+            }
     }
 }
 
 data class SeedDetailUiState(
     val isCreateMode: Boolean = true,
     val name: String = "",
-    val phraseLength: SeedPhraseLength = SeedPhraseLength.SEED_PHRASE_12_WORDS,
-    val phrase: List<String> = List(SeedPhraseLength.SEED_PHRASE_24_WORDS.length) { "" },
+    val phraseLength: SeedPhraseLength = SEED_PHRASE_12_WORDS,
+    val phrase: List<String> = List(SEED_PHRASE_24_WORDS.length) { "" },
     val pin: String = "",
     val enableBiometrics: Boolean = false,
     val accounts: List<Account> = listOf(),
@@ -214,14 +263,14 @@ data class SeedDetailUiState(
         SEED_PHRASE_12_WORDS(12), SEED_PHRASE_24_WORDS(24);
 
         init {
-            assert(SeedDetails.SEED_PHRASE_WORD_COUNT_SHORT == 12) { "Unexpected length of short seed phrase; SeedDetailViewModel needs updating" }
-            assert(SeedDetails.SEED_PHRASE_WORD_COUNT_LONG == 24) { "Unexpected length of long seed phrase; SeedDetailViewModel needs updating" }
+            assert(SEED_PHRASE_WORD_COUNT_SHORT == 12) { "Unexpected length of short seed phrase; SeedDetailViewModel needs updating" }
+            assert(SEED_PHRASE_WORD_COUNT_LONG == 24) { "Unexpected length of long seed phrase; SeedDetailViewModel needs updating" }
         }
     }
 
     init {
-        require(phrase.size == SeedPhraseLength.SEED_PHRASE_24_WORDS.length) {
-            "Phrase array size is ${phrase.size}; expected ${SeedPhraseLength.SEED_PHRASE_24_WORDS.length}"
+        require(phrase.size == SEED_PHRASE_24_WORDS.length) {
+            "Phrase array size is ${phrase.size}; expected ${SEED_PHRASE_24_WORDS.length}"
         }
     }
 }
@@ -230,4 +279,3 @@ data class PreAuthorizeSeed(
     val uid: Int,
     val purpose: Authorization.Purpose
 )
-
