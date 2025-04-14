@@ -82,6 +82,12 @@ android {
         compose true
         buildConfig true
     }
+
+    packaging {
+        resources {
+            merges += "META-INF/versions/**/OSGI-INF/MANIFEST.MF"
+        }
+    }
 }
 
 dependencies {
