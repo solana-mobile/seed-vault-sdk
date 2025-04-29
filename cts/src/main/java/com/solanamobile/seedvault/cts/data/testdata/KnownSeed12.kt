@@ -5,14 +5,21 @@
 package com.solanamobile.seedvault.cts.data.testdata
 
 import android.net.Uri
+import android.os.Build
 import com.solanamobile.seedvault.WalletContractV1
 
 object KnownSeed12 {
     val SEED: Array<String> =
         arrayOf("eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "egg")
     val SEED_PHRASE = SEED.joinToString(" ")
-    const val SEED_NAME = "Test12"
-    const val SEED_PIN = "123456"
+    val SEED_NAME = when (Build.MODEL) {
+        "Seeker" -> "Seeker Seed 1"
+        else -> "Test12"
+    }
+    val SEED_PIN = when (Build.MODEL) {
+        "Seeker" -> "<use existing PIN>"
+        else -> "123456"
+    }
 
     val DERIVATION_PATH_0 =
         Uri.parse("${WalletContractV1.BIP32_URI_SCHEME}:/${WalletContractV1.BIP32_URI_MASTER_KEY_INDICATOR}/44'/501'/0'")!!
