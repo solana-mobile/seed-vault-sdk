@@ -16,7 +16,6 @@ import androidx.core.os.bundleOf
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.Wallet.NotModifiedException
 import com.solanamobile.seedvault.WalletContractV1
-import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
@@ -26,6 +25,8 @@ import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12Authoriz
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed24AuthorizedChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.accountId
 import com.solanamobile.seedvault.cts.data.conditioncheckers.authToken
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed24
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -38,7 +39,7 @@ internal abstract class AccountsContentProviderTestCase(
     private val knownSeedAuthorizedChecker: AuthorizedSeedsChecker,
     @ApplicationContext private val ctx: Context,
     private val logger: TestSessionLogger,
-    private val sagaChecker: SagaChecker
+    private val implementationDetails: ImplementationDetails
 ) : TestCaseImpl(
     preConditions = listOf(
         hasSeedVaultPermissionChecker,
@@ -106,7 +107,7 @@ internal abstract class AccountsContentProviderTestCase(
             result = TestResult.FAIL
         }
 
-        if (!sagaChecker.isSaga() && !testTableUpdateAccountIsUserWalletUnknownAuthToken()) {
+        if (!implementationDetails.IS_LEGACY_IMPLEMENTATION && !testTableUpdateAccountIsUserWalletUnknownAuthToken()) {
             logger.warn("$id: table update account is user wallet with unknown auth token returned unexpected value")
             result = TestResult.FAIL
         }
@@ -121,7 +122,7 @@ internal abstract class AccountsContentProviderTestCase(
             result = TestResult.FAIL
         }
 
-        if (!sagaChecker.isSaga() && !testTableUpdateAccountIsValidUnknownAuthToken()) {
+        if (!implementationDetails.IS_LEGACY_IMPLEMENTATION && !testTableUpdateAccountIsValidUnknownAuthToken()) {
             logger.warn("$id: table update account is valid with unknown auth token returned unexpected value")
             result = TestResult.FAIL
         }
@@ -223,7 +224,7 @@ internal abstract class AccountsContentProviderTestCase(
                 null,
                 null
             )
-            if (sagaChecker.isSaga() && cursor?.count == 0) {
+            if (implementationDetails.IS_LEGACY_IMPLEMENTATION && cursor?.count == 0) {
                 throw IllegalArgumentException("No accounts found")
             }
             cursor?.close()
@@ -270,7 +271,7 @@ internal abstract class AccountsContentProviderTestCase(
                 bundleOf(WalletContractV1.EXTRA_AUTH_TOKEN to -2975244312860459623L),
                 null
             )
-            if (sagaChecker.isSaga() && cursor?.count == 0) {
+            if (implementationDetails.IS_LEGACY_IMPLEMENTATION && cursor?.count == 0) {
                 throw IllegalArgumentException("No accounts found")
             }
             cursor?.close()
@@ -573,7 +574,7 @@ internal abstract class AccountsContentProviderTestCase(
             true // Expected
         } catch (e: NotModifiedException) {
             // Only expected on saga.
-            sagaChecker.isSaga()
+            implementationDetails.IS_LEGACY_IMPLEMENTATION
         }
     }
 
@@ -625,7 +626,7 @@ internal abstract class AccountsContentProviderTestCase(
             true // Expected
         } catch (e: NotModifiedException) {
             // Only expected on saga.
-            sagaChecker.isSaga()
+            implementationDetails.IS_LEGACY_IMPLEMENTATION
         }
     }
 
@@ -673,7 +674,7 @@ internal abstract class AccountsContentProviderTestCase(
             true // Expected
         } catch (e: NotModifiedException) {
             // Only expected on saga.
-            sagaChecker.isSaga()
+            implementationDetails.IS_LEGACY_IMPLEMENTATION
         }
     }
 
@@ -717,17 +718,18 @@ internal class KnownSeed12AccountsContentProviderTestCase @Inject constructor(
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     @ApplicationContext private val ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker
+    implementationDetails: ImplementationDetails,
+    @KnownSeed12 knownSeed12: KnownSeed
 ) : AccountsContentProviderTestCase(
     hasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker,
     ctx,
     logger,
-    sagaChecker
+    implementationDetails
 ) {
     override val id: String = "ks12acp"
     override val description: String =
-        "Verify content provider behavior for ${WalletContractV1.ACCOUNTS_TABLE} when seed '${KnownSeed12.SEED_NAME}' is authorized"
+        "Verify content provider behavior for ${WalletContractV1.ACCOUNTS_TABLE} when seed '${knownSeed12.SEED_NAME}' is authorized"
     override val instructions: String = ""
 }
 
@@ -736,16 +738,17 @@ internal class KnownSeed24AccountsContentProviderTestCase @Inject constructor(
     knownSeed24AuthorizedChecker: KnownSeed24AuthorizedChecker,
     @ApplicationContext private val ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker
+    implementationDetails: ImplementationDetails,
+    @KnownSeed24 knownSeed24: KnownSeed
 ) : AccountsContentProviderTestCase(
     hasSeedVaultPermissionChecker,
     knownSeed24AuthorizedChecker,
     ctx,
     logger,
-    sagaChecker
+    implementationDetails
 ) {
     override val id: String = "ks24acp"
     override val description: String =
-        "Verify content provider behavior for ${WalletContractV1.ACCOUNTS_TABLE} when seed '${KnownSeed24.SEED_NAME}' is authorized"
+        "Verify content provider behavior for ${WalletContractV1.ACCOUNTS_TABLE} when seed '${knownSeed24.SEED_NAME}' is authorized"
     override val instructions: String = ""
 }

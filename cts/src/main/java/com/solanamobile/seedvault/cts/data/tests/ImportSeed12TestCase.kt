@@ -24,6 +24,7 @@ import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12NotAuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
@@ -32,6 +33,7 @@ import javax.inject.Inject
 internal class ImportSeed12TestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
+    @KnownSeed12 private val knownSeed12: KnownSeed,
     @ApplicationContext private val ctx: Context,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
@@ -39,7 +41,7 @@ internal class ImportSeed12TestCase @Inject constructor(
 ), ActivityLauncherTestCase {
     override val id: String = "is12"
     override val description: String = "Test importing a 12-word seed phrase"
-    override val instructions: String = "When the Import Seed workflow begins, import the following 12-word seed phrase: '${KnownSeed12.SEED_PHRASE}'. Name the seed '${KnownSeed12.SEED_NAME}', Set the PIN to '${KnownSeed12.SEED_PIN}', and enable biometrics for this seed."
+    override val instructions: String = "When the Import Seed workflow begins, import the following 12-word seed phrase: '${knownSeed12.SEED_PHRASE}'. Name the seed '${knownSeed12.SEED_NAME}', Set the PIN to '${knownSeed12.SEED_PIN}', and enable biometrics for this seed."
 
     private class ImportSeedIntentContract : ActivityResultContract<Int, Result<Long>>() {
         override fun createIntent(context: Context, @Purpose input: Int): Intent =
@@ -129,7 +131,7 @@ internal class ImportSeed12TestCase @Inject constructor(
                 !c.moveToNext() ||
                 c.getLong(0) != authToken ||
                 c.getInt(1) != WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION ||
-                c.getString(2) != KnownSeed12.SEED_NAME
+                c.getString(2) != knownSeed12.SEED_NAME
             ) return false // unexpected values
         } ?: return false // authToken not found
 
@@ -144,25 +146,25 @@ internal class ImportSeed12TestCase @Inject constructor(
             while (c.moveToNext()) {
                 val derivationPath = Uri.parse(c.getString(1))
                 when (derivationPath) {
-                    KnownSeed12.DERIVATION_PATH_0 -> found[0] = checkAccountValues(
+                    knownSeed12.DERIVATION_PATH_0 -> found[0] = checkAccountValues(
                         c,
-                        KnownSeed12.DERIVATION_PATH_0_PUBLIC_KEY,
-                        KnownSeed12.DERIVATION_PATH_0_PUBLIC_KEY_BASE58
+                        knownSeed12.DERIVATION_PATH_0_PUBLIC_KEY,
+                        knownSeed12.DERIVATION_PATH_0_PUBLIC_KEY_BASE58
                     )
-                    KnownSeed12.DERIVATION_PATH_1 -> found[1] = checkAccountValues(
+                    knownSeed12.DERIVATION_PATH_1 -> found[1] = checkAccountValues(
                         c,
-                        KnownSeed12.DERIVATION_PATH_1_PUBLIC_KEY,
-                        KnownSeed12.DERIVATION_PATH_1_PUBLIC_KEY_BASE58
+                        knownSeed12.DERIVATION_PATH_1_PUBLIC_KEY,
+                        knownSeed12.DERIVATION_PATH_1_PUBLIC_KEY_BASE58
                     )
-                    KnownSeed12.DERIVATION_PATH_2 -> found[2] = checkAccountValues(
+                    knownSeed12.DERIVATION_PATH_2 -> found[2] = checkAccountValues(
                         c,
-                        KnownSeed12.DERIVATION_PATH_2_PUBLIC_KEY,
-                        KnownSeed12.DERIVATION_PATH_2_PUBLIC_KEY_BASE58
+                        knownSeed12.DERIVATION_PATH_2_PUBLIC_KEY,
+                        knownSeed12.DERIVATION_PATH_2_PUBLIC_KEY_BASE58
                     )
-                    KnownSeed12.DERIVATION_PATH_3 -> found[3] = checkAccountValues(
+                    knownSeed12.DERIVATION_PATH_3 -> found[3] = checkAccountValues(
                         c,
-                        KnownSeed12.DERIVATION_PATH_3_PUBLIC_KEY,
-                        KnownSeed12.DERIVATION_PATH_3_PUBLIC_KEY_BASE58
+                        knownSeed12.DERIVATION_PATH_3_PUBLIC_KEY,
+                        knownSeed12.DERIVATION_PATH_3_PUBLIC_KEY_BASE58
                     )
                 }
             }

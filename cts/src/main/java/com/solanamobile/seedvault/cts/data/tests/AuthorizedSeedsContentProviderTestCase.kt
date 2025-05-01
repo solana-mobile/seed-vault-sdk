@@ -12,7 +12,6 @@ import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.cts.PrivilegedSeedVaultChecker
 import com.solanamobile.seedvault.cts.data.ConditionChecker
-import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
@@ -20,6 +19,8 @@ import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermiss
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed24AuthorizedChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.NoAuthorizedSeedsChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed24
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,7 +31,7 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
     preConditions: List<ConditionChecker>,
     private val ctx: Context,
     private val logger: TestSessionLogger,
-    private val sagaChecker: SagaChecker,
+    private val implementationDetails: ImplementationDetails,
     private val privilegedSeedVaultChecker: PrivilegedSeedVaultChecker,
 ) : TestCaseImpl(
     preConditions = preConditions
@@ -143,12 +144,12 @@ internal abstract class AuthorizedSeedsContentProviderTestCase(
     }
 
     private fun testTableMimeType(): Boolean {
-        val expectedTableMimeType = if (sagaChecker.isSaga()) {
+        val expectedTableMimeType = if (implementationDetails.IS_LEGACY_IMPLEMENTATION) {
             "${ContentResolver.CURSOR_DIR_BASE_TYPE}${WalletContractV1.AUTHORIZED_SEEDS_MIME_SUBTYPE}"
         } else {
             "${ContentResolver.CURSOR_DIR_BASE_TYPE}/${WalletContractV1.AUTHORIZED_SEEDS_MIME_SUBTYPE}"
         }
-        val expectedItemMimeType = if (sagaChecker.isSaga()) {
+        val expectedItemMimeType = if (implementationDetails.IS_LEGACY_IMPLEMENTATION) {
             "${ContentResolver.CURSOR_ITEM_BASE_TYPE}${WalletContractV1.AUTHORIZED_SEEDS_MIME_SUBTYPE}"
         } else {
             "${ContentResolver.CURSOR_ITEM_BASE_TYPE}/${WalletContractV1.AUTHORIZED_SEEDS_MIME_SUBTYPE}"
@@ -492,14 +493,14 @@ internal class NoAuthorizedSeedsContentProviderTestCase @Inject constructor(
     noAuthorizedSeedsChecker: NoAuthorizedSeedsChecker,
     @ApplicationContext private val ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker,
+    implementationDetails: ImplementationDetails,
     privilegedSeedVaultChecker: PrivilegedSeedVaultChecker
 ) : AuthorizedSeedsContentProviderTestCase(
     emptyList(),
     preConditions = listOf(hasSeedVaultPermissionChecker, noAuthorizedSeedsChecker),
     ctx,
     logger,
-    sagaChecker,
+    implementationDetails,
     privilegedSeedVaultChecker
 ) {
     override val id: String = "nascp"
@@ -513,10 +514,12 @@ internal class HasAuthorizedSeedsContentProviderTestCase @Inject constructor(
     knownSeed24AuthorizedChecker: KnownSeed24AuthorizedChecker,
     @ApplicationContext private val ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker,
+    implementationDetails: ImplementationDetails,
+    @KnownSeed12 knownSeed12: KnownSeed,
+    @KnownSeed24 knownSeed24: KnownSeed,
     privilegedSeedVaultChecker: PrivilegedSeedVaultChecker
 ) : AuthorizedSeedsContentProviderTestCase(
-    listOf(KnownSeed12.SEED_NAME, KnownSeed24.SEED_NAME),
+    listOf(knownSeed12.SEED_NAME, knownSeed24.SEED_NAME),
     preConditions = listOf(
         hasSeedVaultPermissionChecker,
         knownSeed12AuthorizedChecker,
@@ -524,7 +527,7 @@ internal class HasAuthorizedSeedsContentProviderTestCase @Inject constructor(
     ),
     ctx,
     logger,
-    sagaChecker,
+    implementationDetails,
     privilegedSeedVaultChecker
 ) {
     override val id: String = "hascp"

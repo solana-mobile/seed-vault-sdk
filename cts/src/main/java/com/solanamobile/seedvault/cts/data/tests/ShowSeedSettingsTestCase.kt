@@ -18,6 +18,7 @@ import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.time.withTimeout
@@ -27,6 +28,7 @@ import javax.inject.Inject
 internal class ShowSeedSettingsTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     private val knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    @KnownSeed12 private val knownSeed12: KnownSeed,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker)
@@ -174,7 +176,7 @@ internal class ShowSeedSettingsTestCase @Inject constructor(
 
         val authToken = knownSeed12AuthorizedChecker.findMatchingSeed()
         if (authToken == null) {
-            logger.warn("Cannot find auth token for seed ${KnownSeed12.SEED_NAME}")
+            logger.warn("Cannot find auth token for seed ${knownSeed12.SEED_NAME}")
             return false
         }
 
@@ -254,6 +256,7 @@ internal class ShowSeedSettingsTestCase @Inject constructor(
 internal class CannotShowSeedSettingsTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     private val knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    @KnownSeed12 private val knownSeed12: KnownSeed,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker)
@@ -292,7 +295,7 @@ internal class CannotShowSeedSettingsTestCase @Inject constructor(
 
         val authToken = knownSeed12AuthorizedChecker.findMatchingSeed()
         if (authToken == null) {
-            logger.warn("Cannot find auth token for seed ${KnownSeed12.SEED_NAME}")
+            logger.warn("Cannot find auth token for seed ${knownSeed12.SEED_NAME}")
             return TestResult.FAIL
         }
 

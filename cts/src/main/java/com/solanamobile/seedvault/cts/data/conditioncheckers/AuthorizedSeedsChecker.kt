@@ -10,6 +10,7 @@ import android.os.Bundle
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.cts.data.ConditionCheckerImpl
 import com.solanamobile.seedvault.cts.data.TestResult
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed24
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -107,15 +108,16 @@ internal abstract class AuthorizedSeedsChecker(
 
 @Singleton
 internal class KnownSeed12AuthorizedChecker @Inject constructor(
-    @ApplicationContext ctx: Context
+    @ApplicationContext ctx: Context,
+    @KnownSeed12 knownSeed12: KnownSeed
 ) : AuthorizedSeedsChecker(
-    KnownSeed12.SEED_NAME,
-    KnownSeed12.DERIVATION_PATH_0.toString(),
-    KnownSeed12.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
+    knownSeed12.SEED_NAME,
+    knownSeed12.DERIVATION_PATH_0.toString(),
+    knownSeed12.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
     ctx
 ) {
     override val id: String = "ks12a"
-    override val description: String = "Seed '${KnownSeed12.SEED_NAME}' is authorized"
+    override val description: String = "Seed '${knownSeed12.SEED_NAME}' is authorized"
 
     override suspend fun doCheck(): TestResult {
         return if (findMatchingSeed() != null) TestResult.PASS else TestResult.FAIL
@@ -124,15 +126,16 @@ internal class KnownSeed12AuthorizedChecker @Inject constructor(
 
 @Singleton
 internal class KnownSeed12NotAuthorizedChecker @Inject constructor(
-    @ApplicationContext ctx: Context
+    @ApplicationContext ctx: Context,
+    @KnownSeed12 knownSeed12: KnownSeed
 ) : AuthorizedSeedsChecker(
-    KnownSeed12.SEED_NAME,
-    KnownSeed12.DERIVATION_PATH_0.toString(),
-    KnownSeed12.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
+    knownSeed12.SEED_NAME,
+    knownSeed12.DERIVATION_PATH_0.toString(),
+    knownSeed12.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
     ctx
 ) {
     override val id: String = "ks12na"
-    override val description: String = "Seed '${KnownSeed12.SEED_NAME}' is not authorized"
+    override val description: String = "Seed '${knownSeed12.SEED_NAME}' is not authorized"
 
     override suspend fun doCheck(): TestResult {
         return if (findMatchingSeed() == null) TestResult.PASS else TestResult.FAIL
@@ -141,15 +144,16 @@ internal class KnownSeed12NotAuthorizedChecker @Inject constructor(
 
 @Singleton
 internal class KnownSeed24AuthorizedChecker @Inject constructor(
-    @ApplicationContext ctx: Context
+    @ApplicationContext ctx: Context,
+    @KnownSeed24 knownSeed24: KnownSeed
 ) : AuthorizedSeedsChecker(
-    KnownSeed24.SEED_NAME,
-    KnownSeed24.DERIVATION_PATH_0.toString(),
-    KnownSeed24.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
+    knownSeed24.SEED_NAME,
+    knownSeed24.DERIVATION_PATH_0.toString(),
+    knownSeed24.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
     ctx
 ) {
     override val id: String = "ks24a"
-    override val description: String = "Seed '${KnownSeed24.SEED_NAME}' is authorized"
+    override val description: String = "Seed '${knownSeed24.SEED_NAME}' is authorized"
 
     override suspend fun doCheck(): TestResult {
         return if (findMatchingSeed() != null) TestResult.PASS else TestResult.FAIL
@@ -158,15 +162,16 @@ internal class KnownSeed24AuthorizedChecker @Inject constructor(
 
 @Singleton
 internal class KnownSeed24NotAuthorizedChecker @Inject constructor(
-    @ApplicationContext ctx: Context
+    @ApplicationContext ctx: Context,
+    @KnownSeed24 knownSeed24: KnownSeed
 ) : AuthorizedSeedsChecker(
-    KnownSeed24.SEED_NAME,
-    KnownSeed24.DERIVATION_PATH_0.toString(),
-    KnownSeed24.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
+    knownSeed24.SEED_NAME,
+    knownSeed24.DERIVATION_PATH_0.toString(),
+    knownSeed24.DERIVATION_PATH_0_PUBLIC_KEY_BASE58,
     ctx
 ) {
     override val id: String = "ks24na"
-    override val description: String = "Seed '${KnownSeed24.SEED_NAME}' is not authorized"
+    override val description: String = "Seed '${knownSeed24.SEED_NAME}' is not authorized"
 
     override suspend fun doCheck(): TestResult {
         return if (findMatchingSeed() == null) TestResult.PASS else TestResult.FAIL

@@ -11,13 +11,13 @@ import android.database.Cursor
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.cts.data.ConditionChecker
-import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasUnauthorizedSeedsChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.NoUnauthorizedSeedsChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -26,7 +26,7 @@ internal abstract class UnauthorizedSeedsContentProviderTestCase(
     preConditions: List<ConditionChecker>,
     private val ctx: Context,
     private val logger: TestSessionLogger,
-    private val sagaChecker: SagaChecker
+    private val implementationDetails: ImplementationDetails
 ) : TestCaseImpl(
     preConditions = preConditions
 ) {
@@ -103,12 +103,12 @@ internal abstract class UnauthorizedSeedsContentProviderTestCase(
     }
 
     private fun testTableMimeType(): Boolean {
-        val expectedTableMimeType = if (sagaChecker.isSaga()) {
+        val expectedTableMimeType = if (implementationDetails.IS_LEGACY_IMPLEMENTATION) {
             "${ContentResolver.CURSOR_ITEM_BASE_TYPE}${WalletContractV1.UNAUTHORIZED_SEEDS_MIME_SUBTYPE}"
         } else {
             "${ContentResolver.CURSOR_DIR_BASE_TYPE}/${WalletContractV1.UNAUTHORIZED_SEEDS_MIME_SUBTYPE}"
         }
-        val expectedItemMimeType = if (sagaChecker.isSaga()) {
+        val expectedItemMimeType = if (implementationDetails.IS_LEGACY_IMPLEMENTATION) {
             "${ContentResolver.CURSOR_ITEM_BASE_TYPE}${WalletContractV1.UNAUTHORIZED_SEEDS_MIME_SUBTYPE}"
         } else {
             "${ContentResolver.CURSOR_ITEM_BASE_TYPE}/${WalletContractV1.UNAUTHORIZED_SEEDS_MIME_SUBTYPE}"
@@ -281,13 +281,13 @@ internal class NoUnauthorizedSeedsContentProviderTestCase @Inject constructor(
     noUnauthorizedSeedsChecker: NoUnauthorizedSeedsChecker,
     @ApplicationContext ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker,
+    implementationDetails: ImplementationDetails
 ) : UnauthorizedSeedsContentProviderTestCase(
     false,
     listOf(hasSeedVaultPermissionChecker, noUnauthorizedSeedsChecker),
     ctx,
     logger,
-    sagaChecker
+    implementationDetails
 ) {
     override val id: String = "nuascp"
     override val description: String =
@@ -300,13 +300,13 @@ internal class HasUnauthorizedSeedsContentProviderTestCase @Inject constructor(
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     @ApplicationContext ctx: Context,
     logger: TestSessionLogger,
-    sagaChecker: SagaChecker,
+    implementationDetails: ImplementationDetails
 ) : UnauthorizedSeedsContentProviderTestCase(
     true,
     listOf(hasSeedVaultPermissionChecker, hasUnauthorizedSeedsChecker),
     ctx,
     logger,
-    sagaChecker
+    implementationDetails
 ) {
     override val id: String = "huascp"
     override val description: String =
