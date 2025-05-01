@@ -27,6 +27,7 @@ import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.tests.helper.ActionFailedException
@@ -46,7 +47,7 @@ internal abstract class PubKeyDerivationTestCase(
     private val logger: TestSessionLogger,
     private val fetchPermissionedPubkey: Boolean = false,
     private val expectedException: Exception? = null,
-    private val expectedPubKeys: ArrayList<PublicKeyResponse>? = null
+    private val expectedPubKeys: List<PublicKeyResponse>? = null
 ) : TestCaseImpl(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker)
 ), ActivityLauncherTestCase {
@@ -149,6 +150,8 @@ internal abstract class PubKeyDerivationTestCase(
                 } else {
                     TestResult.PASS
                 }
+            } else if (expectedException != null) {
+                TestResult.FAIL
             } else {
                 TestResult.PASS
             }
@@ -235,19 +238,20 @@ internal class Fetch1PubKeyTestCase @Inject constructor(
     override val instructions: String = ""
 }
 
-internal class Fetch10PubKeyTestCase @Inject constructor(
+internal class FetchMaxPubKeyTestCase @Inject constructor(
     @ApplicationContext context: Context,
     logger: TestSessionLogger,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     @KnownSeed12 knownSeed12: KnownSeed,
+    implementationDetails: ImplementationDetails,
 ) : PubKeyDerivationTestCase(
     context = context,
     hasSeedVaultPermissionChecker = hasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
     knownSeed12 = knownSeed12,
     startIndex = 1001,
-    keysToFetch = 10,
+    keysToFetch = implementationDetails.MAX_REQUESTED_PUBLIC_KEYS,
     expectedPubKeys = arrayListOf(
         PublicKeyResponse(
             byteArrayOf(119, 77, -30, -98, 86, -100, 84, -84, -78, 56, -72, 28, -15, -38, -62, 123, 33, 126, 98, -50, 56, 15, -53, 110, -26, 102, -94, -112, 58, -17, -119, 30),
@@ -299,31 +303,136 @@ internal class Fetch10PubKeyTestCase @Inject constructor(
             "BhWWfc1yf5EgdZM6PBddC1BE1kxxtcdijHsMKongAiGh",
             Uri.parse("bip32:/m/1010'")
         ),
-    ),
+        PublicKeyResponse(
+            byteArrayOf(-60, 16, 63, -83, 70, 121, -114, -64, 97, -105, -124, -37, 52, -56, 14, -126, -71, 44, -44, -123, 121, 3, -123, 6, 71, -21, -34, 85, -59, 88, 63, -104),
+            "ECMHCKagCLGbiqeZV4n8nM96aK3pqPH1SZDSpMyajWns",
+            Uri.parse("bip32:/m/1011'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-18, -47, -30, -12, -18, -44, 125, -81, -105, -83, 68, -31, 31, 36, 77, 97, -47, -97, -69, -128, 28, -95, -40, 100, 124, -17, 54, -119, -126, 120, 65, -71),
+            "H5Ff6Tm1fDsAJ4tvAayhgvKG2TdQjResbfRpDCdPoTQC",
+            Uri.parse("bip32:/m/1012'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(20, -92, 28, 95, 28, -76, 103, 33, -105, 90, -40, 39, 85, 91, 97, -97, -83, 55, -7, 37, 8, -106, -98, -107, 23, -21, -102, 88, 107, -68, -27, 117),
+            "2PaJ5NMPbuQn2gD3vkGyUEgpv54gzZASwCvkKXCPGiGt",
+            Uri.parse("bip32:/m/1013'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(50, -18, 69, 95, -26, 34, 92, 98, 18, 115, 117, -110, -87, -36, -28, -81, -88, -81, -82, -95, -38, -42, 97, 84, 10, 31, -33, 69, -101, 8, 24, 97),
+            "4Rp7Z1YLiv58GpXzdazSz3mtHP2ay54Ki58F6PpBowon",
+            Uri.parse("bip32:/m/1014'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-36, 55, 67, -96, -58, -105, 92, -5, -43, 54, -39, 102, -127, 90, 105, 96, 17, 20, 72, -74, -45, 102, -89, -78, -15, 34, 52, -67, -25, 11, -8, -91),
+            "Fpda2XwKg5GDebRccLJz9J4tdwc2cnDFUrxXuW6kYwEt",
+            Uri.parse("bip32:/m/1015'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-84, 3, -120, 66, -114, -30, 119, -125, 53, 101, -18, -93, 76, -108, 38, -91, 127, -106, -107, -60, 111, 10, -104, 106, 69, 103, 47, 81, -89, 106, -64, 117),
+            "CaUFPAdw4GisnQWbkcvYMmVFjwaCaCw3vN9yH9G6TN4L",
+            Uri.parse("bip32:/m/1016'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-79, 68, -6, -36, -4, -37, -2, 102, 49, -63, 37, -112, -11, 37, -76, 127, -58, -5, 126, 43, -96, 56, 119, -13, -70, -49, 74, 25, -68, 98, -44, -19),
+            "CvzAnXrnHYHQEzYoFfFVvKwk5pzFAfWHDrVvtBpvvcqi",
+            Uri.parse("bip32:/m/1017'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-119, -40, 59, 125, -37, -34, 19, 62, 70, -105, -38, -73, -42, 8, 107, 36, -119, -125, 114, 49, -96, -128, 74, 24, -119, -126, -60, -79, -103, -52, -108, -10),
+            "AH66KC5kRDmZK59LaNyvYfWw3iebhyHPXWjz2hNwEccM",
+            Uri.parse("bip32:/m/1018'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-106, -109, -78, -90, -40, -54, -49, -96, 0, 27, -42, -101, 104, 44, 37, -13, 115, -49, -103, -9, 56, -96, 101, 93, -84, -4, 8, -5, 33, -102, 21, 47),
+            "B8nnCu5G5wJtZGMvnk7mV6Fz7aNrfzPCafF3o767g5Ga",
+            Uri.parse("bip32:/m/1019'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(60, 104, 22, -11, -80, 79, 117, -92, 31, -91, -22, 117, -108, -81, -110, -86, -86, 21, -6, 60, -38, -64, 101, 36, -100, -90, -72, -33, -1, 74, 83, -54),
+            "54oX7y1GBTJaNf1W6nASEX6N2hRkwWb27PcZLKSuKCob",
+            Uri.parse("bip32:/m/1020'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-22, 68, -124, -111, 55, 88, 20, 6, -11, 42, 80, 22, -119, -66, -4, -7, -79, 10, -51, -6, -79, 125, -44, -54, 8, -29, -11, 54, 32, 61, -22, 98),
+            "GmUzvyEhLyGaQUesvTCxMeaTuRuDxSJVrfeEcJPWt2c9",
+            Uri.parse("bip32:/m/1021'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(54, 39, -77, 72, -40, 127, 97, 122, 24, -116, 104, 21, 47, 42, -85, 17, -35, 91, 118, 51, -12, -52, -117, 38, -88, 116, -92, -47, 108, -77, -61, 75),
+            "4eQ8MjSTo4j3PpMi9LMiGuV6NJBsUuHNTrvzt2WVyBiz",
+            Uri.parse("bip32:/m/1022'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-71, 10, -116, 83, -12, 31, -90, 104, 105, -85, 109, 64, -106, -20, 126, 118, -72, 37, -89, -54, 57, 101, -81, -105, -66, -19, 106, -48, 10, -85, -84, -56),
+            "DTKkfrPKhqHogWM6wjHeJCPSRzUd1z4hapXFom8CBwVy",
+            Uri.parse("bip32:/m/1023'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-77, -37, -103, 13, -74, 123, -65, -92, 117, 53, 8, -48, -12, -82, -74, 117, 71, 47, 38, 25, 111, -87, 106, -121, -12, 55, 58, 48, -108, -55, -27, -37),
+            "D76C6kZBtZb1qJPAZ38y8mbziWC6ijTEbGcuxN5N6HQE",
+            Uri.parse("bip32:/m/1024'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(106, 36, 23, 111, 55, 37, -109, -59, -108, 116, 113, -24, -33, -81, -111, 63, -29, 68, -84, -104, -120, 96, 29, -32, 77, -16, 124, -61, 46, 83, -8, 86),
+            "89L8rqWvLa97inrwbcsqjxaEnofTJDbWYGJjt81ZrJmK",
+            Uri.parse("bip32:/m/1025'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(41, 102, -119, -7, -88, 33, -9, 33, -46, -3, -26, 34, 3, -28, -96, 1, 89, -15, -54, -17, 45, 80, -35, 21, 15, 42, -85, -27, 49, 97, 84, 2),
+            "3ncQHwte6maiLf1KDYY8SqQMPB25jQAXsaKAhLBhvVrq",
+            Uri.parse("bip32:/m/1026'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-38, -127, 51, -27, 68, 61, -123, 61, 61, 73, -20, -58, 19, -58, 41, -31, 86, -91, -117, -93, -125, -91, -93, 19, 67, 83, -67, 66, -77, -115, -72, -34),
+            "Fhx9Sy3gkxFT5aa2aYLL7ScaggazgmC47h5ftxXuUGKw",
+            Uri.parse("bip32:/m/1027'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-64, 17, 2, -81, 82, -91, 112, 68, 7, 96, 23, -36, -18, -27, -39, -80, 60, -28, 20, 16, 85, -53, 59, 66, -22, -98, -59, -62, 43, -71, 80, 98),
+            "DvkKgemQ1q7dm12ZeMTs22a6UWCznckssWN4NmmraYkH",
+            Uri.parse("bip32:/m/1028'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(82, -123, -108, 53, 49, 62, -24, 55, 40, 29, -29, 20, -116, -61, 73, 61, 91, -104, 71, 11, -3, 73, 44, 104, 65, 19, 34, -47, -84, -104, 50, -62),
+            "6Z8a1UFFnXBEh13aqt9rZt7r1zn5pmvA8TWf4mHRhmwP",
+            Uri.parse("bip32:/m/1029'")
+        ),
+        PublicKeyResponse(
+            byteArrayOf(-64, -40, 91, -113, 121, 19, 74, -34, 103, -68, 41, 26, -55, -107, -26, 82, 106, 0, 73, -95, 106, 40, -116, 72, 121, -64, -35, 30, 8, -115, 71, -78),
+            "DyndJ8894KAwJDZTfoSCnajqPiSfBU2fzJr896nsiYQy",
+            Uri.parse("bip32:/m/1030'")
+        ),
+    ).take(implementationDetails.MAX_REQUESTED_PUBLIC_KEYS),
     logger = logger
 ) {
-    override val id: String = "f10pk"
-    override val description: String = "Fetch 10 public key."
+    override val id: String = "fmaxpk"
+    override val description: String = "Fetch ${implementationDetails.MAX_REQUESTED_PUBLIC_KEYS} public keys."
     override val instructions: String = ""
+
+    init {
+        check(implementationDetails.MAX_REQUESTED_PUBLIC_KEYS <= 30) { "Test case implementation currently only handles up to 30 requested pubkeys" }
+    }
 }
 
-internal class Fetch11PubKeyTestCase @Inject constructor(
+internal class FetchTooManyPubKeyTestCase @Inject constructor(
     @ApplicationContext context: Context,
     logger: TestSessionLogger,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     @KnownSeed12 knownSeed12: KnownSeed,
+    implementationDetails: ImplementationDetails,
 ) : PubKeyDerivationTestCase(
     context = context,
     hasSeedVaultPermissionChecker = hasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
     knownSeed12 = knownSeed12,
-    keysToFetch = 11,
+    keysToFetch = implementationDetails.MAX_REQUESTED_PUBLIC_KEYS + 1,
     expectedException = ActionFailedException("PubKey fetch", WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED),
     logger = logger
 ) {
-    override val id: String = "f11pk"
-    override val description: String = "Fetch 11 public key."
+    override val id: String = "ftmpk"
+    override val description: String = "Fetch too many (${implementationDetails.MAX_REQUESTED_PUBLIC_KEYS + 1}) public keys."
     override val instructions: String = ""
 }
 

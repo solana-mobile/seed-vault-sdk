@@ -223,7 +223,7 @@ class RunCtsTestsOnSimulator {
     internal inner class Seed12AccountsContentProviderTestCase(override val id: String = "ks12acp") : CtsTestCase
     internal inner class Seed24AccountsContentProviderTestCase(override val id: String = "ks24acp") : CtsTestCase
     internal inner class DeauthorizeSeed12TestCase(override val id: String = "ds12") : CtsTestCase
-    internal inner class Fetch11PubKeyTestCase(override val id: String = "f11pk") : CtsTestCase
+    internal inner class FetchTooManyPubKeyTestCase(override val id: String = "ftmpk") : CtsTestCase
     internal inner class HasAuthorizedSeedsContentProviderTestCase(override val id: String = "hascp") : CtsTestCase
     internal inner class HasUnauthorizedSeedsContentProviderTestCase(override val id: String = "huascp") : CtsTestCase
     internal inner class ImplementationLimitsContentProviderTestCase(override val id: String = "ilcp") : CtsTestCase
@@ -362,7 +362,7 @@ class RunCtsTestsOnSimulator {
     internal inner class PermissionedAccountFetchPubKeysGenericTestCase(override val id: String = "pafpktc") : AuthorizeWithBiometricsTestCase()
     internal inner class PermissionedAccountFetchPubKeysPrivilegedTestCase(override val id: String = "pafpktc") : CtsTestCase
     internal inner class Fetch1PubKeyTestCase(override val id: String = "f1pk") : AuthorizeWithBiometricsTestCase()
-    internal inner class Fetch10PubKeyTestCase(override val id: String = "f10pk") : AuthorizeWithBiometricsTestCase()
+    internal inner class FetchMaxPubKeyTestCase(override val id: String = "fmaxpk") : AuthorizeWithBiometricsTestCase()
     internal inner class ReauthorizeSeed12TestCase(override val id: String = "rs12") : AuthorizeWithBiometricsTestCase()
     internal inner class Sign1MessageWith1SignatureTestCase(override val id: String = "s1m1s") : AuthorizeWithBiometricsTestCase()
     internal inner class Sign1TransactionWith1SignatureTestCase(override val id: String = "s1t1s") : AuthorizeWithBiometricsTestCase()
@@ -512,8 +512,8 @@ class RunCtsTestsOnSimulator {
         PermissionedAccountFetchPubKeysGenericTestCase().takeIf { IS_GENERIC_BUILD },
         PermissionedAccountFetchPubKeysPrivilegedTestCase().takeIf { !IS_GENERIC_BUILD },
         Fetch1PubKeyTestCase(),
-        Fetch10PubKeyTestCase(),
-        Fetch11PubKeyTestCase(),
+        FetchMaxPubKeyTestCase(),
+        FetchTooManyPubKeyTestCase(),
         Sign1TransactionWith1SignatureTestCase(),
         SignMaxTransactionWithMaxSignatureTestCase(),
         SignMaxTransactionWithMaxSignatureBip44TestCase(),
