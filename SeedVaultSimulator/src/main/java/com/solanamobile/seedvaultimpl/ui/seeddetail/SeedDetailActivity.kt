@@ -653,9 +653,7 @@ fun EditField(
                 testTag = testResourceId
             },
         value = fieldValue,
-        onValueChange = {
-            onValueSet(it.trim())
-        },
+        onValueChange = onValueSet,
         textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Done,

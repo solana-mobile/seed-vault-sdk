@@ -4,15 +4,14 @@
 
 package com.solanamobile.seedvault.cts.data.testdata
 
-import android.os.Build
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object NewSeed {
-    val SEED_NAME = when (Build.MODEL) {
-        "Seeker" -> "Seeker Seed 3"
-        else -> "NewSeed"
-    }
-    val SEED_PIN = when (Build.MODEL) {
-        "Seeker" -> "<use existing PIN>"
-        else -> "000000"
+@Singleton
+internal class NewSeed @Inject constructor(implementationDetails: ImplementationDetails) {
+    val SEED_NAME = implementationDetails.generateSeedName(2)
+    val SEED_PIN = when (implementationDetails.IS_PIN_CONFIGURABLE_PER_SEED) {
+        true -> "000000"
+        false -> "<use existing PIN>"
     }
 }

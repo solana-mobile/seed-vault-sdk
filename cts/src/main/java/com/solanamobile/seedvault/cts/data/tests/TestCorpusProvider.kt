@@ -4,11 +4,10 @@
 
 package com.solanamobile.seedvault.cts.data.tests
 
-import com.solanamobile.seedvault.cts.BuildConfig
 import com.solanamobile.seedvault.cts.PrivilegedSeedVaultChecker
-import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCorpus
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,12 +58,11 @@ internal object TestCorpusProvider {
         signTransactionRequestsExceedLimitTestCase: SignTransactionRequestsExceedLimitTestCase,
         signTransactionSignaturesExceedLimitTestCase: SignTransactionSignaturesExceedLimitTestCase,
         logger: TestSessionLogger,
-        sagaChecker: SagaChecker,
+        implementationDetails: ImplementationDetails,
         privilegedSeedVaultChecker: PrivilegedSeedVaultChecker,
     ): TestCorpus {
-        val isSaga = sagaChecker.isSaga()
-        if (isSaga) {
-            logger.warn("Running additional bypass for Saga only.")
+        if (implementationDetails.IS_LEGACY_IMPLEMENTATION) {
+            logger.warn("Running additional bypass for legacy implementation only.")
         }
         val isGenericBuild = !privilegedSeedVaultChecker.isPrivileged()
         return listOfNotNull(
@@ -75,7 +73,7 @@ internal object TestCorpusProvider {
             noUnauthorizedSeedsContentProviderTestCase,
             noAuthorizedSeedsContentProviderTestCase,
             importSeed12TestCase,
-            authorizeSeed12SagaTestCase.takeIf { isSaga },
+            authorizeSeed12SagaTestCase.takeIf { implementationDetails.IS_LEGACY_IMPLEMENTATION },
             permissionedAccountFetchPubKeysTestCase,
             fetch1PubKeyTestCase,
             fetch10PubKeyTestCase,
@@ -94,18 +92,18 @@ internal object TestCorpusProvider {
             signMessageSignaturesExceedLimitTestCase,
             denySignMessageTestCase,
             incorrectPinSignMessageFailureTestCase,
-            cannotShowSeedSettingsTestCase.takeIf { isGenericBuild && !isSaga },
+            cannotShowSeedSettingsTestCase.takeIf { isGenericBuild && !implementationDetails.IS_LEGACY_IMPLEMENTATION },
             showSeedSettingsTestCase.takeIf { !isGenericBuild },
             deauthorizeSeed12TestCase.takeIf { isGenericBuild },
             hasUnauthorizedSeedsContentProviderTestCase.takeIf { isGenericBuild },
             reauthorizeSeed12TestCase.takeIf { isGenericBuild },
             importSeed24TestCase,
-            authorizeSeed24SagaTestCase.takeIf { isSaga },
+            authorizeSeed24SagaTestCase.takeIf { implementationDetails.IS_LEGACY_IMPLEMENTATION },
             hasAuthorizedSeedsContentProviderTestCase,
             seed12AccountsContentProviderTestCase,
             seed24AccountsContentProviderTestCase,
             createNewSeedTestCase,
-            implementationLimitsContentProviderTestCase.takeIf { !isSaga },
+            implementationLimitsContentProviderTestCase.takeIf { !implementationDetails.IS_LEGACY_IMPLEMENTATION },
             deauthorizeSeed24TestCase.takeIf { isGenericBuild },
         )
     }

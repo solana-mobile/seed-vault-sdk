@@ -10,11 +10,11 @@ import android.content.Context
 import androidx.collection.arrayMapOf
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
-import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -22,7 +22,7 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     @ApplicationContext private val ctx: Context,
     private val logger: TestSessionLogger,
-    private val sagaChecker: SagaChecker
+    private val implementationDetails: ImplementationDetails
 ) : TestCaseImpl(
     preConditions = listOf(hasSeedVaultPermissionChecker)
 ) {
@@ -92,12 +92,12 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
     }
 
     private fun testTableMimeType(): Boolean {
-        val expectedTableMimeType = if (sagaChecker.isSaga()) {
+        val expectedTableMimeType = if (implementationDetails.IS_LEGACY_IMPLEMENTATION) {
             "${ContentResolver.CURSOR_DIR_BASE_TYPE}${WalletContractV1.IMPLEMENTATION_LIMITS_MIME_SUBTYPE}"
         } else {
             "${ContentResolver.CURSOR_DIR_BASE_TYPE}/${WalletContractV1.IMPLEMENTATION_LIMITS_MIME_SUBTYPE}"
         }
-        val expectedItemMimeType = if (sagaChecker.isSaga()) {
+        val expectedItemMimeType = if (implementationDetails.IS_LEGACY_IMPLEMENTATION) {
             "${ContentResolver.CURSOR_ITEM_BASE_TYPE}${WalletContractV1.IMPLEMENTATION_LIMITS_MIME_SUBTYPE}"
         } else {
             "${ContentResolver.CURSOR_ITEM_BASE_TYPE}/${WalletContractV1.IMPLEMENTATION_LIMITS_MIME_SUBTYPE}"

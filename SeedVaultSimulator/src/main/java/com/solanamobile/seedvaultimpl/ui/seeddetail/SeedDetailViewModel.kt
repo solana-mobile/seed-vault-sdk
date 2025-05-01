@@ -96,18 +96,20 @@ class SeedDetailViewModel @Inject constructor(
 
     fun setSeedPhraseWord(index: Int, word: String) {
         require(index in 0 until SEED_PHRASE_24_WORDS.length)
-        Log.d(TAG, "setSeedPhraseWord($index, $word)")
+        val w = word.filterNot { c -> c.isWhitespace() }
+        Log.d(TAG, "setSeedPhraseWord($index, $w)")
         _seedDetailUiState.update { current ->
             val newPhrase = current.phrase.toMutableList().also {
-                it[index] = word
+                it[index] = w
             }
             current.copy(phrase = newPhrase)
         }
     }
 
     fun setPIN(pin: String) {
-        Log.d(TAG, "setPIN($pin)")
-        _seedDetailUiState.update { it.copy(pin = pin) }
+        val p = pin.filterNot { c -> c.isWhitespace() }
+        Log.d(TAG, "setPIN($p)")
+        _seedDetailUiState.update { it.copy(pin = p) }
     }
 
     fun enableBiometrics(en: Boolean) {
@@ -140,7 +142,7 @@ class SeedDetailViewModel @Inject constructor(
                 SeedDetails(
                     seedBytes,
                     phrase,
-                    it.name.ifBlank { null },
+                    it.name.trim().ifBlank { null },
                     it.pin,
                     it.enableBiometrics,
                     it.isBackedUp

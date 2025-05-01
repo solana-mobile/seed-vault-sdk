@@ -28,8 +28,6 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.cts.data.TestResult
-import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
-import com.solanamobile.seedvault.cts.data.testdata.KnownSeed24
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.delay
@@ -43,7 +41,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.ByteArrayOutputStream
 import java.util.regex.Pattern
-
 
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
@@ -335,9 +332,19 @@ class RunCtsTestsOnSimulator {
     }
 
     internal inner class ImportSeed12TestCase(override val id: String = "is12") :
-        ImportSeedTestCase(KnownSeed12.SEED_NAME, KnownSeed12.SEED_PIN, KnownSeed12.SEED, true)
+        ImportSeedTestCase(
+            "Test 1", "123456", arrayOf(
+                "eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "eye", "egg"
+            ), true
+        )
     internal inner class ImportSeed24TestCase(override val id: String = "is24") :
-        ImportSeedTestCase(KnownSeed24.SEED_NAME, KnownSeed24.SEED_PIN, KnownSeed24.SEED, false)
+        ImportSeedTestCase(
+            "Test 2", "654321", arrayOf(
+                "fox", "fox", "fox", "fox", "fox", "fox", "fox", "fox",
+                "fox", "fox", "fox", "fox", "fox", "fox", "fox", "fox",
+                "fox", "fox", "fox", "fox", "fox", "fox", "fox", "oven"
+            ), false
+        )
 
     internal abstract inner class AuthorizeWithBiometricsTestCase : CtsTestCase {
         override fun createClickAndWaitCondition(): ClickAndWaitCondition = ClickAndWaitConditionEvent(Until.newWindow())
@@ -367,7 +374,7 @@ class RunCtsTestsOnSimulator {
     internal inner class CreateNewSeedTestCase : CtsTestCase {
         override val id = "cns"
 
-        private val seedName = "NewSeed"
+        private val seedName = "Test 3"
         private val seedPin = "000000"
         private val enableBiometrics = true
 
@@ -538,8 +545,12 @@ class RunCtsTestsOnSimulator {
 
 fun UiDevice.pressKeyCodeSequence(str: String) {
     str.forEach { c ->
+        val symbolicName = when (c) {
+            ' ' -> "KEYCODE_SPACE"
+            else -> "KEYCODE_${c.uppercase()}"
+        }
         pressKeyCode(
-            KeyEvent.keyCodeFromString("KEYCODE_${c.uppercase()}"),
+            KeyEvent.keyCodeFromString(symbolicName),
             if (c.isUpperCase()) KeyEvent.META_SHIFT_ON else 0
         )
     }

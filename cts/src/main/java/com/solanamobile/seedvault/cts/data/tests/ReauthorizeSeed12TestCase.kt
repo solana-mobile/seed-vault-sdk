@@ -14,13 +14,14 @@ import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.WalletContractV1.AuthToken
 import com.solanamobile.seedvault.cts.data.ActivityLauncherTestCase
-import com.solanamobile.seedvault.cts.data.SagaChecker
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasUnauthorizedSeedsChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12NotAuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import kotlinx.coroutines.CompletableDeferred
 import javax.inject.Inject
@@ -29,20 +30,22 @@ internal class AuthorizeSeed12SagaTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
+    @KnownSeed12 knownSeed12: KnownSeed,
     private val logger: TestSessionLogger,
-    private val sagaChecker: SagaChecker
+    private val implementationDetails: ImplementationDetails
 ): ReauthorizeSeed12TestCase(
     hasSeedVaultPermissionChecker,
     hasUnauthorizedSeedsChecker,
     knownSeed12NotAuthorizedChecker,
+    knownSeed12,
     logger
 ) {
     override val id: String = "as12saga"
-    override val description: String = "Authorize the '${KnownSeed12.SEED_NAME}'"
-    override val instructions: String = "On your Saga device rename the previous created seed to '${KnownSeed12.SEED_NAME}' before pressing execute\n\nWhen prompted, authorize seed ${KnownSeed12.SEED_NAME} using biometrics"
+    override val description: String = "Authorize the '${knownSeed12.SEED_NAME}'"
+    override val instructions: String = "On your Saga device rename the previous created seed to '${knownSeed12.SEED_NAME}' before pressing execute\n\nWhen prompted, authorize seed ${knownSeed12.SEED_NAME} using biometrics"
 
     override suspend fun doExecute(): TestResult {
-        if (!sagaChecker.isSaga()) {
+        if (!implementationDetails.IS_LEGACY_IMPLEMENTATION) {
             logger.warn("Running Saga only test on non-saga device.")
             return TestResult.FAIL
         }
@@ -54,13 +57,14 @@ internal open class ReauthorizeSeed12TestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     private val knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
+    @KnownSeed12 private val knownSeed12: KnownSeed,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
     preConditions = listOf(hasSeedVaultPermissionChecker, hasUnauthorizedSeedsChecker, knownSeed12NotAuthorizedChecker)
 ), ActivityLauncherTestCase {
     override val id: String = "rs12"
-    override val description: String = "Reauthorize the previously deauthorized seed '${KnownSeed12.SEED_NAME}'"
-    override val instructions: String = "When prompted, authorize seed ${KnownSeed12.SEED_NAME} using biometrics"
+    override val description: String = "Reauthorize the previously deauthorized seed '${knownSeed12.SEED_NAME}'"
+    override val instructions: String = "When prompted, authorize seed ${knownSeed12.SEED_NAME} using biometrics"
 
     private class AuthorizeSeedIntentContract : ActivityResultContract<Int, Result<Long>>() {
         override fun createIntent(context: Context, @WalletContractV1.Purpose input: Int): Intent =
@@ -109,7 +113,7 @@ internal open class ReauthorizeSeed12TestCase @Inject constructor(
         }
 
         if (!testReauthorizeSeed()) {
-            logger.warn("$id: seed ${KnownSeed12.SEED_NAME} was not reauthorized")
+            logger.warn("$id: seed ${knownSeed12.SEED_NAME} was not reauthorized")
             result = TestResult.FAIL
         }
 

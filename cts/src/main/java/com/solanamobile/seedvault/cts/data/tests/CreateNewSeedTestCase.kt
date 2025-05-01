@@ -28,6 +28,7 @@ import javax.inject.Inject
 internal class CreateNewSeedTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     newSeedExistsChecker: NewSeedDoesNotExistChecker,
+    newSeed: NewSeed,
     @ApplicationContext private val ctx: Context,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
@@ -35,7 +36,7 @@ internal class CreateNewSeedTestCase @Inject constructor(
 ), ActivityLauncherTestCase {
     override val id: String = "cns"
     override val description: String = "Create a new, random 12-word seed, and verify that it is created and properly enumerates pre-derived accounts"
-    override val instructions: String = "When the Create Seed workflow begins, follow the steps to create a new seed. Name the seed '${NewSeed.SEED_NAME}', Set the PIN to '${NewSeed.SEED_PIN}', and enable biometrics for this seed."
+    override val instructions: String = "When the Create Seed workflow begins, follow the steps to create a new seed. Name the seed '${newSeed.SEED_NAME}', Set the PIN to '${newSeed.SEED_PIN}', and enable biometrics for this seed."
 
     private class CreateSeedIntentContract : ActivityResultContract<Int, Result<Long>>() {
         override fun createIntent(context: Context, @WalletContractV1.Purpose input: Int): Intent =

@@ -20,7 +20,6 @@ import com.solanamobile.seedvault.PublicKeyResponse
 import com.solanamobile.seedvault.Wallet
 import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.WalletContractV1.AuthToken
-import com.solanamobile.seedvault.cts.BuildConfig
 import com.solanamobile.seedvault.cts.PrivilegedSeedVaultChecker
 import com.solanamobile.seedvault.cts.data.ActivityLauncherTestCase
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
@@ -28,6 +27,7 @@ import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.tests.helper.ActionFailedException
 import com.solanamobile.seedvault.cts.data.tests.helper.EmptyResponseException
@@ -40,6 +40,7 @@ internal abstract class PubKeyDerivationTestCase(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     @ApplicationContext private val context: Context,
     private val knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    private val knownSeed12: KnownSeed,
     private val keysToFetch: Int = 1,
     private val startIndex: Int = 1000,
     private val logger: TestSessionLogger,
@@ -108,7 +109,7 @@ internal abstract class PubKeyDerivationTestCase(
     override suspend fun doExecute(): TestResult {
         @AuthToken val authToken = knownSeed12AuthorizedChecker.findMatchingSeed()
         if (authToken == null) {
-            logger.warn("$id: Failed locating seed `${KnownSeed12.SEED_NAME}` to `signMessage`")
+            logger.warn("$id: Failed locating seed `${knownSeed12.SEED_NAME}` to `signMessage`")
             return TestResult.FAIL
         }
 
@@ -213,10 +214,12 @@ internal class Fetch1PubKeyTestCase @Inject constructor(
     logger: TestSessionLogger,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    @KnownSeed12 knownSeed12: KnownSeed,
 ) : PubKeyDerivationTestCase(
     context = context,
     hasSeedVaultPermissionChecker = hasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    knownSeed12 = knownSeed12,
     keysToFetch = 1,
     expectedPubKeys = arrayListOf(
         PublicKeyResponse(
@@ -237,10 +240,12 @@ internal class Fetch10PubKeyTestCase @Inject constructor(
     logger: TestSessionLogger,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    @KnownSeed12 knownSeed12: KnownSeed,
 ) : PubKeyDerivationTestCase(
     context = context,
     hasSeedVaultPermissionChecker = hasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    knownSeed12 = knownSeed12,
     startIndex = 1001,
     keysToFetch = 10,
     expectedPubKeys = arrayListOf(
@@ -307,10 +312,12 @@ internal class Fetch11PubKeyTestCase @Inject constructor(
     logger: TestSessionLogger,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    @KnownSeed12 knownSeed12: KnownSeed,
 ) : PubKeyDerivationTestCase(
     context = context,
     hasSeedVaultPermissionChecker = hasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    knownSeed12 = knownSeed12,
     keysToFetch = 11,
     expectedException = ActionFailedException("PubKey fetch", WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED),
     logger = logger
@@ -325,10 +332,12 @@ internal class PermissionedAccountFetchPubKeysTestCase @Inject constructor(
     logger: TestSessionLogger,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
+    @KnownSeed12 knownSeed12: KnownSeed,
     private val privilegedSeedVaultChecker: PrivilegedSeedVaultChecker,
 ) : PubKeyDerivationTestCase(
     context = context,
     knownSeed12AuthorizedChecker = knownSeed12AuthorizedChecker,
+    knownSeed12 = knownSeed12,
     hasSeedVaultPermissionChecker = hasSeedVaultPermissionChecker,
     logger = logger,
     keysToFetch = 10,
