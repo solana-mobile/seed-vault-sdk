@@ -122,9 +122,9 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
             c.count == 1 && // Current implementations only define a single PURPOSE_* value
                     c.moveToFirst() &&
                     c.getInt(0) == WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION &&
-                    c.getShort(1) >= MIN_ALLOWED_MAX_SIGNING_REQUESTS &&
-                    c.getShort(2) >= MIN_ALLOWED_MAX_REQUESTED_SIGNATURES &&
-                    c.getShort(3) >= MIN_ALLOWED_MAX_REQUESTED_PUBLIC_KEYS
+                    c.getShort(1) == implementationDetails.MAX_SIGNING_REQUESTS.toShort() &&
+                    c.getShort(2) == implementationDetails.MAX_REQUESTED_SIGNATURES.toShort() &&
+                    c.getShort(3) == implementationDetails.MAX_REQUESTED_PUBLIC_KEYS.toShort()
         } ?: false
     }
 
@@ -142,9 +142,9 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
             c.count == 1 && // Current implementations only define a single PURPOSE_* value
                     c.moveToFirst() &&
                     c.getInt(0) == WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION &&
-                    c.getShort(1) >= MIN_ALLOWED_MAX_SIGNING_REQUESTS &&
-                    c.getShort(2) >= MIN_ALLOWED_MAX_REQUESTED_SIGNATURES &&
-                    c.getShort(3) >= MIN_ALLOWED_MAX_REQUESTED_PUBLIC_KEYS
+                    c.getShort(1) == implementationDetails.MAX_SIGNING_REQUESTS.toShort() &&
+                    c.getShort(2) == implementationDetails.MAX_REQUESTED_SIGNATURES.toShort() &&
+                    c.getShort(3) == implementationDetails.MAX_REQUESTED_PUBLIC_KEYS.toShort()
         } ?: false
     }
 
@@ -177,9 +177,9 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
             c.count == 1 && // Current implementations only define a single PURPOSE_* value
                     c.moveToFirst() &&
                     c.getInt(0) == WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION &&
-                    c.getShort(1) >= MIN_ALLOWED_MAX_SIGNING_REQUESTS &&
-                    c.getShort(2) >= MIN_ALLOWED_MAX_REQUESTED_SIGNATURES &&
-                    c.getShort(3) >= MIN_ALLOWED_MAX_REQUESTED_PUBLIC_KEYS
+                    c.getShort(1) == implementationDetails.MAX_SIGNING_REQUESTS.toShort() &&
+                    c.getShort(2) == implementationDetails.MAX_REQUESTED_SIGNATURES.toShort() &&
+                    c.getShort(3) == implementationDetails.MAX_REQUESTED_PUBLIC_KEYS.toShort()
         } ?: false
     }
 
@@ -200,9 +200,9 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
             ctx,
             WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
         ) == arrayMapOf(
-            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS to MIN_ALLOWED_MAX_SIGNING_REQUESTS.toLong(),
-            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES to MIN_ALLOWED_MAX_REQUESTED_SIGNATURES.toLong(),
-            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS to MIN_ALLOWED_MAX_REQUESTED_PUBLIC_KEYS.toLong()
+            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS to implementationDetails.MAX_SIGNING_REQUESTS.toLong(),
+            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES to implementationDetails.MAX_REQUESTED_SIGNATURES.toLong(),
+            WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS to implementationDetails.MAX_REQUESTED_PUBLIC_KEYS.toLong()
         )
     }
 
@@ -226,9 +226,9 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
             c.count == 1 && // Current implementations only define a single PURPOSE_* value
                     c.moveToFirst() &&
                     c.getInt(0) == WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION &&
-                    c.getShort(1) >= MIN_ALLOWED_MAX_SIGNING_REQUESTS &&
-                    c.getShort(2) >= MIN_ALLOWED_MAX_REQUESTED_SIGNATURES &&
-                    c.getShort(3) >= MIN_ALLOWED_MAX_REQUESTED_PUBLIC_KEYS
+                    c.getShort(1) == implementationDetails.MAX_SIGNING_REQUESTS.toShort() &&
+                    c.getShort(2) == implementationDetails.MAX_REQUESTED_SIGNATURES.toShort() &&
+                    c.getShort(3) == implementationDetails.MAX_REQUESTED_PUBLIC_KEYS.toShort()
         } ?: false
     }
 
@@ -242,9 +242,9 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
             c.count == 1 && // Current implementations only define a single PURPOSE_* value
                     c.moveToFirst() &&
                     c.getInt(0) == WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION &&
-                    c.getShort(1) >= MIN_ALLOWED_MAX_SIGNING_REQUESTS &&
-                    c.getShort(2) >= MIN_ALLOWED_MAX_REQUESTED_SIGNATURES &&
-                    c.getShort(3) >= MIN_ALLOWED_MAX_REQUESTED_PUBLIC_KEYS
+                    c.getShort(1) == implementationDetails.MAX_SIGNING_REQUESTS.toShort() &&
+                    c.getShort(2) == implementationDetails.MAX_REQUESTED_SIGNATURES.toShort() &&
+                    c.getShort(3) == implementationDetails.MAX_REQUESTED_PUBLIC_KEYS.toShort()
         } ?: false
     }
 
@@ -257,11 +257,5 @@ internal class ImplementationLimitsContentProviderTestCase @Inject constructor(
         )?.use { c ->
             c.count == 0
         } ?: false
-    }
-
-    companion object {
-        private const val MIN_ALLOWED_MAX_SIGNING_REQUESTS: Short = 3
-        private const val MIN_ALLOWED_MAX_REQUESTED_SIGNATURES: Short = 3
-        private const val MIN_ALLOWED_MAX_REQUESTED_PUBLIC_KEYS: Short = 10
     }
 }

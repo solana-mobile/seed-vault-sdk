@@ -28,6 +28,7 @@ import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.AuthorizedSeedsChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import com.solanamobile.seedvault.cts.data.tests.helper.ActionFailedException
 import com.solanamobile.seedvault.cts.data.tests.helper.EmptyResponseException
 import com.solanamobile.seedvault.cts.data.tests.helper.NoResultException
@@ -40,8 +41,8 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
     private val authorizedSeedsChecker: AuthorizedSeedsChecker,
     private val logger: TestSessionLogger,
     private val expectedException: Exception? = null,
-    private val signingRequests: () -> ArrayList<SigningRequest>,
-    private val expectedSignatures: ArrayList<SigningResponse>? = null
+    private val signingRequests: () -> List<SigningRequest>,
+    private val expectedSignatures: List<SigningResponse>? = null
 ) : TestCaseImpl(
     preConditions = preConditions
 ), ActivityLauncherTestCase {
@@ -50,14 +51,14 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
 
     data class SignTransactionsInput(
         @AuthToken val authToken: Long,
-        val requests: ArrayList<SigningRequest>
+        val requests: List<SigningRequest>
     )
 
     class SignTransactionIntentContract :
         ActivityResultContract<SignTransactionsInput, Result<ArrayList<SigningResponse>>>() {
 
         override fun createIntent(context: Context, input: SignTransactionsInput): Intent =
-            Wallet.signTransactions(input.authToken, input.requests)
+            Wallet.signTransactions(input.authToken, ArrayList(input.requests))
 
         override fun parseResult(
             resultCode: Int,
@@ -265,6 +266,7 @@ internal class SignMaxTransactionWithMaxSignatureTestCase @Inject constructor(
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
+    implementationDetails: ImplementationDetails
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
@@ -309,8 +311,92 @@ internal class SignMaxTransactionWithMaxSignatureTestCase @Inject constructor(
                 Uri.parse("bip32:/m/44'/501'/7'"),
                 Uri.parse("bip32:/m/44'/501'/8'"),
             )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(66, -27, -126, 65, -83, -29, -74, 76, -109, -128, -122, -95, 127, 111, 102, -124, -52, 59, 100, 59, 66, 58, 74, 65, -96, -22, 10, 51, 12, 93, -120, -98, -8, 113, -70, -29, -26, 49, -100, -117, 84, 32, -101, 96, 6, -30, 80, 43, -10, -14, -77, -113, -19, 53, -116, -92, 120, 75, 20, -70, -83, 123, 127, 12),
+                byteArrayOf(55, -65, 49, 28, -33, 87, -72, -68, -57, 80, 38, -27, -113, 125, -20, 2, 13, 20, 76, 50, 103, -96, 104, -124, 18, -101, -108, 15, 1, 120, 83, -37, -40, -61, -82, -123, 24, -40, 122, -116, 38, 102, 98, -2, 37, 70, -52, -118, -74, 115, 113, -100, 17, 30, -118, -118, 47, -10, -27, 31, 8, -65, -64, 6),
+                byteArrayOf(63, -90, -17, -87, 88, -70, 41, 44, 91, 4, 39, -94, 107, 118, 1, 12, 44, -70, -35, 15, 121, 79, -128, 19, -88, 115, 89, 8, 98, -77, 81, 97, -14, -36, 65, -56, 114, 42, 47, 25, -30, -115, -77, 3, -66, 68, -12, -104, -30, 53, 78, -98, -68, -85, 119, 94, -9, 4, -55, 70, -16, 32, 92, 14)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/9'"),
+                Uri.parse("bip32:/m/44'/501'/10'"),
+                Uri.parse("bip32:/m/44'/501'/11'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(-61, -59, 125, -71, 110, 106, 12, -47, -44, 27, -27, -94, 37, -88, 39, -53, -74, -27, -2, 88, -117, 5, -68, 42, 9, -23, 120, -23, -127, -128, 78, -38, 97, 43, -52, 45, 127, -30, 16, 67, -114, -109, -8, 104, 53, 120, 39, -115, -101, -99, -33, 12, -41, -63, -109, -69, -82, 22, -106, 39, -3, 22, -17, 10),
+                byteArrayOf(-56, -12, -2, 124, 56, 76, 84, 33, 47, -75, 119, -48, -90, 54, 103, 24, 119, -24, 55, -44, 65, 49, -46, 57, -82, -95, -112, -51, 32, -26, 80, 86, -23, 16, 70, 125, 80, -27, 71, 31, 41, 72, -124, -45, -100, 49, -4, -85, -30, 78, -67, -21, 103, -70, -49, -87, -78, -81, 107, 121, -84, -45, 82, 4),
+                byteArrayOf(103, -1, -111, -118, -119, -65, -108, 120, -56, -4, -83, -11, 120, 10, -79, 100, 9, -36, -107, -50, 29, 54, 65, 30, -47, -67, -21, -112, -8, -70, 24, -26, -81, 23, 64, 57, 90, 34, -95, 15, -88, -107, 123, -43, -3, 116, 76, -46, -78, -12, -15, 84, -7, 6, 55, 2, -125, -10, -74, -7, -95, 11, 78, 2)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/12'"),
+                Uri.parse("bip32:/m/44'/501'/13'"),
+                Uri.parse("bip32:/m/44'/501'/14'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf( -118, 74, -26, 3, 48, -74, 125, 61, -128, -9, 49, 25, 17, -6, 93, 53, 48, -89, -93, 48, 53, 70, 85, -88, -81, 8, -100, 67, 49, 38, 17, 78, -96, 108, -62, -25, -109, -67, 72, -128, 12, 63, -100, -110, -57, 30, -104, 55, 20, 122, -37, 81, -44, 114, -54, 15, -26, 124, -90, 109, -51, 67, -37, 8),
+                byteArrayOf(31, -97, -32, 4, 101, 17, 31, 107, -86, 48, 34, -16, 1, 30, -72, -4, -91, 87, -117, 39, -36, -60, 62, 18, 62, -45, -59, 19, 111, 123, -117, 87, -71, 12, -51, -15, -56, 7, 15, 123, 88, -118, 11, 24, -74, 53, 3, -93, 84, -88, 29, -24, 4, -60, -31, -44, 13, -118, -40, -2, 124, 77, 64, 13),
+                byteArrayOf(-22, -31, -124, -60, -97, 28, 19, 112, 12, -77, 35, -44, -24, 80, 56, 97, 44, 80, 56, 21, -20, 4, 7, -63, -107, 100, -46, -10, 83, 43, -84, 64, 50, -107, 13, 2, -2, 67, 111, -40, -42, 105, -7, -38, 24, -101, -113, 84, 105, -52, 122, 82, 61, 82, -43, -32, -51, -94, 107, -37, 36, -108, -47, 0)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/15'"),
+                Uri.parse("bip32:/m/44'/501'/16'"),
+                Uri.parse("bip32:/m/44'/501'/17'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(44, 26, -117, -111, 23, 78, 46, 77, -128, -120, -44, -57, -120, 98, 92, 50, -64, 80, 114, -124, 29, -38, 25, -32, -10, -63, 1, -3, 3, 102, 74, -99, -4, 34, -61, 51, 75, 94, 95, -53, 14, -18, 33, -57, -124, 62, 4, 46, -83, 31, 69, -53, 44, 16, -39, -110, -92, 25, 3, -15, -60, 90, -34, 12),
+                byteArrayOf(45, 30, 114, 54, 95, 92, 67, 12, -90, 69, -96, 30, -36, -61, -82, 120, -27, 57, -80, -71, 45, 65, -35, 29, 63, 16, -63, -62, -44, 1, -15, -9, -65, 109, -69, -4, 126, 27, 3, -118, 46, -75, -38, -97, 99, 12, 30, 60, 23, 48, -43, -92, -24, -100, 24, 81, -126, -67, 118, -67, -67, 22, -110, 15),
+                byteArrayOf(86, -20, 85, 68, -33, 25, -1, -79, -111, 110, -37, 55, -9, 17, 20, 7, 49, -68, 90, 20, -10, -92, -21, -101, -8, -120, -44, -47, -111, 25, -4, -32, 14, 84, 109, 127, 93, -64, 17, 26, -8, -64, -112, 42, 120, -125, -80, 24, 62, -56, 84, 52, 96, 52, 5, -112, 1, 95, 8, 4, -88, 110, 111, 0)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/18'"),
+                Uri.parse("bip32:/m/44'/501'/19'"),
+                Uri.parse("bip32:/m/44'/501'/20'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(-74, -118, -25, -50, -8, 3, 105, 99, 115, -13, -4, -122, -121, 26, -116, 55, -58, 99, 16, 124, -23, 26, -90, 104, -109, 1, 10, 57, 42, 120, 15, -58, 72, 57, -105, 37, -17, -75, -17, -23, -34, -2, 55, 102, 118, -28, -103, -17, 17, -10, 97, -50, -45, 34, -114, 46, 41, -60, -107, -121, -52, 104, -97, 8),
+                byteArrayOf(58, -26, 54, 126, 85, -77, 50, -112, -16, -118, 37, -111, -39, 101, -78, -68, 98, 23, 104, 104, -111, -106, 56, 95, -35, 27, -13, 30, -48, 71, 78, -56, -55, -86, 95, 2, -48, -68, 41, -16, 72, -110, 62, 87, 6, 50, -33, -5, -96, -42, -96, 70, 10, -65, -67, 115, 66, -90, 90, 88, 105, 20, 99, 13),
+                byteArrayOf(-43, -6, 116, -63, 67, -117, -20, 67, -51, 7, -50, 83, 99, 117, 110, -90, 88, 119, 18, -8, 79, -8, -89, -77, -25, 65, 5, -53, -109, 42, 1, -57, 28, 46, 26, -115, 0, -76, 99, -75, 86, -31, -115, -91, 71, 97, 29, 123, -78, 46, -60, -32, -96, -115, -26, 39, 15, -4, 89, 45, 67, 52, -37, 14)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/21'"),
+                Uri.parse("bip32:/m/44'/501'/22'"),
+                Uri.parse("bip32:/m/44'/501'/23'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(24, 72, -69, -6, 6, 113, -68, -26, -15, 11, -70, -20, 103, -80, -96, -11, -122, -68, 21, 11, -102, 41, 108, 6, -98, -78, -44, -2, 97, 23, 75, -89, -116, 84, -101, 10, 15, 8, -32, 36, -56, 50, -21, -39, -128, -80, -100, -72, -118, 88, -14, -66, -71, 45, 124, 115, -34, 13, -89, 57, -49, -12, 105, 15),
+                byteArrayOf(-5, -35, 60, 36, -113, -67, 101, -1, -1, -54, 103, -96, 70, 74, -83, -81, -80, 87, -82, -51, 5, 87, 42, 38, 51, 3, 78, 16, -64, -101, 97, -40, 54, 116, 58, 118, 117, 22, -107, -67, -96, -20, 62, -85, -122, -82, -120, -32, -104, -24, -36, 99, 104, -73, -12, -105, -6, -106, -72, 41, -11, 57, -89, 13),
+                byteArrayOf(31, 32, -61, -94, 43, -92, 126, 64, -103, 25, 101, 77, -108, 113, -4, -36, -76, 59, -17, 65, -26, -114, 96, 26, 4, 3, 33, -104, -25, -98, 92, -103, -99, 31, 61, -104, -84, 117, 59, -116, -13, 65, -14, -128, 51, 90, -44, -54, -107, -71, 66, -14, -39, 61, -38, 124, 45, 70, 38, 50, -84, 99, -10, 1)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/24'"),
+                Uri.parse("bip32:/m/44'/501'/25'"),
+                Uri.parse("bip32:/m/44'/501'/26'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(-96, -68, -75, 26, -9, -7, 32, 55, -97, -87, -104, -29, -125, 35, 125, 81, -102, -106, -109, -21, -104, 84, 19, -34, -3, -55, 114, 34, 113, 69, -15, 125, 63, 10, -4, -69, -94, -18, 82, 99, 14, -51, 74, 33, -10, -11, -49, -82, -73, 8, -67, 1, 7, 59, -22, 79, 78, 28, 89, 13, -48, 33, 59, 5),
+                byteArrayOf(-78, -85, 3, -66, 10, 125, 67, -114, 39, 42, -83, -5, -107, -18, -90, 60, -67, 66, 89, 19, 127, 106, 109, -79, 73, -32, -107, -101, -96, 51, 72, 126, -117, 106, 109, -110, 54, 10, 46, -68, -110, -90, -79, -11, 1, -4, -1, -33, -87, 21, -28, -103, -31, -28, -28, -100, -42, -89, 21, 41, -23, -61, 77, 2),
+                byteArrayOf(-73, -68, -101, -10, -111, -70, 70, 33, 51, 89, -12, -35, -46, -90, -93, -76, -27, 69, -89, 8, 121, 110, -6, -32, -105, 41, -13, -104, 57, -1, 90, 80, -68, 81, -37, -22, 34, -71, -99, -16, -75, 76, -114, -80, -125, 119, 23, 65, 10, -43, -36, 110, 80, -77, -109, -70, 51, 9, 92, -18, -111, -28, 127, 11)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/27'"),
+                Uri.parse("bip32:/m/44'/501'/28'"),
+                Uri.parse("bip32:/m/44'/501'/29'"),
+            )
         )
-    )
+    ).take(implementationDetails.MAX_SIGNING_REQUESTS)
 ), ActivityLauncherTestCase {
     override val id: String = "smaxtmaxs"
     override val description: String
@@ -319,6 +405,11 @@ internal class SignMaxTransactionWithMaxSignatureTestCase @Inject constructor(
             return "Sign ${limits.first} transaction with ${limits.second} signature"
         }
     override val instructions: String = "Approve transaction when prompted."
+
+    init {
+        check(implementationDetails.MAX_SIGNING_REQUESTS <= 10) { "Test case implementation currently only handles up to 3 transactions per signing request" }
+        check(implementationDetails.MAX_REQUESTED_SIGNATURES <= 3) { "Test case implementation currently only handles up to 3 signatures per transaction" }
+    }
 }
 
 internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject constructor(
@@ -326,6 +417,7 @@ internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject construct
     logger: TestSessionLogger,
     knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
+    implementationDetails: ImplementationDetails
 ) : SignNTransactionsMSignaturesTestCase(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker),
     authorizedSeedsChecker = knownSeed12AuthorizedChecker,
@@ -370,8 +462,92 @@ internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject construct
                 Uri.parse("bip32:/m/44'/501'/7'"),
                 Uri.parse("bip32:/m/44'/501'/8'"),
             )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(66, -27, -126, 65, -83, -29, -74, 76, -109, -128, -122, -95, 127, 111, 102, -124, -52, 59, 100, 59, 66, 58, 74, 65, -96, -22, 10, 51, 12, 93, -120, -98, -8, 113, -70, -29, -26, 49, -100, -117, 84, 32, -101, 96, 6, -30, 80, 43, -10, -14, -77, -113, -19, 53, -116, -92, 120, 75, 20, -70, -83, 123, 127, 12),
+                byteArrayOf(55, -65, 49, 28, -33, 87, -72, -68, -57, 80, 38, -27, -113, 125, -20, 2, 13, 20, 76, 50, 103, -96, 104, -124, 18, -101, -108, 15, 1, 120, 83, -37, -40, -61, -82, -123, 24, -40, 122, -116, 38, 102, 98, -2, 37, 70, -52, -118, -74, 115, 113, -100, 17, 30, -118, -118, 47, -10, -27, 31, 8, -65, -64, 6),
+                byteArrayOf(63, -90, -17, -87, 88, -70, 41, 44, 91, 4, 39, -94, 107, 118, 1, 12, 44, -70, -35, 15, 121, 79, -128, 19, -88, 115, 89, 8, 98, -77, 81, 97, -14, -36, 65, -56, 114, 42, 47, 25, -30, -115, -77, 3, -66, 68, -12, -104, -30, 53, 78, -98, -68, -85, 119, 94, -9, 4, -55, 70, -16, 32, 92, 14)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/9'"),
+                Uri.parse("bip32:/m/44'/501'/10'"),
+                Uri.parse("bip32:/m/44'/501'/11'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(-61, -59, 125, -71, 110, 106, 12, -47, -44, 27, -27, -94, 37, -88, 39, -53, -74, -27, -2, 88, -117, 5, -68, 42, 9, -23, 120, -23, -127, -128, 78, -38, 97, 43, -52, 45, 127, -30, 16, 67, -114, -109, -8, 104, 53, 120, 39, -115, -101, -99, -33, 12, -41, -63, -109, -69, -82, 22, -106, 39, -3, 22, -17, 10),
+                byteArrayOf(-56, -12, -2, 124, 56, 76, 84, 33, 47, -75, 119, -48, -90, 54, 103, 24, 119, -24, 55, -44, 65, 49, -46, 57, -82, -95, -112, -51, 32, -26, 80, 86, -23, 16, 70, 125, 80, -27, 71, 31, 41, 72, -124, -45, -100, 49, -4, -85, -30, 78, -67, -21, 103, -70, -49, -87, -78, -81, 107, 121, -84, -45, 82, 4),
+                byteArrayOf(103, -1, -111, -118, -119, -65, -108, 120, -56, -4, -83, -11, 120, 10, -79, 100, 9, -36, -107, -50, 29, 54, 65, 30, -47, -67, -21, -112, -8, -70, 24, -26, -81, 23, 64, 57, 90, 34, -95, 15, -88, -107, 123, -43, -3, 116, 76, -46, -78, -12, -15, 84, -7, 6, 55, 2, -125, -10, -74, -7, -95, 11, 78, 2)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/12'"),
+                Uri.parse("bip32:/m/44'/501'/13'"),
+                Uri.parse("bip32:/m/44'/501'/14'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf( -118, 74, -26, 3, 48, -74, 125, 61, -128, -9, 49, 25, 17, -6, 93, 53, 48, -89, -93, 48, 53, 70, 85, -88, -81, 8, -100, 67, 49, 38, 17, 78, -96, 108, -62, -25, -109, -67, 72, -128, 12, 63, -100, -110, -57, 30, -104, 55, 20, 122, -37, 81, -44, 114, -54, 15, -26, 124, -90, 109, -51, 67, -37, 8),
+                byteArrayOf(31, -97, -32, 4, 101, 17, 31, 107, -86, 48, 34, -16, 1, 30, -72, -4, -91, 87, -117, 39, -36, -60, 62, 18, 62, -45, -59, 19, 111, 123, -117, 87, -71, 12, -51, -15, -56, 7, 15, 123, 88, -118, 11, 24, -74, 53, 3, -93, 84, -88, 29, -24, 4, -60, -31, -44, 13, -118, -40, -2, 124, 77, 64, 13),
+                byteArrayOf(-22, -31, -124, -60, -97, 28, 19, 112, 12, -77, 35, -44, -24, 80, 56, 97, 44, 80, 56, 21, -20, 4, 7, -63, -107, 100, -46, -10, 83, 43, -84, 64, 50, -107, 13, 2, -2, 67, 111, -40, -42, 105, -7, -38, 24, -101, -113, 84, 105, -52, 122, 82, 61, 82, -43, -32, -51, -94, 107, -37, 36, -108, -47, 0)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/15'"),
+                Uri.parse("bip32:/m/44'/501'/16'"),
+                Uri.parse("bip32:/m/44'/501'/17'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(44, 26, -117, -111, 23, 78, 46, 77, -128, -120, -44, -57, -120, 98, 92, 50, -64, 80, 114, -124, 29, -38, 25, -32, -10, -63, 1, -3, 3, 102, 74, -99, -4, 34, -61, 51, 75, 94, 95, -53, 14, -18, 33, -57, -124, 62, 4, 46, -83, 31, 69, -53, 44, 16, -39, -110, -92, 25, 3, -15, -60, 90, -34, 12),
+                byteArrayOf(45, 30, 114, 54, 95, 92, 67, 12, -90, 69, -96, 30, -36, -61, -82, 120, -27, 57, -80, -71, 45, 65, -35, 29, 63, 16, -63, -62, -44, 1, -15, -9, -65, 109, -69, -4, 126, 27, 3, -118, 46, -75, -38, -97, 99, 12, 30, 60, 23, 48, -43, -92, -24, -100, 24, 81, -126, -67, 118, -67, -67, 22, -110, 15),
+                byteArrayOf(86, -20, 85, 68, -33, 25, -1, -79, -111, 110, -37, 55, -9, 17, 20, 7, 49, -68, 90, 20, -10, -92, -21, -101, -8, -120, -44, -47, -111, 25, -4, -32, 14, 84, 109, 127, 93, -64, 17, 26, -8, -64, -112, 42, 120, -125, -80, 24, 62, -56, 84, 52, 96, 52, 5, -112, 1, 95, 8, 4, -88, 110, 111, 0)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/18'"),
+                Uri.parse("bip32:/m/44'/501'/19'"),
+                Uri.parse("bip32:/m/44'/501'/20'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(-74, -118, -25, -50, -8, 3, 105, 99, 115, -13, -4, -122, -121, 26, -116, 55, -58, 99, 16, 124, -23, 26, -90, 104, -109, 1, 10, 57, 42, 120, 15, -58, 72, 57, -105, 37, -17, -75, -17, -23, -34, -2, 55, 102, 118, -28, -103, -17, 17, -10, 97, -50, -45, 34, -114, 46, 41, -60, -107, -121, -52, 104, -97, 8),
+                byteArrayOf(58, -26, 54, 126, 85, -77, 50, -112, -16, -118, 37, -111, -39, 101, -78, -68, 98, 23, 104, 104, -111, -106, 56, 95, -35, 27, -13, 30, -48, 71, 78, -56, -55, -86, 95, 2, -48, -68, 41, -16, 72, -110, 62, 87, 6, 50, -33, -5, -96, -42, -96, 70, 10, -65, -67, 115, 66, -90, 90, 88, 105, 20, 99, 13),
+                byteArrayOf(-43, -6, 116, -63, 67, -117, -20, 67, -51, 7, -50, 83, 99, 117, 110, -90, 88, 119, 18, -8, 79, -8, -89, -77, -25, 65, 5, -53, -109, 42, 1, -57, 28, 46, 26, -115, 0, -76, 99, -75, 86, -31, -115, -91, 71, 97, 29, 123, -78, 46, -60, -32, -96, -115, -26, 39, 15, -4, 89, 45, 67, 52, -37, 14)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/21'"),
+                Uri.parse("bip32:/m/44'/501'/22'"),
+                Uri.parse("bip32:/m/44'/501'/23'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(24, 72, -69, -6, 6, 113, -68, -26, -15, 11, -70, -20, 103, -80, -96, -11, -122, -68, 21, 11, -102, 41, 108, 6, -98, -78, -44, -2, 97, 23, 75, -89, -116, 84, -101, 10, 15, 8, -32, 36, -56, 50, -21, -39, -128, -80, -100, -72, -118, 88, -14, -66, -71, 45, 124, 115, -34, 13, -89, 57, -49, -12, 105, 15),
+                byteArrayOf(-5, -35, 60, 36, -113, -67, 101, -1, -1, -54, 103, -96, 70, 74, -83, -81, -80, 87, -82, -51, 5, 87, 42, 38, 51, 3, 78, 16, -64, -101, 97, -40, 54, 116, 58, 118, 117, 22, -107, -67, -96, -20, 62, -85, -122, -82, -120, -32, -104, -24, -36, 99, 104, -73, -12, -105, -6, -106, -72, 41, -11, 57, -89, 13),
+                byteArrayOf(31, 32, -61, -94, 43, -92, 126, 64, -103, 25, 101, 77, -108, 113, -4, -36, -76, 59, -17, 65, -26, -114, 96, 26, 4, 3, 33, -104, -25, -98, 92, -103, -99, 31, 61, -104, -84, 117, 59, -116, -13, 65, -14, -128, 51, 90, -44, -54, -107, -71, 66, -14, -39, 61, -38, 124, 45, 70, 38, 50, -84, 99, -10, 1)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/24'"),
+                Uri.parse("bip32:/m/44'/501'/25'"),
+                Uri.parse("bip32:/m/44'/501'/26'"),
+            )
+        ),
+        SigningResponse(
+            listOf(
+                byteArrayOf(-96, -68, -75, 26, -9, -7, 32, 55, -97, -87, -104, -29, -125, 35, 125, 81, -102, -106, -109, -21, -104, 84, 19, -34, -3, -55, 114, 34, 113, 69, -15, 125, 63, 10, -4, -69, -94, -18, 82, 99, 14, -51, 74, 33, -10, -11, -49, -82, -73, 8, -67, 1, 7, 59, -22, 79, 78, 28, 89, 13, -48, 33, 59, 5),
+                byteArrayOf(-78, -85, 3, -66, 10, 125, 67, -114, 39, 42, -83, -5, -107, -18, -90, 60, -67, 66, 89, 19, 127, 106, 109, -79, 73, -32, -107, -101, -96, 51, 72, 126, -117, 106, 109, -110, 54, 10, 46, -68, -110, -90, -79, -11, 1, -4, -1, -33, -87, 21, -28, -103, -31, -28, -28, -100, -42, -89, 21, 41, -23, -61, 77, 2),
+                byteArrayOf(-73, -68, -101, -10, -111, -70, 70, 33, 51, 89, -12, -35, -46, -90, -93, -76, -27, 69, -89, 8, 121, 110, -6, -32, -105, 41, -13, -104, 57, -1, 90, 80, -68, 81, -37, -22, 34, -71, -99, -16, -75, 76, -114, -80, -125, 119, 23, 65, 10, -43, -36, 110, 80, -77, -109, -70, 51, 9, 92, -18, -111, -28, 127, 11)
+            ),
+            listOf(
+                Uri.parse("bip32:/m/44'/501'/27'"),
+                Uri.parse("bip32:/m/44'/501'/28'"),
+                Uri.parse("bip32:/m/44'/501'/29'"),
+            )
         )
-    )
+    ).take(implementationDetails.MAX_SIGNING_REQUESTS)
 ), ActivityLauncherTestCase {
     override val id: String = "smaxtmaxsb44"
     override val description: String
@@ -380,6 +556,11 @@ internal class SignMaxTransactionWithMaxSignatureBip44TestCase @Inject construct
             return "Sign ${limits.first} transaction with ${limits.second} signature using BIP-44 derivation paths"
         }
     override val instructions: String = "Approve transaction when prompted."
+
+    init {
+        check(implementationDetails.MAX_SIGNING_REQUESTS <= 10) { "Test case implementation currently only handles up to 3 transactions per signing request" }
+        check(implementationDetails.MAX_REQUESTED_SIGNATURES <= 3) { "Test case implementation currently only handles up to 3 signatures per transaction" }
+    }
 }
 
 internal class SignTransactionRequestsExceedLimitTestCase @Inject constructor(
