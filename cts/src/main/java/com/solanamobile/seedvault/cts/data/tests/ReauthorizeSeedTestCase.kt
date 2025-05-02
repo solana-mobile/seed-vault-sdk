@@ -17,14 +17,44 @@ import com.solanamobile.seedvault.cts.data.ActivityLauncherTestCase
 import com.solanamobile.seedvault.cts.data.TestCaseImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
+import com.solanamobile.seedvault.cts.data.conditioncheckers.AuthorizedSeedsChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasUnauthorizedSeedsChecker
+import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12NotAuthorizedChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed24NotAuthorizedChecker
 import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
+import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed24
 import kotlinx.coroutines.CompletableDeferred
 import javax.inject.Inject
+
+internal class AuthorizeSeed12SagaTestCase @Inject constructor(
+    hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
+    hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
+    knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
+    @KnownSeed12 knownSeed12: KnownSeed,
+    private val logger: TestSessionLogger,
+    private val implementationDetails: ImplementationDetails
+): ReauthorizeSeed12TestCase(
+    hasSeedVaultPermissionChecker,
+    hasUnauthorizedSeedsChecker,
+    knownSeed12NotAuthorizedChecker,
+    knownSeed12,
+    logger
+) {
+    override val id: String = "as12saga"
+    override val description: String = "Authorize the '${knownSeed12.SEED_NAME}'"
+    override val instructions: String = "On your Saga device rename the previous created seed to '${knownSeed12.SEED_NAME}' before pressing execute\n\nWhen prompted, authorize seed ${knownSeed12.SEED_NAME} using biometrics"
+
+    override suspend fun doExecute(): TestResult {
+        if (!implementationDetails.IS_LEGACY_IMPLEMENTATION) {
+            logger.warn("Running Saga only test on non-saga device.")
+            return TestResult.FAIL
+        }
+        return super.doExecute()
+    }
+}
 
 internal class AuthorizeSeed24SagaTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
@@ -53,19 +83,15 @@ internal class AuthorizeSeed24SagaTestCase @Inject constructor(
     }
 }
 
-internal open class ReauthorizeSeed24TestCase @Inject constructor(
+internal abstract class ReauthorizeSeedTestCase(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
-    private val knownSeed24NotAuthorizedChecker: KnownSeed24NotAuthorizedChecker,
-    @KnownSeed24 private val knownSeed24: KnownSeed,
+    private val knownSeedNotAuthorizedChecker: AuthorizedSeedsChecker,
+    private val knownSeed: KnownSeed,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
-    preConditions = listOf(hasSeedVaultPermissionChecker, hasUnauthorizedSeedsChecker, knownSeed24NotAuthorizedChecker)
+    preConditions = listOf(hasSeedVaultPermissionChecker, hasUnauthorizedSeedsChecker, knownSeedNotAuthorizedChecker)
 ), ActivityLauncherTestCase {
-    override val id: String = "rs24"
-    override val description: String = "Reauthorize the previously deauthorized seed '${knownSeed24.SEED_NAME}'"
-    override val instructions: String = "When prompted, authorize seed ${knownSeed24.SEED_NAME} using pin ${knownSeed24.SEED_PIN}"
-
     private class AuthorizeSeedIntentContract : ActivityResultContract<Int, Result<Long>>() {
         override fun createIntent(context: Context, @WalletContractV1.Purpose input: Int): Intent =
             Wallet.authorizeSeed(input)
@@ -113,7 +139,7 @@ internal open class ReauthorizeSeed24TestCase @Inject constructor(
         }
 
         if (!testReauthorizeSeed()) {
-            logger.warn("$id: seed ${knownSeed24.SEED_NAME} was not reauthorized")
+            logger.warn("$id: seed ${knownSeed.SEED_NAME} was not reauthorized")
             result = TestResult.FAIL
         }
 
@@ -132,7 +158,7 @@ internal open class ReauthorizeSeed24TestCase @Inject constructor(
     }
 
     private suspend fun testReauthorizeSeed(): Boolean {
-        @AuthToken val preAuthorizeAuthToken = knownSeed24NotAuthorizedChecker.findMatchingSeed()
+        @AuthToken val preAuthorizeAuthToken = knownSeedNotAuthorizedChecker.findMatchingSeed()
         if (preAuthorizeAuthToken != null) {
             return false
         }
@@ -153,7 +179,7 @@ internal open class ReauthorizeSeed24TestCase @Inject constructor(
             return false
         }
 
-        @AuthToken val postAuthorizeAuthToken = knownSeed24NotAuthorizedChecker.findMatchingSeed()
+        @AuthToken val postAuthorizeAuthToken = knownSeedNotAuthorizedChecker.findMatchingSeed()
 
         return (authToken == postAuthorizeAuthToken)
     }
@@ -174,4 +200,40 @@ internal open class ReauthorizeSeed24TestCase @Inject constructor(
             false
         }
     }
+}
+
+internal open class ReauthorizeSeed12TestCase @Inject constructor(
+    hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
+    hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
+    knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
+    @KnownSeed12 knownSeed12: KnownSeed,
+    logger: TestSessionLogger
+) : ReauthorizeSeedTestCase(
+    hasSeedVaultPermissionChecker,
+    hasUnauthorizedSeedsChecker,
+    knownSeed12NotAuthorizedChecker,
+    knownSeed12,
+    logger
+) {
+    override val id: String = "rs12"
+    override val description: String = "Reauthorize the previously deauthorized seed '${knownSeed12.SEED_NAME}'"
+    override val instructions: String = "When prompted, authorize seed ${knownSeed12.SEED_NAME} using biometrics"
+}
+
+internal open class ReauthorizeSeed24TestCase @Inject constructor(
+    hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
+    hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
+    knownSeed24NotAuthorizedChecker: KnownSeed24NotAuthorizedChecker,
+    @KnownSeed24 knownSeed24: KnownSeed,
+    logger: TestSessionLogger
+) : ReauthorizeSeedTestCase(
+    hasSeedVaultPermissionChecker,
+    hasUnauthorizedSeedsChecker,
+    knownSeed24NotAuthorizedChecker,
+    knownSeed24,
+    logger
+) {
+    override val id: String = "rs24"
+    override val description: String = "Reauthorize the previously deauthorized seed '${knownSeed24.SEED_NAME}'"
+    override val instructions: String = "When prompted, authorize seed ${knownSeed24.SEED_NAME} using biometrics"
 }
