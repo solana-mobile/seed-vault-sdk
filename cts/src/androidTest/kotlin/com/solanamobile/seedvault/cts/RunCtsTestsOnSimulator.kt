@@ -55,6 +55,8 @@ class RunCtsTestsOnSimulator {
         const val STATE_CHANGE_TIMEOUT = 3000L // 3 seconds, in ms
         const val FINISH_BUTTON_TIMEOUT = STATE_CHANGE_TIMEOUT * 10L
         const val SHORT_INTER_ACTION_DELAY = 100L // 100ms
+
+        const val SIMULATOR_PACKAGE_NAME = "com.solanamobile.seedvaultimpl"
     }
 
     @get:Rule
@@ -501,6 +503,64 @@ class RunCtsTestsOnSimulator {
     internal inner class IncorrectPinSignMessageFailureTestCase(override val id: String = "ipsmf") : DenyAuthorizationWithIncorrectPinTestCase()
     internal inner class IncorrectPinSignTransactionFailureTestCase(override val id: String = "ipstf") : DenyAuthorizationWithIncorrectPinTestCase()
 
+    internal inner class RenameExistingSeedTestCase(override val id: String = "res") : CtsTestCase {
+        override suspend fun performAndroidDeviceInteractions() {
+            assertTrue(device.performActionAndWait({
+                val intent =
+                    context.packageManager.getLaunchIntentForPackage(SIMULATOR_PACKAGE_NAME).apply {
+                        if (this == null) {
+                            throw IllegalStateException("Couldn't get the LaunchIntent for $SIMULATOR_PACKAGE_NAME")
+                        }
+
+                        // Clear out any previous instances
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    }
+                context.startActivity(intent)
+            }, Until.newWindow(), STATE_CHANGE_TIMEOUT))
+
+            device.waitForIdle()
+
+            UiSelector().text("Test 3").let { selector ->
+                device.findObject(selector).apply {
+                    assertTrue(waitForExistsOrDumpWindowHierarchy(STATE_CHANGE_TIMEOUT))
+                    assertTrue(clickAndWaitForNewWindow(STATE_CHANGE_TIMEOUT))
+                }
+            }
+
+            device.waitForIdle()
+
+            UiSelector().resourceId("SeedName").let { selector ->
+                device.findObject(selector).apply {
+                    assertTrue(waitForExistsOrDumpWindowHierarchy(STATE_CHANGE_TIMEOUT))
+                    click()
+                    clearTextField()
+                }
+                device.pressKeyCodeSequence("Renamed Seed")
+                assertTrue(device.pressKeyCode(KeyEvent.KEYCODE_TAB))
+            }
+
+            waitForImeHidden()
+            device.waitForIdle()
+
+            device.findObject(UiSelector().resourceId("Save")).apply {
+                assertTrue(waitForExistsOrDumpWindowHierarchy(STATE_CHANGE_TIMEOUT))
+                assertTrue(clickAndWaitForNewWindow(STATE_CHANGE_TIMEOUT))
+            }
+
+            device.waitForIdle()
+
+            device.pressBack() // dismiss the Seed Vault Simulator window and return to CTS app
+
+            device.waitForIdle()
+
+            assertNotNull(
+                device.waitOrDumpWindowHierarchy(
+                    Until.findObject(By.res("ExternalActionComplete")), STATE_CHANGE_TIMEOUT
+                )?.click()
+            )
+        }
+    }
+
     private val testCases = listOfNotNull(
         NoPermissionsContentProviderCheck().takeIf { IS_GENERIC_BUILD },
         AcquireSeedVaultPrivilegedPermissionTestCase().takeIf { IS_GENERIC_BUILD },
@@ -540,6 +600,7 @@ class RunCtsTestsOnSimulator {
         CreateNewSeedTestCase(),
         ImplementationLimitsContentProviderTestCase(),
         DeauthorizeSeed24TestCase().takeIf { IS_GENERIC_BUILD },
+        RenameExistingSeedTestCase(),
     )
 }
 

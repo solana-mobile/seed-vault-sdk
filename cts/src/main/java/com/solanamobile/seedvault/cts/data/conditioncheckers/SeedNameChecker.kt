@@ -9,6 +9,7 @@ import com.solanamobile.seedvault.WalletContractV1
 import com.solanamobile.seedvault.cts.data.ConditionCheckerImpl
 import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.testdata.NewSeed
+import com.solanamobile.seedvault.cts.data.testdata.RenamedSeed
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,8 +48,34 @@ internal class NewSeedDoesNotExistChecker @Inject constructor(
     @ApplicationContext ctx: Context,
     newSeed: NewSeed
 ) : SeedNameChecker(newSeed.SEED_NAME, ctx) {
-    override val id = "nssn"
+    override val id = "nsdne"
     override val description = "Seed '${newSeed.SEED_NAME}' is not authorized"
+
+    override suspend fun doCheck(): TestResult {
+        return if (findMatchingSeed() == null) TestResult.PASS else TestResult.FAIL
+    }
+}
+
+@Singleton
+internal class NewSeedExistsChecker @Inject constructor(
+    @ApplicationContext ctx: Context,
+    newSeed: NewSeed
+) : SeedNameChecker(newSeed.SEED_NAME, ctx) {
+    override val id = "nse"
+    override val description = "Seed '${newSeed.SEED_NAME}' is authorized"
+
+    override suspend fun doCheck(): TestResult {
+        return if (findMatchingSeed() != null) TestResult.PASS else TestResult.FAIL
+    }
+}
+
+@Singleton
+internal class RenamedSeedDoesNotExistChecker @Inject constructor(
+    @ApplicationContext ctx: Context,
+    renamedSeed: RenamedSeed
+) : SeedNameChecker(renamedSeed.SEED_NAME, ctx) {
+    override val id = "rsdne"
+    override val description = "Seed '${renamedSeed.SEED_NAME}' is not authorized"
 
     override suspend fun doCheck(): TestResult {
         return if (findMatchingSeed() == null) TestResult.PASS else TestResult.FAIL

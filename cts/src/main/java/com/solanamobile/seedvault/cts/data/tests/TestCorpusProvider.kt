@@ -44,6 +44,7 @@ internal object TestCorpusProvider {
         noUnauthorizedSeedsContentProviderTestCase: NoUnauthorizedSeedsContentProviderTestCase,
         permissionedAccountFetchPubKeysTestCase: PermissionedAccountFetchPubKeysTestCase,
         reauthorizeSeed12TestCase: ReauthorizeSeed12TestCase,
+        renameExistingSeedTestCase: RenameExistingSeedTestCase,
         seed12AccountsContentProviderTestCase: KnownSeed12AccountsContentProviderTestCase,
         seed24AccountsContentProviderTestCase: KnownSeed24AccountsContentProviderTestCase,
         showSeedSettingsTestCase: ShowSeedSettingsTestCase,
@@ -105,6 +106,7 @@ internal object TestCorpusProvider {
             createNewSeedTestCase,
             implementationLimitsContentProviderTestCase.takeIf { !implementationDetails.IS_LEGACY_IMPLEMENTATION },
             deauthorizeSeed24TestCase.takeIf { isGenericBuild },
+            renameExistingSeedTestCase,
         )
     }
 }

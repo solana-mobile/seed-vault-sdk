@@ -16,4 +16,6 @@
     <string name="next_test">Next test</string>
     <string name="previous_test">previous test</string>
     <string name="share_test_results">Share test results</string>
+    <string name="external_action_dialog_title">Perform external action</string>
+    <string name="external_action_dialog_confirm">Ready</string>
 </resources>
