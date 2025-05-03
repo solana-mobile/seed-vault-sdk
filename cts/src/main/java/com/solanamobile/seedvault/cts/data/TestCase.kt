@@ -7,9 +7,11 @@ package com.solanamobile.seedvault.cts.data
 import android.util.Log
 import androidx.activity.result.ActivityResultCaller
 import dagger.Lazy
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
@@ -34,6 +36,16 @@ typealias TestCorpus = List<TestCase>
 
 internal interface ActivityLauncherTestCase {
     fun registerActivityLauncher(arc: ActivityResultCaller)
+}
+
+internal interface ExternalActionTestCase {
+    enum class State { NOT_WAITING, WAITING, COMPLETE }
+
+    val externalActionInstructions: String
+    val externalActionState: StateFlow<State>
+
+    suspend fun waitForExternalActionComplete()
+    fun externalActionComplete()
 }
 
 internal interface TestResultRecorder {
@@ -98,5 +110,45 @@ internal abstract class TestCaseImpl(
             checkers.map { checker ->
                 ConditionCheckResult(checker.id, checker.description, TestResult.UNEVALUATED)
             }
+    }
+}
+
+internal abstract class ExternalActionTestCaseImpl(
+    preConditions: List<ConditionChecker>,
+) : TestCaseImpl(
+    preConditions = preConditions
+), ExternalActionTestCase {
+    val _externalActionState = MutableStateFlow<ExternalActionTestCase.State>(
+        ExternalActionTestCase.State.NOT_WAITING)
+    override val externalActionState: StateFlow<ExternalActionTestCase.State> =
+        _externalActionState.asStateFlow()
+
+    override val externalActionInstructions
+        get() = instructions
+
+    override suspend fun waitForExternalActionComplete() {
+        check(_externalActionState.value == ExternalActionTestCase.State.NOT_WAITING) { "The external action has already been waited for" }
+        _externalActionState.value = ExternalActionTestCase.State.WAITING
+
+        try {
+            _externalActionState.first { it == ExternalActionTestCase.State.COMPLETE }
+        } catch (e: CancellationException) {
+            Log.v(TAG, "Marking external action as complete for cancelled waitForExternalActionComplete")
+            _externalActionState.value = ExternalActionTestCase.State.COMPLETE
+            throw e
+        }
+    }
+
+    override suspend fun execute() {
+        _externalActionState.value = ExternalActionTestCase.State.NOT_WAITING
+        super.execute()
+    }
+
+    override fun externalActionComplete() {
+        _externalActionState.value = ExternalActionTestCase.State.COMPLETE
+    }
+
+    companion object {
+        private val TAG = ExternalActionTestCaseImpl::class.simpleName!!
     }
 }

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -60,6 +62,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.solanamobile.seedvault.cts.data.ConditionCheckManifest
+import com.solanamobile.seedvault.cts.data.ExternalActionTestCase
 import com.solanamobile.seedvault.cts.data.TestCase
 import com.solanamobile.seedvault.cts.data.TestCorpus
 import com.solanamobile.seedvault.cts.data.TestResult
@@ -297,7 +300,6 @@ fun TestFlow(
     moveToPreviousTest: () -> Unit,
     endTesting: () -> Unit
 ) {
-    val testState = testDetails.state.collectAsState().value
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -372,6 +374,31 @@ fun TestFlow(
         }
     )
     { innerPadding ->
+        if (testDetails is ExternalActionTestCase) {
+            val externalActionState = testDetails.externalActionState.collectAsState().value
+            if (externalActionState == ExternalActionTestCase.State.WAITING) {
+                AlertDialog(
+                    modifier = Modifier.semantics {
+                        testTagsAsResourceId = true
+                    },
+                    title = { Text(stringResource(R.string.external_action_dialog_title)) },
+                    text = { Text(testDetails.externalActionInstructions) },
+                    onDismissRequest = { testDetails.externalActionComplete() },
+                    confirmButton = {
+                        TextButton(
+                            modifier = Modifier.semantics {
+                                testTag = "ExternalActionComplete"
+                            },
+                            onClick = { testDetails.externalActionComplete() }
+                        ) {
+                            Text(stringResource(R.string.external_action_dialog_confirm))
+                        }
+                    }
+                )
+            }
+        }
+
+        val testState = testDetails.state.collectAsState().value
         TestStateView(
             modifier = Modifier.padding(innerPadding),
             testDetails = testDetails,
