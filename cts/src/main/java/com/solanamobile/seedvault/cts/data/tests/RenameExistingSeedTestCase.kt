@@ -33,6 +33,9 @@ internal class RenameExistingSeedTestCase @Inject constructor(
     override suspend fun doExecute(): TestResult {
         var result = TestResult.PASS
 
+        val seedAuthToken = newSeedExistsChecker.findMatchingSeed()
+        check(seedAuthToken != null) // the precondition check passed, so should never be null
+
         waitForExternalActionComplete()
 
         if (newSeedExistsChecker.findMatchingSeed() != null) {
@@ -40,8 +43,14 @@ internal class RenameExistingSeedTestCase @Inject constructor(
             result = TestResult.FAIL
         }
 
-        if (renamedSeedDoesNotExistChecker.findMatchingSeed() == null) {
+        val renamedSeedAuthToken = renamedSeedDoesNotExistChecker.findMatchingSeed()
+        if (renamedSeedAuthToken == null) {
             logger.warn("Seed '${renamedSeed.SEED_NAME}' not found")
+            result = TestResult.FAIL
+        }
+
+        if (renamedSeedAuthToken != seedAuthToken) {
+            logger.warn("Seed identity changed during renaming")
             result = TestResult.FAIL
         }
 
