@@ -121,6 +121,6 @@ dependencies {
     // Note: use old-style syntax because of the @aar type selector; even with
     // `{ artifact { type = "aar" } }` I'm not able to get these working correctly with version
     // catalog references.
-    implementation "com.goterl:lazysodium-android:5.1.0@aar"
+    implementation "com.goterl:lazysodium-android:5.2.0@aar"
     implementation "net.java.dev.jna:jna:5.17.0@aar"
 }
