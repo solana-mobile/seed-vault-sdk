@@ -9,6 +9,10 @@
         <package android:name="com.solanamobile.seedvaultimpl" />
     </queries>
 
+    <!-- NOTE: all consumers of this library will declare that they use the ACCESS_SEED_VAULT
+         permission, even if they instead request and hold the ACCESS_SEED_VAULT_PRIVILEGED
+         permission. This is OK; privileged wallets won't actually request the ACCESS_SEED_VAULT
+         permission at runtime. -->
     <uses-permission android:name="com.solanamobile.seedvault.ACCESS_SEED_VAULT" />
 
 </manifest>

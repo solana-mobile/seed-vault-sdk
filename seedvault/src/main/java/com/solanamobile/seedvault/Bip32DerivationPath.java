@@ -123,7 +123,7 @@ public class Bip32DerivationPath extends BipDerivationPath {
             throw new UnsupportedOperationException("BIP32 URI must be hierarchical");
         }
 
-        if (bip32Uri.isAbsolute() && !bip32Uri.getScheme().equals(WalletContractV1.BIP32_URI_SCHEME)) {
+        if (bip32Uri.isAbsolute() && !WalletContractV1.BIP32_URI_SCHEME.equals(bip32Uri.getScheme())) {
             throw new UnsupportedOperationException("BIP32 URI absolute scheme must be " + WalletContractV1.BIP32_URI_SCHEME);
         }
 
@@ -178,6 +178,31 @@ public class Bip32DerivationPath extends BipDerivationPath {
         return "Bip32DerivationPath{" +
                 "mLevels=" + mLevels +
                 '}';
+    }
+
+    /**
+     * Test if this derivation path is an ancestor of another. For the purposes of this test, an
+     * ancestor is defined as:
+     * <ul>
+     *     <li>the descendant {@link Bip32DerivationPath} begins with the same {@link BipLevel}s as
+     *     the ancestor</li>
+     *     <li>the descendant has at least one more {@link BipLevel} than the ancestor</li>
+     * </ul>
+     * @param descendant the {@link Bip32DerivationPath} whose ancestry should be tested
+     * @return true if this instance is an ancestor of descendant, else false
+     */
+    public boolean isAncestorOf(@NonNull Bip32DerivationPath descendant) {
+        if (descendant.mLevels.size() <= mLevels.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < mLevels.size(); i++) {
+            if (!mLevels.get(i).equals(descendant.mLevels.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override

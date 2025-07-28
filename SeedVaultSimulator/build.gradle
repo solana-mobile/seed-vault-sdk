@@ -1,0 +1,126 @@
+/*
+ * Copyright (c) 2022 Solana Mobile Inc.
+ */
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.androidx.navigation.safeargs)
+    alias(libs.plugins.protobuf)
+    alias(libs.plugins.google.kotlin.ksp)
+    alias(libs.plugins.androidx.compose.compiler)
+    alias(libs.plugins.hilt.android)
+}
+
+android {
+    namespace 'com.solanamobile.seedvaultimpl'
+    compileSdk 35
+
+    signingConfigs {
+        create("simulator") {
+            storeFile = file("../testkeystore/SeedVaultSimulatorKey")
+            storePassword = 'simulator123'
+            keyAlias = 'simulator'
+            keyPassword = 'simulator456'
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.solanamobile.seedvaultimpl"
+        // In SDK versions < 33, the ResolverActivity implementation (which is used to disambiguate
+        // which <activity-alias> to launch, generic or privileged) will strip unknown Parcelable
+        // classes from the Intent. This strips the array of Parcelable payloads from signing
+        // intents. Limit SeedVaultSimulator to >= 33 to avoid this issue.
+        minSdk 33
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs["simulator"]
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_debug"
+            manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher_debug"
+        }
+        release {
+            minifyEnabled false
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
+            manifestPlaceholders["appIconRound"] = "@mipmap/ic_launcher"
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs["simulator"]
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    buildFeatures {
+        compose true
+        viewBinding true
+    }
+}
+
+protobuf {
+    protoc {
+        def protoc_ver = libs.versions.protobuf.java.get()
+        artifact = "com.google.protobuf:protoc:$protoc_ver"   // Download from repositories
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option "lite"
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation project(path: ':seedvault')
+    implementation project(path: ':ui:apptheme')
+
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.material3
+
+    ksp libs.hilt.compiler
+    implementation libs.hilt.android
+    implementation libs.hilt.navigation.compose
+    implementation libs.android.material
+    implementation libs.androidx.activity.ktx
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.datastore
+    implementation libs.androidx.fragment.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.androidx.navigation.fragment.ktx
+    implementation libs.androidx.navigation.ui.ktx
+    implementation libs.androidx.recyclerview
+    implementation libs.protobuf.java
+    implementation libs.kotlinx.coroutines.android
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.test.junit
+    androidTestImplementation libs.androidx.test.espresso.core
+
+    // Note: use old-style syntax because of the @aar type selector; even with
+    // `{ artifact { type = "aar" } }` I'm not able to get these working correctly with version
+    // catalog references.
+    implementation "com.goterl:lazysodium-android:5.1.0@aar"
+    implementation "net.java.dev.jna:jna:5.17.0@aar"
+}

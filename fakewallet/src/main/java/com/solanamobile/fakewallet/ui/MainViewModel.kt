@@ -7,12 +7,14 @@ package com.solanamobile.fakewallet.ui
 import android.app.Application
 import android.database.ContentObserver
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.solanamobile.fakewallet.BuildConfig
 import com.solanamobile.fakewallet.usecase.VerifyEd25519SignatureUseCase
 import com.solanamobile.seedvault.*
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +45,14 @@ class MainViewModel(
         viewModelScope.launch {
             observeSeedVaultContentChanges()
             refreshUiState()
+
+            // Privileged wallets do not manually authorize individual seeds, so check on startup
+            // that accounts have been marked as user wallets.
+            if (BuildConfig.FLAVOR == "Privileged") {
+                _uiState.value.seeds.forEach { seed ->
+                    markAccountsAsUserWallets(seed.authToken)
+                }
+            }
         }
     }
 
@@ -85,6 +95,8 @@ class MainViewModel(
             val authToken = authorizedSeedsCursor.getLong(0)
             val authPurpose = authorizedSeedsCursor.getInt(1)
             val seedName = authorizedSeedsCursor.getString(2)
+            val isBackedUp =
+                if (authorizedSeedsCursor.columnCount == 4) authorizedSeedsCursor.getShort(3) else 0.toShort()
             val accounts = mutableListOf<Account>()
 
             val accountsCursor = withContext(Dispatchers.Default) {
@@ -104,7 +116,13 @@ class MainViewModel(
             accountsCursor.close()
 
             seeds.add(
-                Seed(authToken, seedName.ifBlank { authToken.toString() }, authPurpose, accounts)
+                Seed(
+                    authToken,
+                    seedName.ifBlank { authToken.toString() },
+                    authPurpose,
+                    isBackedUp == 1.toShort(),
+                    accounts
+                )
             )
         }
         authorizedSeedsCursor.close()
@@ -166,7 +184,12 @@ class MainViewModel(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onAddSeedSuccess(event: ViewModelEvent.AddSeedViewModelEvent, authToken: Long) {
+        markAccountsAsUserWallets(authToken)
+    }
+
+    private fun markAccountsAsUserWallets(authToken: Long) {
         // Mark two accounts as user wallets. This simulates a real wallet app exploring each
         // account and marking them as containing user funds.
         viewModelScope.launch {
@@ -204,6 +227,7 @@ class MainViewModel(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onAddSeedFailure(event: ViewModelEvent.AddSeedViewModelEvent, resultCode: Int) {
         showErrorMessage(resultCode)
     }
@@ -216,10 +240,29 @@ class MainViewModel(
         }
     }
 
+    fun showSeedSettings(authToken: Long) {
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.ShowSeedSettings(authToken)
+            )
+        }
+    }
+
+    @Suppress("UNUSED_PARAMETER")
     fun onDeauthorizeSeedSuccess(event: ViewModelEvent.DeauthorizeSeed) {
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onDeauthorizeSeedFailure(event: ViewModelEvent.DeauthorizeSeed, resultCode: Int) {
+        showErrorMessage(resultCode)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onShowSeedSettingsSuccess(event: ViewModelEvent.ShowSeedSettings) {
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onShowSeedSettingsFailure(event: ViewModelEvent.ShowSeedSettings, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
@@ -235,9 +278,11 @@ class MainViewModel(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onUpdateAccountNameSuccess(event: ViewModelEvent.UpdateAccountName) {
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onUpdateAccountNameFailure(event: ViewModelEvent.UpdateAccountName, resultCode: Int) {
         showErrorMessage(resultCode)
     }
@@ -252,19 +297,49 @@ class MainViewModel(
         }
     }
 
-    fun signMaxTransactionsWithMaxSignatures(@WalletContractV1.AuthToken authToken: Long) {
-        signMTransactionsWithNSignatures(authToken, maxSigningRequests, maxRequestedSignatures)
+    fun signMaxTransactionsWithMaxSignatures(
+        @WalletContractV1.AuthToken authToken: Long,
+    ) {
+        signMTransactionsWithNSignatures(
+            authToken,
+            maxSigningRequests,
+            maxRequestedSignatures,
+        )
+    }
+
+    fun signPermissionedAccountTransactions(
+        @WalletContractV1.AuthToken authToken: Long,
+    ) {
+        if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+            throw IllegalStateException("PermissionedAccount not available")
+        }
+
+        val signingRequests = (0 until maxSigningRequests).map { i ->
+            val derivationPaths = (0 until maxRequestedSignatures).map { j ->
+                PermissionedAccount.getPermissionedAccountDerivationPath(i * maxRequestedSignatures + j)
+                    .toUri()
+            }
+            SigningRequest(createFakeTransaction(i), derivationPaths)
+        }
+
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.SignTransactions(authToken, ArrayList(signingRequests))
+            )
+        }
     }
 
     private fun signMTransactionsWithNSignatures(
         @WalletContractV1.AuthToken authToken: Long,
         m: Int,
-        n: Int
+        n: Int,
     ) {
         val signingRequests = (0 until m).map { i ->
             val derivationPaths = (0 until n).map { j ->
                 Bip44DerivationPath.newBuilder()
-                    .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
+                    .setAccount(BipLevel(i * maxRequestedSignatures + j, true))
+                    .build()
+                    .toUri()
             }
             SigningRequest(createFakeTransaction(i), derivationPaths)
         }
@@ -292,6 +367,7 @@ class MainViewModel(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onSignTransactionsFailure(event: ViewModelEvent.SignTransactions, resultCode: Int) {
         showErrorMessage(resultCode)
     }
@@ -306,19 +382,48 @@ class MainViewModel(
         }
     }
 
-    fun signMaxMessagesWithMaxSignatures(@WalletContractV1.AuthToken authToken: Long) {
-        signMMessagesWithNSignatures(authToken, maxSigningRequests, maxRequestedSignatures)
+    fun signMaxMessagesWithMaxSignatures(
+        @WalletContractV1.AuthToken authToken: Long,
+    ) {
+        signMMessagesWithNSignatures(
+            authToken,
+            maxSigningRequests,
+            maxRequestedSignatures,
+        )
+    }
+
+    fun signPermissionedAccountMessages(
+        @WalletContractV1.AuthToken authToken: Long,
+    ) {
+        if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+            throw IllegalStateException("PermissionedAccount not available")
+        }
+
+        val signingRequests = (0 until maxSigningRequests).map { i ->
+            val derivationPaths = (0 until maxRequestedSignatures).map { j ->
+                PermissionedAccount.getPermissionedAccountDerivationPath(i * maxRequestedSignatures + j)
+                    .toUri()
+            }
+            SigningRequest(createFakeMessage(i), derivationPaths)
+        }
+
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.SignMessages(authToken, ArrayList(signingRequests))
+            )
+        }
     }
 
     private fun signMMessagesWithNSignatures(
         @WalletContractV1.AuthToken authToken: Long,
         m: Int,
-        n: Int
+        n: Int,
     ) {
         val signingRequests = (0 until m).map { i ->
             val derivationPaths = (0 until n).map { j ->
                 Bip44DerivationPath.newBuilder()
-                    .setAccount(BipLevel(i * maxRequestedSignatures + j, true)).build().toUri()
+                    .setAccount(BipLevel(i * maxRequestedSignatures + j, true))
+                    .build().toUri()
             }
             SigningRequest(createFakeMessage(i), derivationPaths)
         }
@@ -346,18 +451,45 @@ class MainViewModel(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onSignMessagesFailure(event: ViewModelEvent.SignMessages, resultCode: Int) {
         showErrorMessage(resultCode)
     }
 
-    fun requestPublicKeys(@WalletContractV1.AuthToken authToken: Long) {
-        requestMPublicKeys(authToken, maxRequestedPublicKeys)
+    fun requestPublicKeys(
+        @WalletContractV1.AuthToken authToken: Long,
+        levels: List<BipLevel> = listOf()
+    ) {
+        requestMPublicKeys(authToken, maxRequestedPublicKeys, levels)
     }
 
-    private fun requestMPublicKeys(@WalletContractV1.AuthToken authToken: Long, m: Int) {
+    fun requestPermissionedPublicKeys(
+        @WalletContractV1.AuthToken authToken: Long,
+    ) {
+        if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
+            throw IllegalStateException("PermissionedAccount not available")
+        }
+
+        val derivationPaths = (0 until maxRequestedPublicKeys).map { i ->
+            PermissionedAccount.getPermissionedAccountDerivationPath(i).toUri()
+        }
+
+        viewModelScope.launch {
+            _viewModelEvents.emit(
+                ViewModelEvent.RequestPublicKeys(authToken, ArrayList(derivationPaths))
+            )
+        }
+    }
+
+    private fun requestMPublicKeys(
+        @WalletContractV1.AuthToken authToken: Long,
+        m: Int,
+        levels: List<BipLevel> = listOf()
+    ) {
         val derivationPaths = (0 until m).map { i ->
-            Bip32DerivationPath.newBuilder()
-                .appendLevel(BipLevel(FIRST_REQUESTED_PUBLIC_KEY_INDEX + i, true))
+            val builder = Bip32DerivationPath.newBuilder()
+            builder.appendLevels(levels)
+            builder.appendLevel(BipLevel(FIRST_REQUESTED_PUBLIC_KEY_INDEX + i, true))
                 .build().toUri()
         }
 
@@ -368,10 +500,12 @@ class MainViewModel(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onRequestPublicKeysSuccess(event: ViewModelEvent.RequestPublicKeys, publicKeys: List<PublicKeyResponse>) {
         showMessage("Public key(s) retrieved")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onRequestPublicKeysFailure(event: ViewModelEvent.RequestPublicKeys, resultCode: Int) {
         showErrorMessage(resultCode)
     }
@@ -488,6 +622,7 @@ data class Seed(
     @WalletContractV1.AuthToken val authToken: Long,
     val name: String,
     @WalletContractV1.Purpose val purpose: Int,
+    val isBackedUp: Boolean,
     val accounts: List<Account> = listOf()
 )
 
@@ -507,7 +642,7 @@ data class UiState(
 sealed interface ViewModelEvent : Parcelable {
     sealed interface AddSeedViewModelEvent : ViewModelEvent
 
-    object AuthorizeNewSeed : AddSeedViewModelEvent {
+    data object AuthorizeNewSeed : AddSeedViewModelEvent {
         override fun writeToParcel(parcel: Parcel, flags: Int) = Unit
         override fun describeContents(): Int = 0
 
@@ -518,7 +653,7 @@ sealed interface ViewModelEvent : Parcelable {
         }
     }
 
-    object CreateNewSeed : AddSeedViewModelEvent {
+    data object CreateNewSeed : AddSeedViewModelEvent {
         override fun writeToParcel(parcel: Parcel, flags: Int) = Unit
         override fun describeContents(): Int = 0
 
@@ -529,7 +664,7 @@ sealed interface ViewModelEvent : Parcelable {
         }
     }
 
-    object ImportExistingSeed : AddSeedViewModelEvent {
+    data object ImportExistingSeed : AddSeedViewModelEvent {
         override fun writeToParcel(parcel: Parcel, flags: Int) = Unit
         override fun describeContents(): Int = 0
 
@@ -554,6 +689,23 @@ sealed interface ViewModelEvent : Parcelable {
         companion object CREATOR : Parcelable.Creator<DeauthorizeSeed> {
             override fun createFromParcel(parcel: Parcel) = DeauthorizeSeed(parcel)
             override fun newArray(size: Int): Array<DeauthorizeSeed?> = arrayOfNulls(size)
+        }
+    }
+
+    data class ShowSeedSettings(
+        @WalletContractV1.AuthToken val authToken: Long
+    ) : ViewModelEvent {
+        constructor(p: Parcel) : this(p.readLong())
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeLong(authToken)
+        }
+
+        override fun describeContents(): Int = 0
+
+        companion object CREATOR : Parcelable.Creator<ShowSeedSettings> {
+            override fun createFromParcel(parcel: Parcel) = ShowSeedSettings(parcel)
+            override fun newArray(size: Int): Array<ShowSeedSettings?> = arrayOfNulls(size)
         }
     }
 

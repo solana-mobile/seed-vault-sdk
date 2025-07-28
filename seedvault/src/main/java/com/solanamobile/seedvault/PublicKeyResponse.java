@@ -19,8 +19,6 @@ import java.util.Objects;
 /**
  * The account public key generated in response to an {@link WalletContractV1#ACTION_GET_PUBLIC_KEY}
  * request.
- *
- * @version 0.2.6
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class PublicKeyResponse implements Parcelable {
@@ -72,7 +70,12 @@ public class PublicKeyResponse implements Parcelable {
     protected PublicKeyResponse(Parcel in) {
         mPublicKey = in.createByteArray();
         mPublicKeyEncoded = in.readString();
-        resolvedDerivationPath = in.readTypedObject(Uri.CREATOR);
+        final Uri rdp = in.readTypedObject(Uri.CREATOR);
+        if (rdp != null) {
+            resolvedDerivationPath = rdp;
+        } else {
+            resolvedDerivationPath = Uri.EMPTY;
+        }
     }
 
     @Override
@@ -87,7 +90,7 @@ public class PublicKeyResponse implements Parcelable {
         return 0;
     }
 
-    public static final Creator<PublicKeyResponse> CREATOR = new Creator<PublicKeyResponse>() {
+    public static final Creator<PublicKeyResponse> CREATOR = new Creator<>() {
         @Override
         public PublicKeyResponse createFromParcel(Parcel in) {
             return new PublicKeyResponse(in);

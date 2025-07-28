@@ -44,8 +44,9 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     init {
         reactContext.addActivityEventListener(mActivityEventListener)
 
-        if (reactContext.checkSelfPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT) == PackageManager.PERMISSION_GRANTED &&
-                SeedVault.isAvailable(reactContext, true)) {
+        if ((reactContext.checkSelfPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT) == PackageManager.PERMISSION_GRANTED
+                || reactContext.checkSelfPermission(WalletContractV1.PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED) == PackageManager.PERMISSION_GRANTED) 
+                && SeedVault.isAvailable(reactContext, true)) {
             observeSeedVaultContentChanges()
         }
     }
@@ -252,6 +253,42 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun updateAccountIsValid(authToken: String, accountId: String, isValid: Boolean) {
         Wallet.updateAccountIsValid(reactContext, authToken.toLong(), accountId.toLong(), isValid)
+    }
+
+    @ReactMethod
+    fun requestShowSeedSettings(authToken: String) {
+        Log.d(TAG, "Requesting Seed Settings to be shown...")
+        val intent = Wallet.showSeedSettings(authToken.toLong())
+        reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SHOW_SEED_SETTINGS);
+    }
+
+    @ReactMethod
+    fun showSeedSettings(authToken: String, promise: Promise) {
+        showSeedSettingsAsync(authToken) { error ->
+            error?.let { promise.reject(it) } ?: promise.resolve(null)
+        }
+    }
+
+    private fun showSeedSettingsAsync(authToken: String, callback: (error: Throwable?) -> Unit) {
+        Log.d(TAG, "Requesting Seed Settings to be shown...")
+        val intent = Wallet.showSeedSettings(authToken.toLong())
+        try {
+            registerForActivityResult(intent, REQUEST_SHOW_SEED_SETTINGS) { resultCode, data ->
+                if (resultCode != Activity.RESULT_CANCELED) {
+                    try {
+                        Wallet.onShowSeedSettingsResult(resultCode, data)
+                        Log.d(TAG, "Seed settings shown")
+                        callback(null)
+                    } catch (e: Wallet.ActionFailedException) {
+                        Log.e(TAG, "Show seed settings failed", e)
+                        callback(e)
+                    }
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Show seed settings failed, permision denied")
+            callback(e)
+        }
     }
 
     @ReactMethod
@@ -578,6 +615,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
         private const val REQUEST_SIGN_TRANSACTIONS = 3
         private const val REQUEST_SIGN_MESSAGES = 4
         private const val REQUEST_GET_PUBLIC_KEYS = 5
+        private const val REQUEST_SHOW_SEED_SETTINGS = 6
         private const val KEY_PENDING_EVENT = "pendingEvent"
         private const val DEFAULT_ACTIVITY_RESULT_TIMEOUT_MS = 300000L
         private const val MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS = 30000L

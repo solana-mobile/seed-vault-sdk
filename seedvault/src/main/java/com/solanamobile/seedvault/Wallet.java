@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Programming interfaces for {@link WalletContractV1}
  *
- * @version 0.2.6
+ * @version 0.3.2
  */
 @RequiresApi(api = Build.VERSION_CODES.R) // library minSdk is 17
 public final class Wallet {
@@ -182,6 +182,43 @@ public final class Wallet {
         }
 
         return authToken;
+    }
+
+    /**
+     * Request that the Seed Vault show the settings UI for the specified seed. The returned
+     * {@link Intent} should be used with {@link Activity#startActivityForResult(Intent, int)}, and
+     * the result (as returned to {@link Activity#onActivityResult(int, int, Intent)} should be used
+     * as a parameter to {@link #onAuthorizeSeedResult(int, Intent)}.
+     * <p>NOTE: only wallets holding the
+     * {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission are allowed to
+     * send this {@link Intent}.</p>
+     * @param authToken the auth token for the seed for which to show the settings UI
+     * @return an {@link Intent} suitable for usage with
+     *      {@link Activity#startActivityForResult(Intent, int)}
+     */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
+    @NonNull
+    public static Intent showSeedSettings(
+            @WalletContractV1.AuthToken long authToken) {
+        return new Intent()
+                .setAction(WalletContractV1.ACTION_SEED_SETTINGS)
+                .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+    }
+
+    /**
+     * Process the result of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
+     * invocation of {@link #showSeedSettings(long)})
+     * @param resultCode resultCode from {@code onActivityResult}
+     * @param result intent from {@code onActivityResult}
+     * @throws ActionFailedException if showing the seed settings UI failed
+     */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
+    public static void onShowSeedSettingsResult(
+            int resultCode,
+            @Nullable Intent result) throws ActionFailedException {
+        if (resultCode != Activity.RESULT_OK && resultCode != Activity.RESULT_CANCELED) {
+            throw new ActionFailedException("showSeedSettings failed with result=" + resultCode);
+        }
     }
 
     /**
@@ -566,7 +603,7 @@ public final class Wallet {
                 WalletContractV1.UNAUTHORIZED_SEEDS_ALL_COLUMNS,
                 null,
                 null);
-        if (!c.moveToFirst()) {
+        if (c == null || !c.moveToFirst()) {
             throw new IllegalStateException("Cursor does not contain expected data");
         }
         boolean hasUnauthorizedSeeds = (c.getShort(1) != 0);
@@ -795,7 +832,7 @@ public final class Wallet {
                 WalletContractV1.IMPLEMENTATION_LIMITS_ALL_COLUMNS,
                 null,
                 null);
-        if (!c.moveToNext()) {
+        if (c == null || !c.moveToNext()) {
             throw new UnsupportedOperationException("Failed to get implementation limits");
         }
         final ArrayMap<String, Long> implementationLimitsMap = new ArrayMap<>(3);

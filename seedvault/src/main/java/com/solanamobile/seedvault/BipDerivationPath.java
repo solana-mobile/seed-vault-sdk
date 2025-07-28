@@ -32,9 +32,9 @@ public abstract class BipDerivationPath {
     @NonNull
     public static BipDerivationPath fromUri(@NonNull Uri bipUri) {
         final String scheme = bipUri.getScheme();
-        if (scheme.equals(WalletContractV1.BIP32_URI_SCHEME)) {
+        if (WalletContractV1.BIP32_URI_SCHEME.equals(scheme)) {
             return Bip32DerivationPath.fromUri(bipUri);
-        } else if (scheme.equals(WalletContractV1.BIP44_URI_SCHEME)) {
+        } else if (WalletContractV1.BIP44_URI_SCHEME.equals(scheme)) {
             return Bip44DerivationPath.fromUri(bipUri);
         } else {
             throw new UnsupportedOperationException("Unknown BIP derivation URI scheme '" + scheme + "'");

@@ -21,27 +21,44 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * The programming contract for the Seed Vault Wallet API
  *
- * @version 0.2.6
+ * @version 0.3.2
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public final class WalletContractV1 {
     /**
      * Package name of the Seed Vault, which implements this Wallet API contract
-     *
-     * TODO set to the final Seed Vault package before shipping, and rev class version
      */
     public static final String PACKAGE_SEED_VAULT = "com.solanamobile.seedvaultimpl";
 
     /**
-     * Permission name of the Seed Vault access permission. This will be a runtime permission for
-     * which all consumers of the Seed Vault must request access.
+     * Permission name of the Seed Vault privileged access permission.
+     * <p>This is a signature permission which is automatically granted at install time to apps
+     * signed with known certificates. It is granted only to apps which the Seed Vault
+     * implementation wishes to provide privileged access.</p>
+     * <p>Apps wishing to interact with Seed Vault via this Wallet API contract should possess
+     * either the {@link #PERMISSION_ACCESS_SEED_VAULT} or the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission, but not both.</p>
+     */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
+    public static final String PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED = "com.solanamobile.seedvault.ACCESS_SEED_VAULT_PRIVILEGED";
+
+    /**
+     * Permission name of the Seed Vault access permission.
+     * <p>This is a runtime permission which all ordinary consumers of the Seed Vault must request
+     * access.</p>
+     * <p>Apps wishing to interact with Seed Vault via this Wallet API contract should possess
+     * either the {@link #PERMISSION_ACCESS_SEED_VAULT} or the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission, but not both.</p>
      */
     public static final String PERMISSION_ACCESS_SEED_VAULT = "com.solanamobile.seedvault.ACCESS_SEED_VAULT";
 
     /**
      * Permission name of the Seed Vault service permission. This will be a privileged permission
      * when running with a real implementation of Seed Vault (where it must be provided as part of
-     * the system, for security purposes).
+     * the system, for security purposes), and a normal permission when running with an insecure or
+     * development implementation of Seed Vault.
+     * <p>This permission is not intended to be held by any app other than the implementation of
+     * Seed Vault itself.</p>
      */
     public static final String PERMISSION_SEED_VAULT_IMPL = "com.solanamobile.seedvault.SEED_VAULT_IMPL";
 
@@ -63,6 +80,9 @@ public final class WalletContractV1 {
      * authorized with the specified purpose, {@link #RESULT_NO_AVAILABLE_SEEDS} will be returned.
      * If the user failed to authorize the transaction, {@link #RESULT_AUTHENTICATION_FAILED} will
      * be returned.</p>
+     * <p><b>Privileged behavior: When the sending app possesses the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission, all seeds will be automatically
+     * authorized, and this method will always return {@link #RESULT_NO_AVAILABLE_SEEDS}.</b></p>
      */
     public static final String ACTION_AUTHORIZE_SEED_ACCESS = AUTHORITY_WALLET + ".ACTION_AUTHORIZE_SEED_ACCESS";
 
@@ -86,9 +106,19 @@ public final class WalletContractV1 {
      * the number of {@link SigningRequest}s or the number of BIP derivation paths in a
      * {@link SigningRequest} is more than the quantity supported by the Seed Vault implementation,
      * {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED} will be returned.</p>
+     * <p><b>Privileged behavior: When the sending app possesses the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission, the Seed Vault implementation
+     * will present only the minimum amount of UI required to authenticate access to the Seed Vault.
+     * The sending app is responsible for informing the user of the details of the transaction being
+     * signed. If all derivation paths provided are contained within a {@link #BIP44_URI_SCHEME}
+     * hierarchy with account index of {@link #PERMISSIONED_BIP44_ACCOUNT} and change of
+     * {@link #PERMISSIONED_BIP44_CHANGE} (or the equivalent {@link #BIP32_URI_SCHEME} derivation
+     * path), the Seed Vault implementation must sign the transaction without any authentication UI.
+     * </b></p>
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
+     * @see PermissionedAccount
      */
     public static final String ACTION_SIGN_TRANSACTION = AUTHORITY_WALLET + ".ACTION_SIGN_TRANSACTION";
 
@@ -112,9 +142,19 @@ public final class WalletContractV1 {
      * the number of {@link SigningRequest}s or the number of BIP derivation paths in a
      * {@link SigningRequest} is more than the quantity supported by the Seed Vault implementation,
      * {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED} will be returned.</p>
+     * <p><b>Privileged behavior: When the sending app possesses the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission, the Seed Vault implementation
+     * will present only the minimum amount of UI required to authenticate access to the Seed Vault.
+     * The sending app is responsible for informing the user of the details of the message being
+     * signed. If all derivation paths provided are contained within a {@link #BIP44_URI_SCHEME}
+     * hierarchy with account index of {@link #PERMISSIONED_BIP44_ACCOUNT} and change of
+     * {@link #PERMISSIONED_BIP44_CHANGE} (or the equivalent {@link #BIP32_URI_SCHEME} derivation
+     * path), the Seed Vault implementation must sign the message without any authentication UI.</b>
+     * </p>
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
+     * @see PermissionedAccount
      */
     public static final String ACTION_SIGN_MESSAGE = AUTHORITY_WALLET + ".ACTION_SIGN_MESSAGE";
 
@@ -137,6 +177,15 @@ public final class WalletContractV1 {
      * returned. If the number of account BIP derivation path URIs is more than the quantity
      * supported by the Seed Vault implementation, {@link #RESULT_IMPLEMENTATION_LIMIT_EXCEEDED}
      * will be returned.</p>
+     * <p><b>Privileged behavior: When the sending app possesses the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission, the Seed Vault implementation
+     * will present only the minimum amount of UI required to authenticate access to the Seed Vault.
+     * The sending app is responsible for informing the user of the details of the public key being
+     * retrieved. If all derivation paths provided are contained within a {@link #BIP44_URI_SCHEME}
+     * hierarchy with account index of {@link #PERMISSIONED_BIP44_ACCOUNT} and change of
+     * {@link #PERMISSIONED_BIP44_CHANGE} (or the equivalent {@link #BIP32_URI_SCHEME} derivation
+     * path), the Seed Vault implementation must retrieve the requested public keys without any
+     * authentication UI.</b></p>
      *
      * @see Bip32DerivationPath
      * @see Bip44DerivationPath
@@ -172,6 +221,21 @@ public final class WalletContractV1 {
      * {@link #PACKAGE_SEED_VAULT}.</p>
      */
     public static final String ACTION_IMPORT_SEED = AUTHORITY_WALLET + ".ACTION_IMPORT_SEED";
+
+    /**
+     * Intent action to launch the Seed Vault settings UI for a particular seed. The Intent should
+     * contain an {@link #EXTRA_AUTH_TOKEN} extra, specifying the seed for which to display the
+     * settings UI. This Intent must be sent with
+     * {@link android.app.Activity#startActivityForResult(Intent, int)}.
+     * <p>Attempts to send this Intent without holding the privileged permission will throw a
+     * {@link java.lang.SecurityException}.</p>
+     * <p>If the specified auth token is not valid, {@link #RESULT_INVALID_AUTH_TOKEN} will be
+     * returned.</p>
+     * <p>NOTE: this action should be used with an implicit Intent; it should not specify
+     * {@link #PACKAGE_SEED_VAULT}.</p>
+     */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
+    public static final String ACTION_SEED_SETTINGS = AUTHORITY_WALLET + ".ACTION_SEED_SETTINGS";
 
     /** An unspecified error occurred in response to one of the {@code ACTION_*} actions */
     public static final int RESULT_UNSPECIFIED_ERROR = RESULT_FIRST_USER + 1000;
@@ -299,6 +363,28 @@ public final class WalletContractV1 {
     public static final String BIP_URI_HARDENED_INDEX_IDENTIFIER = "'";
 
     /**
+     * A <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP44</a> account
+     * index for a permissioned account. These accounts are used by apps holding the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission to perform actions (such as
+     * signing transactions) without authentication UI.
+     *
+     * @see PermissionedAccount
+     */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
+    public static final int PERMISSIONED_BIP44_ACCOUNT = 10000;
+
+    /**
+     * A <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP44</a> change
+     * index for a permissioned account. These accounts are used by apps holding the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission to perform actions (such as
+     * signing transactions) without authentication UI.
+     *
+     * @see PermissionedAccount
+     */
+    @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
+    public static final int PERMISSIONED_BIP44_CHANGE = 0;
+
+    /**
      * The minimum number of {@link SigningRequest}s per {@link #ACTION_SIGN_TRANSACTION} that all
      * Seed Vault implementations must support
      */
@@ -340,9 +426,17 @@ public final class WalletContractV1 {
     /** Type: {@code String} (may be blank) */
     public static final String AUTHORIZED_SEEDS_SEED_NAME = "AuthorizedSeeds_SeedName";
 
+    /**
+     * Type: {@code short} (1 for true, 0 for false)
+     * <p>NOTE: this column will only be included in the result if the app holds the
+     * {@link #PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission</p>
+     */
+    public static final String AUTHORIZED_SEEDS_IS_BACKED_UP = "AuthorizedSeeds_IsBackedUp";
+
     /** All columns for the Wallet content provider authorized seeds table */
     public static final String[] AUTHORIZED_SEEDS_ALL_COLUMNS = {
-            AUTHORIZED_SEEDS_AUTH_TOKEN, AUTHORIZED_SEEDS_AUTH_PURPOSE, AUTHORIZED_SEEDS_SEED_NAME};
+            AUTHORIZED_SEEDS_AUTH_TOKEN, AUTHORIZED_SEEDS_AUTH_PURPOSE, AUTHORIZED_SEEDS_SEED_NAME,
+            AUTHORIZED_SEEDS_IS_BACKED_UP};
 
     /** Wallet content provider unauthorized seeds table name */
     public static final String UNAUTHORIZED_SEEDS_TABLE = "unauthorizedseeds";
@@ -441,7 +535,7 @@ public final class WalletContractV1 {
     /**
      * The resolved {@link #BIP32_URI_SCHEME} derivation path URI
      * <p>Type: {@code Uri} (a {@link #BIP32_URI_SCHEME} Uri)</p>
-     * */
+     */
     public static final String EXTRA_RESOLVED_BIP32_DERIVATION_PATH = "ResolveBipDerivationPath_ResolvedBip32DerivationPath";
 
     /** Annotation for the valid account ID range */

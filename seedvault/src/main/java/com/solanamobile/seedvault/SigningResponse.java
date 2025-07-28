@@ -20,8 +20,6 @@ import java.util.Objects;
 
 /**
  * The signatures generated in response to a {@link SigningRequest}
- *
- * @version 0.2.6
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public class SigningResponse implements Parcelable {
@@ -33,7 +31,9 @@ public class SigningResponse implements Parcelable {
 
     /**
      * Construct a new {@link SigningResponse}
+     *
      * @param signatures the set of signatures for this {@link SigningResponse}
+     * @param resolvedDerivationPaths list of normalized bip32 paths.
      */
     public SigningResponse(@NonNull List<byte[]> signatures,
                            @NonNull List<Uri> resolvedDerivationPaths) {
@@ -47,7 +47,12 @@ public class SigningResponse implements Parcelable {
         for (int i = 0; i < size; i++) {
             mSignatures.add(in.createByteArray());
         }
-        mResolvedDerivationPaths = in.createTypedArrayList(Uri.CREATOR);
+        final ArrayList<Uri> rdp = in.createTypedArrayList(Uri.CREATOR);
+        if (rdp != null) {
+            mResolvedDerivationPaths = rdp;
+        } else {
+            mResolvedDerivationPaths = new ArrayList<>();
+        }
     }
 
     @Override
@@ -64,7 +69,7 @@ public class SigningResponse implements Parcelable {
         return 0;
     }
 
-    public static final Creator<SigningResponse> CREATOR = new Creator<SigningResponse>() {
+    public static final Creator<SigningResponse> CREATOR = new Creator<>() {
         @Override
         public SigningResponse createFromParcel(Parcel in) {
             return new SigningResponse(in);
@@ -78,8 +83,9 @@ public class SigningResponse implements Parcelable {
 
     /**
      * Get the set of signatures for this {@link SigningResponse}
+     *
      * @return a {@link List} of signatures, corresponding to the BIP derivation paths specified in
-     *      the {@link SigningRequest}
+     * the {@link SigningRequest}
      */
     public List<byte[]> getSignatures() {
         return Collections.unmodifiableList(mSignatures);
@@ -89,6 +95,7 @@ public class SigningResponse implements Parcelable {
      * Get the set of resolved derivation paths corresponding to each signature. These are fully
      * resolved to the canonical representation for the {@code WalletContractV1.PURPOSE_*} and key
      * derivation scheme.
+     *
      * @return a {@link List} of resolved derivation paths, corresponding to each signature
      */
     public List<Uri> getResolvedDerivationPaths() {
@@ -100,8 +107,15 @@ public class SigningResponse implements Parcelable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SigningResponse that = (SigningResponse) o;
-        return mSignatures.equals(that.mSignatures)
-                && mResolvedDerivationPaths.equals(that.mResolvedDerivationPaths);
+        if (mSignatures.size() != that.mSignatures.size()) return false;
+
+        for (int i = 0; i < mSignatures.size(); i++) {
+            if (!Arrays.equals(mSignatures.get(i), that.mSignatures.get(i))) {
+                return false;
+            }
+        }
+
+        return mResolvedDerivationPaths.equals(that.mResolvedDerivationPaths);
     }
 
     @Override
