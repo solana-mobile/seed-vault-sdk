@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * The programming contract for the Seed Vault Wallet API
  *
- * @version 0.3.1
+ * @version 0.3.2
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public final class WalletContractV1 {
