@@ -18,46 +18,48 @@ updates:
     schedule:
       interval: "weekly"
 
-  - package-ecosystem: "npm"
-    # Files stored in the `js/` project
-    directories:
-      - "/js"
-    schedule:
-      interval: "weekly"
+  # DISABLED UNTIL js/ IS SUPPORTED
+  #- package-ecosystem: "npm"
+  #  # Files stored in the `js/` project
+  #  directories:
+  #    - "/js"
+  #  schedule:
+  #    interval: "weekly"
 
   ##############################################################################
   # next branch
+  # DISABLED UNTIL NEXT DEVELOPMENT ITERATION
   ##############################################################################
 
-  - package-ecosystem: "github-actions"
-    # Workflow files stored in the default location of `.github/workflows`
-    directories:
-      - "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "next"
-    labels:
-      - "dependencies"
-      - "next"
-
-  - package-ecosystem: "gradle"
-    # Files stored in the default project in the root of this repo
-    directories:
-      - "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "next"
-    labels:
-      - "dependencies"
-      - "next"
-
-  - package-ecosystem: "npm"
-    # Files stored in the `js/` project
-    directories:
-      - "/js"
-    schedule:
-      interval: "weekly"
-    target-branch: "next"
-    labels:
-      - "dependencies"
-      - "next"
+  #- package-ecosystem: "github-actions"
+  #  # Workflow files stored in the default location of `.github/workflows`
+  #  directories:
+  #    - "/"
+  #  schedule:
+  #    interval: "weekly"
+  #  target-branch: "next"
+  #  labels:
+  #    - "dependencies"
+  #    - "next"
+  #
+  #- package-ecosystem: "gradle"
+  #  # Files stored in the default project in the root of this repo
+  #  directories:
+  #    - "/"
+  #  schedule:
+  #    interval: "weekly"
+  #  target-branch: "next"
+  #  labels:
+  #    - "dependencies"
+  #    - "next"
+  #
+  #- package-ecosystem: "npm"
+  #  # Files stored in the `js/` project
+  #  directories:
+  #    - "/js"
+  #  schedule:
+  #    interval: "weekly"
+  #  target-branch: "next"
+  #  labels:
+  #    - "dependencies"
+  #    - "next"
