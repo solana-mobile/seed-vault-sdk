@@ -6,12 +6,14 @@ package com.solanamobile.seedvault;
 
 import static android.content.pm.PermissionInfo.PROTECTION_FLAG_PRIVILEGED;
 import static android.content.pm.PermissionInfo.PROTECTION_MASK_BASE;
+import static android.content.pm.PermissionInfo.PROTECTION_SIGNATURE;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.os.Build;
+import android.os.Process;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -88,7 +90,7 @@ public class SeedVault {
         final PackageInfo pi;
         try {
             pi = context.getPackageManager().getPackageInfo(WalletContractV1.PACKAGE_SEED_VAULT,
-                    PackageManager.GET_PERMISSIONS);
+                    PackageManager.GET_PERMISSIONS | PackageManager.GET_SIGNATURES);
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
@@ -100,7 +102,35 @@ public class SeedVault {
         if (pi.permissions != null) {
             for (PermissionInfo permission : pi.permissions) {
                 if (WalletContractV1.PERMISSION_SEED_VAULT_IMPL.equals(permission.name)) {
-                    return hasPrivilegedProtectionFlag(permission);
+                    // If the permission does not use signature protection, it can't be considered
+                    // secure. Note that this is only a precondition - additional checks are
+                    // required.
+                    if (!usesSignatureProtection(permission)) {
+                        return false;
+                    }
+
+                    if (hasPrivilegedProtectionFlag(permission)) {
+                        return true;
+                    }
+
+                    // Workaround - not all devices always set the PROTECTION_FLAG_PRIVILEGED bit
+                    // correctly. For these devices, check that the app providing the permission has
+                    // the same signing certificate as the 'android' package. These are both system
+                    // apps, and so there should only be one signing certificate for each.
+                    final PackageInfo androidPi;
+                    try {
+                        androidPi = context.getPackageManager().getPackageInfo("android",
+                                PackageManager.GET_SIGNATURES);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        return false;
+                    }
+
+                    assert androidPi.applicationInfo != null; // should never be null
+                    assert androidPi.signatures != null; // should never be null
+                    assert pi.signatures != null; // should never be null
+
+                    return androidPi.applicationInfo.uid == Process.SYSTEM_UID
+                            && androidPi.signatures[0].equals(pi.signatures[0]);
                 }
             }
         }
@@ -125,6 +155,10 @@ public class SeedVault {
         } else {
             return AccessType.NONE;
         }
+    }
+
+    private static boolean usesSignatureProtection(@NonNull PermissionInfo permission) {
+        return (permission.protectionLevel & PROTECTION_MASK_BASE) == PROTECTION_SIGNATURE;
     }
 
     private static boolean hasPrivilegedProtectionFlag(@NonNull PermissionInfo permission) {
