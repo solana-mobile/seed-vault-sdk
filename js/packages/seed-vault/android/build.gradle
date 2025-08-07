@@ -8,7 +8,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:7.4.2'
+    classpath libs.versions.android.gradle
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
@@ -137,8 +137,8 @@ dependencies {
   implementation "com.facebook.react:react-native:+"  // From node_modules
   implementation project(path: ':seedvault')
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
-  implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
+  implementation libs.version.kotlinx.coroutines.android
+  implementation libs.version.kotlinx.serialization.json
 }
 
 if (isNewArchitectureEnabled()) {
