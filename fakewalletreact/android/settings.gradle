@@ -13,7 +13,6 @@ pluginManagement {
     }
 }
 plugins {
-    id "com.android.library" version "8.7.3" apply false
     id("com.facebook.react.settings")
 }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
