@@ -24,14 +24,12 @@ hilt-navigation-compose = "1.2.0"
 junit = "4.13.2"
 kotlin = "2.2.0"
 kotlinx-coroutines-android = "1.10.2"
-kotlinx-serialization = "1.9.0"
 logback-android = "3.0.0"
 protobuf-gradle-plugin = "0.9.5"
 protobuf-java = "4.31.1"
 sl4j = "2.0.17"
 
 [libraries]
-android-gradle = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 android-material = { group = "com.google.android.material", name = "material", version.ref = "android-material" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activity" }
@@ -70,7 +68,6 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 hilt-testing-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines-android" }
-kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 logback-android = { group = "com.github.tony19", name = "logback-android", version.ref = "logback-android" }
 protobuf-java = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf-java" }
 sl4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "sl4j" }
