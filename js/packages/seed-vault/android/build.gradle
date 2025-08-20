@@ -139,6 +139,13 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
   implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
+  // we cannot use the latest version of these dependencies. React native versions are tightly 
+  // coupled with kotlin versions. If we use the latest versions of these deps that reply on 
+  // kotlin 2.1+, react native builds break.
+  // These are the highest versions found to work with react native 0.76 and higher. Leaving 
+  // the above versions for now for maximum compatibility. 
+  // implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+  // implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
 }
 
 if (isNewArchitectureEnabled()) {

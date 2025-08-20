@@ -20,4 +20,8 @@ buildscript {
     }
 }
 
+plugins {
+    alias libs.plugins.android.library apply false
+}
+
 apply plugin: "com.facebook.react.rootproject"
