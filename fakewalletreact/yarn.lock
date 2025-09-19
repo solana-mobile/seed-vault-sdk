@@ -1987,7 +1987,7 @@
     "@sinonjs/commons" "^3.0.0"
 
 "@solana-mobile/seed-vault-lib@file:../js/packages/seed-vault":
-  version "0.3.0"
+  version "0.3.4"
 
 "@types/babel__core@^7.1.14":
   version "7.20.0"
