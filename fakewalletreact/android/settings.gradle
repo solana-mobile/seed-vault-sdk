@@ -31,5 +31,3 @@ dependencyResolutionManagement {
 rootProject.name = 'fakewalletreact'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
-include ':seedvault'
-project(':seedvault').projectDir = new File('../../seedvault')
