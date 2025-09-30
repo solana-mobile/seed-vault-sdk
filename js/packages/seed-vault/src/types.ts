@@ -47,23 +47,23 @@ export type SigningResult = Readonly<{
 }>;
 
 interface AuthorizeSeedAPI {
-    hasUnauthorizedSeeds(): boolean
-    hasUnauthorizedSeedsForPurpose(purpose: SeedPurpose): boolean
-    getAuthorizedSeeds(): Seed[]
-    authorizeNewSeed(): {authToken: AuthToken}
+    hasUnauthorizedSeeds(): Promise<boolean>
+    hasUnauthorizedSeedsForPurpose(purpose: SeedPurpose): Promise<boolean>
+    getAuthorizedSeeds(): Promise<Seed[]>
+    authorizeNewSeed(): Promise<{authToken: AuthToken}>
     deauthorizeSeed(authToken: AuthToken): void
 }
 
 interface AccountAPI {
-    getAccounts(authToken: AuthToken, filterOnColumn: string, value: any): Account[]
-    getUserWallets(authToken: AuthToken): Account[]
+    getAccounts(authToken: AuthToken, filterOnColumn: string, value: any): Promise<Account[]>
+    getUserWallets(authToken: AuthToken): Promise<Account[]>
     updateAccountName(authToken: AuthToken, accountId: number, name?: string): void
     updateAccountIsUserWallet(authToken: AuthToken, accountId: number, isUserWallet: boolean): void
     updateAccountIsValid(authToken: AuthToken, accountId: number, isValid: boolean): void
 }
 
 interface CreateNewSeedAPI {
-    createNewSeed(): {authToken: AuthToken}
+    createNewSeed(): Promise<{authToken: AuthToken}>
 }
 
 // TODO
@@ -73,32 +73,32 @@ interface CreateNewSeedAPI {
 // }
 
 interface ImportExistingSeedAPI {
-    importExistingSeed(): {authToken: AuthToken}
+    importExistingSeed(): Promise<{authToken: AuthToken}>
 }
 
 interface PublicKeyAPI {
-    getPublicKey(authToken: AuthToken, derivationPath: DerivationPath): SeedPublicKey
-    getPublicKeys(authToken: AuthToken, derivationPaths: DerivationPath[]): SeedPublicKey[]
-    resolveDerivationPath(derivationPath: DerivationPath): DerivationPath
-    resolveDerivationPathForPurpose(derivationPath: DerivationPath, purpose: SeedPurpose): DerivationPath
+    getPublicKey(authToken: AuthToken, derivationPath: DerivationPath): Promise<SeedPublicKey>
+    getPublicKeys(authToken: AuthToken, derivationPaths: DerivationPath[]): Promise<SeedPublicKey[]>
+    resolveDerivationPath(derivationPath: DerivationPath): Promise<DerivationPath>
+    resolveDerivationPathForPurpose(derivationPath: DerivationPath, purpose: SeedPurpose): Promise<DerivationPath>
 }
 
 interface SignMessagesAPI {
-    signMessage(authToken: AuthToken, derivationPath: DerivationPath, message: Base64EncodedMessage): SigningResult
-    signMessages(authToken: AuthToken, signingRequests: SigningRequest[]): SigningResult[]
+    signMessage(authToken: AuthToken, derivationPath: DerivationPath, message: Base64EncodedMessage): Promise<SigningResult>
+    signMessages(authToken: AuthToken, signingRequests: SigningRequest[]): Promise<SigningResult[]>
 }
 
 interface SignTransactionsAPI {
-    signTransaction(authToken: AuthToken, derivationPath: DerivationPath, transaction: Base64EncodedTransaction): SigningResult
-    signTransactions(authToken: AuthToken, signingRequests: SigningRequest[]): SigningResult[]
+    signTransaction(authToken: AuthToken, derivationPath: DerivationPath, transaction: Base64EncodedTransaction): Promise<SigningResult>
+    signTransactions(authToken: AuthToken, signingRequests: SigningRequest[]): Promise<SigningResult[]>
 }
 
 interface SeedVaultAvailabilityAPI {
-    isSeedVaultAvailable(allowSimulated: boolean): boolean
+    isSeedVaultAvailable(allowSimulated: boolean): Promise<boolean>
 }
 
 interface ShowSeedSettingsAPI {
-    showSeedSettings(authToken: AuthToken): void
+    showSeedSettings(authToken: AuthToken): Promise<void>
 }
 
 export interface SeedVaultAPI 
