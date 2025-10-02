@@ -6,7 +6,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <queries>
+        <!-- Most Seed Vault Wallet ACTION_*'s use explicit intents targeted to this package -->
         <package android:name="com.solanamobile.seedvaultimpl" />
+
+        <!-- The following 3 Seed Vault Wallet intents are implicit intents, that may be implemented
+             by packages other than com.solanamobile.seedvaultimpl -->
+        <intent>
+            <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_CREATE_SEED" />
+            <category android:name="android.intent.category.DEFAULT" />
+        </intent>
+        <intent>
+            <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_IMPORT_SEED" />
+            <category android:name="android.intent.category.DEFAULT" />
+        </intent>
+        <intent>
+            <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SEED_SETTINGS" />
+            <category android:name="android.intent.category.DEFAULT" />
+        </intent>
+
+        <!-- All Seed Vault Wallet content provider data is via this authority -->
+        <provider android:authorities="com.solanamobile.seedvault.wallet.v1.walletprovider" />
     </queries>
 
     <!-- NOTE: all consumers of this library will declare that they use the ACCESS_SEED_VAULT

@@ -26,6 +26,7 @@ import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed24
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
 import javax.inject.Inject
 
@@ -34,6 +35,7 @@ internal class AuthorizeSeed12SagaTestCase @Inject constructor(
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
     @KnownSeed12 knownSeed12: KnownSeed,
+    @ApplicationContext ctx: Context,
     private val logger: TestSessionLogger,
     private val implementationDetails: ImplementationDetails
 ): ReauthorizeSeed12TestCase(
@@ -41,6 +43,8 @@ internal class AuthorizeSeed12SagaTestCase @Inject constructor(
     hasUnauthorizedSeedsChecker,
     knownSeed12NotAuthorizedChecker,
     knownSeed12,
+    implementationDetails,
+    ctx,
     logger
 ) {
     override val id: String = "as12saga"
@@ -61,6 +65,7 @@ internal class AuthorizeSeed24SagaTestCase @Inject constructor(
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     knownSeed24NotAuthorizedChecker: KnownSeed24NotAuthorizedChecker,
     @KnownSeed24 knownSeed24: KnownSeed,
+    @ApplicationContext private val ctx: Context,
     private val logger: TestSessionLogger,
     private val implementationDetails: ImplementationDetails
 ): ReauthorizeSeed24TestCase(
@@ -68,6 +73,8 @@ internal class AuthorizeSeed24SagaTestCase @Inject constructor(
     hasUnauthorizedSeedsChecker,
     knownSeed24NotAuthorizedChecker,
     knownSeed24,
+    implementationDetails,
+    ctx,
     logger
 ) {
     override val id: String = "as24saga"
@@ -88,13 +95,15 @@ internal abstract class ReauthorizeSeedTestCase(
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     private val knownSeedNotAuthorizedChecker: AuthorizedSeedsChecker,
     private val knownSeed: KnownSeed,
+    private val implementationDetails: ImplementationDetails,
+    private val ctx: Context,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
     preConditions = listOf(hasSeedVaultPermissionChecker, hasUnauthorizedSeedsChecker, knownSeedNotAuthorizedChecker)
 ), ActivityLauncherTestCase {
     private class AuthorizeSeedIntentContract : ActivityResultContract<Int, Result<Long>>() {
         override fun createIntent(context: Context, @WalletContractV1.Purpose input: Int): Intent =
-            Wallet.authorizeSeed(input)
+            Wallet.authorizeSeed(context, input)
 
         override fun parseResult(resultCode: Int, intent: Intent?): Result<Long> {
             return when (resultCode) {
@@ -147,13 +156,14 @@ internal abstract class ReauthorizeSeedTestCase(
     }
 
     private fun testWalletHelperConstructsExpectedIntent(): Boolean {
-        val helperIntent = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val helperIntent = Wallet.authorizeSeed(ctx, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         val directIntent = Intent(WalletContractV1.ACTION_AUTHORIZE_SEED_ACCESS)
             .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
             .putExtra(
                 WalletContractV1.EXTRA_PURPOSE,
                 WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
             )
+            .setComponent(implementationDetails.ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME)
         return directIntent.filterEquals(helperIntent)
     }
 
@@ -207,12 +217,16 @@ internal open class ReauthorizeSeed12TestCase @Inject constructor(
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
     @KnownSeed12 knownSeed12: KnownSeed,
+    implementationDetails: ImplementationDetails,
+    @ApplicationContext ctx: Context,
     logger: TestSessionLogger
 ) : ReauthorizeSeedTestCase(
     hasSeedVaultPermissionChecker,
     hasUnauthorizedSeedsChecker,
     knownSeed12NotAuthorizedChecker,
     knownSeed12,
+    implementationDetails,
+    ctx,
     logger
 ) {
     override val id: String = "rs12"
@@ -225,12 +239,16 @@ internal open class ReauthorizeSeed24TestCase @Inject constructor(
     hasUnauthorizedSeedsChecker: HasUnauthorizedSeedsChecker,
     knownSeed24NotAuthorizedChecker: KnownSeed24NotAuthorizedChecker,
     @KnownSeed24 knownSeed24: KnownSeed,
+    implementationDetails: ImplementationDetails,
+    @ApplicationContext ctx: Context,
     logger: TestSessionLogger
 ) : ReauthorizeSeedTestCase(
     hasSeedVaultPermissionChecker,
     hasUnauthorizedSeedsChecker,
     knownSeed24NotAuthorizedChecker,
     knownSeed24,
+    implementationDetails,
+    ctx,
     logger
 ) {
     override val id: String = "rs24"

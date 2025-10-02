@@ -26,6 +26,7 @@ import com.solanamobile.seedvault.cts.data.conditioncheckers.AuthorizedSeedsChec
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12NotAuthorizedChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed24NotAuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed24
@@ -37,6 +38,7 @@ internal abstract class ImportSeedTestCase(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeedNotAuthorizedChecker: AuthorizedSeedsChecker,
     private val knownSeed: KnownSeed,
+    private val implementationDetails: ImplementationDetails,
     private val ctx: Context,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
@@ -44,7 +46,7 @@ internal abstract class ImportSeedTestCase(
 ), ActivityLauncherTestCase {
     private class ImportSeedIntentContract : ActivityResultContract<Int, Result<Long>>() {
         override fun createIntent(context: Context, @Purpose input: Int): Intent =
-            Wallet.importSeed(input)
+            Wallet.importSeed(context, input)
 
         override fun parseResult(resultCode: Int, intent: Intent?): Result<Long> {
             return when (resultCode) {
@@ -95,11 +97,11 @@ internal abstract class ImportSeedTestCase(
     }
 
     private fun testWalletHelperConstructsExpectedIntent(): Boolean {
-        val helperIntent = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val helperIntent = Wallet.importSeed(ctx, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         val directIntent = Intent(WalletContractV1.ACTION_IMPORT_SEED).putExtra(
             WalletContractV1.EXTRA_PURPOSE,
             WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
-        )
+        ).setComponent(implementationDetails.ACTION_IMPORT_SEED_COMPONENT_NAME)
         return directIntent.filterEquals(helperIntent)
     }
 
@@ -203,12 +205,14 @@ internal class ImportSeed12TestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed12NotAuthorizedChecker: KnownSeed12NotAuthorizedChecker,
     @KnownSeed12 knownSeed12: KnownSeed,
+    implementationDetails: ImplementationDetails,
     @ApplicationContext ctx: Context,
     logger: TestSessionLogger
 ) : ImportSeedTestCase(
     hasSeedVaultPermissionChecker,
     knownSeed12NotAuthorizedChecker,
     knownSeed12,
+    implementationDetails,
     ctx,
     logger
 ) {
@@ -221,12 +225,14 @@ internal class ImportSeed24TestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     knownSeed24NotAuthorizedChecker: KnownSeed24NotAuthorizedChecker,
     @KnownSeed24 knownSeed24: KnownSeed,
+    implementationDetails: ImplementationDetails,
     @ApplicationContext ctx: Context,
     logger: TestSessionLogger
 ) : ImportSeedTestCase(
     hasSeedVaultPermissionChecker,
     knownSeed24NotAuthorizedChecker,
     knownSeed24,
+    implementationDetails,
     ctx,
     logger
 ) {
