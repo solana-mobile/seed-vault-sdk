@@ -58,7 +58,7 @@ internal abstract class SignNMessagesMSignaturesTestCase(
         ActivityResultContract<SignMessagesInput, Result<ArrayList<SigningResponse>>>() {
 
         override fun createIntent(context: Context, input: SignMessagesInput): Intent =
-            Wallet.signMessages(input.authToken, ArrayList(input.requests))
+            Wallet.signMessages(context, input.authToken, ArrayList(input.requests))
 
         override fun parseResult(
             resultCode: Int,

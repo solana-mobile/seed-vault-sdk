@@ -6,6 +6,7 @@ package com.solanamobile.seedvault;
 
 import static android.app.Activity.RESULT_FIRST_USER;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -19,14 +20,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * The programming contract for the Seed Vault Wallet API
+ * The programming contract for the Seed Vault Wallet API.
+ * <p>NOTE: to ensure that Intents containing the <code>ACTION_*</code> actions described in this
+ * contract are routed properly, it is recommended that they have a component specified. See
+ * {@link SeedVault#resolveComponentForIntent(Context, Intent)} for an example of how the component
+ * should be resolved (or just use that method directly).</p>
  *
- * @version 0.3.3
+ * @version 0.4.0
  */
 @RequiresApi(api = Build.VERSION_CODES.M) // library minSdk is 17
 public final class WalletContractV1 {
     /**
-     * Package name of the Seed Vault, which implements this Wallet API contract
+     * Package name of the Seed Vault, which implements this Wallet API contract. Except where
+     * otherwise noted, this value should be used with {@link Intent#setPackage(String)} on Intents
+     * with <code>ACTION_*</code> actions defined in this contract.
      */
     public static final String PACKAGE_SEED_VAULT = "com.solanamobile.seedvaultimpl";
 

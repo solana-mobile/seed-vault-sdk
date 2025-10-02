@@ -58,7 +58,7 @@ internal abstract class SignNTransactionsMSignaturesTestCase(
         ActivityResultContract<SignTransactionsInput, Result<ArrayList<SigningResponse>>>() {
 
         override fun createIntent(context: Context, input: SignTransactionsInput): Intent =
-            Wallet.signTransactions(input.authToken, ArrayList(input.requests))
+            Wallet.signTransactions(context, input.authToken, ArrayList(input.requests))
 
         override fun parseResult(
             resultCode: Int,

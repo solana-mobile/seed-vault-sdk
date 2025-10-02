@@ -18,8 +18,10 @@ import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.KnownSeed12AuthorizedChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed
 import com.solanamobile.seedvault.cts.data.testdata.KnownSeed12
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.time.withTimeout
 import java.time.Duration
@@ -29,6 +31,8 @@ internal class ShowSeedSettingsTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     private val knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     @KnownSeed12 private val knownSeed12: KnownSeed,
+    private val implementationDetails: ImplementationDetails,
+    @ApplicationContext private val ctx: Context,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
     preConditions = listOf(hasSeedVaultPermissionChecker, knownSeed12AuthorizedChecker)
@@ -194,11 +198,10 @@ internal class ShowSeedSettingsTestCase @Inject constructor(
     }
 
     private fun testWalletHelperConstructsCorrectIntents(): Boolean {
-        return Wallet.showSeedSettings(UNKNOWN_AUTH_TOKEN).let { intent ->
+        return Wallet.showSeedSettings(ctx, UNKNOWN_AUTH_TOKEN).let { intent ->
             intent.action == WalletContractV1.ACTION_SEED_SETTINGS && intent.extras?.size() == 1 && intent.getLongExtra(
                 WalletContractV1.EXTRA_AUTH_TOKEN, -1L
-            ) == UNKNOWN_AUTH_TOKEN && intent.component == null
-
+            ) == UNKNOWN_AUTH_TOKEN && intent.component == implementationDetails.ACTION_SEED_SETTINGS_COMPONENT_NAME
         }
     }
 

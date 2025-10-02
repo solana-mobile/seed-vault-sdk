@@ -39,7 +39,7 @@ import kotlinx.coroutines.CompletableDeferred
 
 internal abstract class PubKeyDerivationTestCase(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
-    @ApplicationContext private val context: Context,
+    private val context: Context,
     private val knownSeed12AuthorizedChecker: KnownSeed12AuthorizedChecker,
     private val knownSeed12: KnownSeed,
     private val keysToFetch: Int = 1,
@@ -61,7 +61,7 @@ internal abstract class PubKeyDerivationTestCase(
         ActivityResultContract<FetchPubKeyInput, Result<ArrayList<PublicKeyResponse>>>() {
 
         override fun createIntent(context: Context, input: FetchPubKeyInput): Intent =
-            Wallet.requestPublicKeys(input.authToken, input.derivationPaths)
+            Wallet.requestPublicKeys(context, input.authToken, input.derivationPaths)
 
         override fun parseResult(
             resultCode: Int,

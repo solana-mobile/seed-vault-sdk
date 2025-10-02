@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Programming interfaces for {@link WalletContractV1}
  *
- * @version 0.3.3
+ * @version 0.4.0
  */
 @RequiresApi(api = Build.VERSION_CODES.R) // library minSdk is 17
 public final class Wallet {
@@ -56,23 +56,31 @@ public final class Wallet {
      * should be used with {@link Activity#startActivityForResult(Intent, int)}, and the result (as
      * returned to {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters
      * to {@link #onAuthorizeSeedResult(int, Intent)}.
+     * @param context the {@link Context} in which to perform this request
      * @param purpose the purpose for which the seed will be used. One of the
      *      {@code WalletContractV1.PURPOSE_*} constants.
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent authorizeSeed(
+            @NonNull Context context,
             @WalletContractV1.Purpose int purpose) {
-        return new Intent()
+        Intent intent = new Intent()
                 .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
                 .setAction(WalletContractV1.ACTION_AUTHORIZE_SEED_ACCESS)
                 .putExtra(WalletContractV1.EXTRA_PURPOSE, purpose);
+        SeedVault.resolveComponentForIntent(context, intent);
+        return intent;
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #authorizeSeed(int)})
+     * invocation of {@link #authorizeSeed(Context, int)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
      * @return the auth token for the newly authorized seed
@@ -101,22 +109,30 @@ public final class Wallet {
      * should be used with {@link Activity#startActivityForResult(Intent, int)}, and the result (as
      * returned to {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters
      * to {@link #onCreateSeedResult(int, Intent)}.
+     * @param context the {@link Context} in which to perform this request
      * @param purpose the purpose for which the seed will be used. One of the
      *      {@code WalletContractV1.PURPOSE_*} constants.
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent createSeed(
+            @NonNull Context context,
             @WalletContractV1.Purpose int purpose) {
-        return new Intent()
+        Intent intent = new Intent()
                 .setAction(WalletContractV1.ACTION_CREATE_SEED)
                 .putExtra(WalletContractV1.EXTRA_PURPOSE, purpose);
+        SeedVault.resolveComponentForIntent(context, intent);
+        return intent;
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #createSeed(int)})
+     * invocation of {@link #createSeed(Context, int)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
      * @return the auth token for the newly created seed
@@ -145,22 +161,30 @@ public final class Wallet {
      * should be used with {@link Activity#startActivityForResult(Intent, int)}, and the result (as
      * returned to {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters
      * to {@link #onImportSeedResult(int, Intent)}.
+     * @param context the {@link Context} in which to perform this request
      * @param purpose the purpose for which the seed will be used. One of the
      *      {@code WalletContractV1.PURPOSE_*} constants.
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent importSeed(
+            @NonNull Context context,
             @WalletContractV1.Purpose int purpose) {
-        return new Intent()
+        Intent intent = new Intent()
                 .setAction(WalletContractV1.ACTION_IMPORT_SEED)
                 .putExtra(WalletContractV1.EXTRA_PURPOSE, purpose);
+        SeedVault.resolveComponentForIntent(context, intent);
+        return intent;
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #importSeed(int)})
+     * invocation of {@link #importSeed(Context, int)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
      * @return the auth token for the imported seed
@@ -192,22 +216,30 @@ public final class Wallet {
      * <p>NOTE: only wallets holding the
      * {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permission are allowed to
      * send this {@link Intent}.</p>
+     * @param context the {@link Context} in which to perform this request
      * @param authToken the auth token for the seed for which to show the settings UI
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @RequiresApi(api = SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED)
     @NonNull
     public static Intent showSeedSettings(
+            @NonNull Context context,
             @WalletContractV1.AuthToken long authToken) {
-        return new Intent()
+        Intent intent = new Intent()
                 .setAction(WalletContractV1.ACTION_SEED_SETTINGS)
                 .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken);
+        SeedVault.resolveComponentForIntent(context, intent);
+        return intent;
     }
 
     /**
      * Process the result of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #showSeedSettings(long)})
+     * invocation of {@link #showSeedSettings(Context, long)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
      * @throws ActionFailedException if showing the seed settings UI failed
@@ -227,15 +259,21 @@ public final class Wallet {
      * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
      * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
      * {@link #onSignTransactionsResult(int, Intent)}.
+     * @param context the {@link Context} in which to perform this request
      * @param authToken the auth token for the seed with which to perform transaction signing
      * @param derivationPath a {@link BipDerivationPath} representing the account with which to
      *      sign this transaction
      * @param transaction a {@code byte[]} containing the transaction to be signed
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent signTransaction(
+            @NonNull Context context,
             @WalletContractV1.AuthToken long authToken,
             @NonNull Uri derivationPath,
             @NonNull byte[] transaction) {
@@ -243,7 +281,7 @@ public final class Wallet {
         paths.add(derivationPath);
         final ArrayList<SigningRequest> req = new ArrayList<>(1);
         req.add(new SigningRequest(transaction, paths));
-        return signTransactions(authToken, req);
+        return signTransactions(context, authToken, req);
     }
 
     /**
@@ -252,31 +290,39 @@ public final class Wallet {
      * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
      * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
      * {@link #onSignTransactionsResult(int, Intent)}.
+     * @param context the {@link Context} in which to perform this request
      * @param authToken the auth token for the seed with which to perform transaction signing
      * @param signingRequests the set of transactions to be signed
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
      * @throws IllegalArgumentException if signingRequests is empty
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent signTransactions(
+            @NonNull Context context,
             @WalletContractV1.AuthToken long authToken,
             @NonNull ArrayList<SigningRequest> signingRequests) {
         if (signingRequests.isEmpty()) {
             throw new IllegalArgumentException("signingRequests must not be empty");
         }
-        return new Intent()
+        Intent intent = new Intent()
                 .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
                 .setAction(WalletContractV1.ACTION_SIGN_TRANSACTION)
                 .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
                 .putParcelableArrayListExtra(WalletContractV1.EXTRA_SIGNING_REQUEST,
                         signingRequests);
+        SeedVault.resolveComponentForIntent(context, intent);
+        return intent;
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #signTransaction(long, Uri, byte[])} or
-     * {@link #signTransactions(long, ArrayList)})
+     * invocation of {@link #signTransaction(Context, long, Uri, byte[])} or
+     * {@link #signTransactions(Context, long, ArrayList)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
      * @return a {@link List} of {@link SigningResponse}s with the transaction signatures
@@ -307,15 +353,21 @@ public final class Wallet {
      * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
      * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
      * {@link #onSignMessagesResult(int, Intent)}.
+     * @param context the {@link Context} in which to perform this request
      * @param authToken the auth token for the seed with which to perform message signing
      * @param derivationPath a {@link BipDerivationPath} representing the account with which to
      *      sign this message
      * @param message a {@code byte[]} containing the message to be signed
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent signMessage(
+            @NonNull Context context,
             @WalletContractV1.AuthToken long authToken,
             @NonNull Uri derivationPath,
             @NonNull byte[] message) {
@@ -323,7 +375,7 @@ public final class Wallet {
         paths.add(derivationPath);
         final ArrayList<SigningRequest> req = new ArrayList<>(1);
         req.add(new SigningRequest(message, paths));
-        return signMessages(authToken, req);
+        return signMessages(context, authToken, req);
     }
 
     /**
@@ -332,31 +384,39 @@ public final class Wallet {
      * with {@link Activity#startActivityForResult(Intent, int)}, and the result (as returned to
      * {@link Activity#onActivityResult(int, int, Intent)}) should be used as parameters to
      * {@link #onSignMessagesResult(int, Intent)}.
+     * @param context the {@link Context} in which to perform this request
      * @param authToken the auth token for the seed with which to perform message signing
      * @param signingRequests the set of messages to be signed
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
      * @throws IllegalArgumentException if signingRequests is empty
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent signMessages(
+            @NonNull Context context,
             @WalletContractV1.AuthToken long authToken,
             @NonNull ArrayList<SigningRequest> signingRequests) {
         if (signingRequests.isEmpty()) {
             throw new IllegalArgumentException("signingRequests must not be empty");
         }
-        return new Intent()
+        Intent intent = new Intent()
                 .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
                 .setAction(WalletContractV1.ACTION_SIGN_MESSAGE)
                 .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
                 .putParcelableArrayListExtra(WalletContractV1.EXTRA_SIGNING_REQUEST,
                         signingRequests);
+        SeedVault.resolveComponentForIntent(context, intent);
+        return intent;
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #signMessage(long, Uri, byte[])} or
-     * {@link #signMessages(long, ArrayList)})
+     * invocation of {@link #signMessage(Context, long, Uri, byte[])} or
+     * {@link #signMessages(Context, long, ArrayList)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
      * @return a {@link List} of {@link SigningResponse}s with the message signatures
@@ -388,19 +448,25 @@ public final class Wallet {
      * used as parameters to {@link #onRequestPublicKeysResult(int, Intent)}. If the public key is
      * not present in the results of {@link #getAccounts(Context, long, String[])}, the user will be
      * asked to authorize access to this public key.
+     * @param context the {@link Context} in which to perform this request
      * @param authToken the auth token for the seed with which to request a public key
      * @param derivationPath a {@link BipDerivationPath} representing the account from which to
      *      request the public key
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent requestPublicKey(
+            @NonNull Context context,
             @WalletContractV1.AuthToken long authToken,
             @NonNull Uri derivationPath) {
         final ArrayList<Uri> paths = new ArrayList<>(1);
         paths.add(derivationPath);
-        return requestPublicKeys(authToken, paths);
+        return requestPublicKeys(context, authToken, paths);
     }
 
     /**
@@ -410,31 +476,39 @@ public final class Wallet {
      * used as parameters to {@link #onRequestPublicKeysResult(int, Intent)}. If the public keys are
      * not present in the results of {@link #getAccounts(Context, long, String[])}, the user will be
      * asked to authorize access to these public keys.
+     * @param context the {@link Context} in which to perform this request
      * @param authToken the auth token for the seed with which to request a public key
      * @param derivationPaths an {@link ArrayList} of {@link BipDerivationPath}s representing the
      *      accounts from which to request the public keys
      * @return an {@link Intent} suitable for usage with
      *      {@link Activity#startActivityForResult(Intent, int)}
      * @throws IllegalArgumentException if derivationPaths is empty
+     * @throws IllegalStateException if there is no Seed Vault implementation capable of receiving
+     *      this intent, or if this app does not hold one of the
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT} or
+     *      {@link WalletContractV1#PERMISSION_ACCESS_SEED_VAULT_PRIVILEGED} permissions.
      */
     @NonNull
     public static Intent requestPublicKeys(
+            @NonNull Context context,
             @WalletContractV1.AuthToken long authToken,
             @NonNull ArrayList<Uri> derivationPaths) {
         if (derivationPaths.isEmpty()) {
             throw new IllegalArgumentException("derivationPaths must not be empty");
         }
-        return new Intent()
+        Intent intent = new Intent()
                 .setPackage(WalletContractV1.PACKAGE_SEED_VAULT)
                 .setAction(WalletContractV1.ACTION_GET_PUBLIC_KEY)
                 .putExtra(WalletContractV1.EXTRA_AUTH_TOKEN, authToken)
                 .putParcelableArrayListExtra(WalletContractV1.EXTRA_DERIVATION_PATH,
                         derivationPaths);
+        SeedVault.resolveComponentForIntent(context, intent);
+        return intent;
     }
 
     /**
      * Process the results of {@link Activity#onActivityResult(int, int, Intent)} (in response to an
-     * invocation of {@link #requestPublicKeys(long, ArrayList)})
+     * invocation of {@link #requestPublicKeys(Context, long, ArrayList)})
      * @param resultCode resultCode from {@code onActivityResult}
      * @param result intent from {@code onActivityResult}
      * @return an {@link ArrayList} of {@link PublicKeyResponse}s with the public keys
