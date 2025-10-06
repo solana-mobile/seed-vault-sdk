@@ -34,7 +34,7 @@ All Android projects within this repository can be built using [Android Studio](
 
 ```
 dependencies {
-    implementation 'com.solanamobile:seedvault-wallet-sdk:0.3.3'
+    implementation 'com.solanamobile:seedvault-wallet-sdk:0.4.0'
 }
 ```
 
