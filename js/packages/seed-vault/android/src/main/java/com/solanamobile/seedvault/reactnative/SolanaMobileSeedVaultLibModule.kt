@@ -417,7 +417,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
         reactContext.addActivityEventListener(object : BaseActivityEventListener() {
             override fun onActivityResult(
-                activity: Activity?,
+                activity: Activity,
                 receivedRequestCode: Int,
                 resultCode: Int,
                 data: Intent?
