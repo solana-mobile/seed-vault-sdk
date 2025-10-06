@@ -208,7 +208,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun requestImportExistingSeed() {
         Log.d(TAG, "Requesting import of an existing seed...")
-        val intent = Wallet.importSeedreactContext, (WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val intent = Wallet.importSeed(reactContext, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_IMPORT_EXISTING_SEED)
     }
 
