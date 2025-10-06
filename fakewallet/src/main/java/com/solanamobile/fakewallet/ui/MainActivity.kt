@@ -208,24 +208,27 @@ class MainActivity : ComponentActivity() {
                     check(pendingEvent == null) { "Received a request while another is pending" }
                     when (event) {
                         is ViewModelEvent.AuthorizeNewSeed -> {
-                            val i =
-                                Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+                            val i = Wallet.authorizeSeed(
+                                this@MainActivity, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+                            )
                             requestCode = REQUEST_AUTHORIZE_SEED_ACCESS
                             seedVaultActivityResultLauncher.launch(i)
                             pendingEvent = event
                         }
 
                         is ViewModelEvent.CreateNewSeed -> {
-                            val i =
-                                Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+                            val i = Wallet.createSeed(
+                                this@MainActivity, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+                            )
                             requestCode = REQUEST_CREATE_NEW_SEED
                             seedVaultActivityResultLauncher.launch(i)
                             pendingEvent = event
                         }
 
                         is ViewModelEvent.ImportExistingSeed -> {
-                            val i =
-                                Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+                            val i = Wallet.importSeed(
+                                this@MainActivity, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
+                            )
                             requestCode = REQUEST_IMPORT_EXISTING_SEED
                             seedVaultActivityResultLauncher.launch(i)
                             pendingEvent = event
@@ -246,7 +249,7 @@ class MainActivity : ComponentActivity() {
                             if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
                                 throw IllegalStateException("ShowSeedSettings not available")
                             }
-                            val i = Wallet.showSeedSettings(event.authToken)
+                            val i = Wallet.showSeedSettings(this@MainActivity, event.authToken)
                             requestCode = REQUEST_SHOW_SEED_SETTINGS
                             seedVaultActivityResultLauncher.launch(i)
                             pendingEvent = event
@@ -268,7 +271,7 @@ class MainActivity : ComponentActivity() {
 
                         is ViewModelEvent.SignTransactions -> {
                             val i = Wallet.signTransactions(
-                                event.authToken, event.transactions
+                                this@MainActivity, event.authToken, event.transactions
                             )
                             requestCode = REQUEST_SIGN_TRANSACTIONS
                             seedVaultActivityResultLauncher.launch(i)
@@ -277,7 +280,7 @@ class MainActivity : ComponentActivity() {
 
                         is ViewModelEvent.SignMessages -> {
                             val i = Wallet.signMessages(
-                                event.authToken, event.messages
+                                this@MainActivity, event.authToken, event.messages
                             )
                             requestCode = REQUEST_SIGN_MESSAGES
                             seedVaultActivityResultLauncher.launch(i)
@@ -286,7 +289,7 @@ class MainActivity : ComponentActivity() {
 
                         is ViewModelEvent.RequestPublicKeys -> {
                             val i = Wallet.requestPublicKeys(
-                                event.authToken, event.derivationPaths
+                                this@MainActivity, event.authToken, event.derivationPaths
                             )
                             requestCode = REQUEST_GET_PUBLIC_KEYS
                             seedVaultActivityResultLauncher.launch(i)

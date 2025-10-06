@@ -64,11 +64,11 @@
             android:exported="true"
             android:permission="com.solanamobile.seedvault.ACCESS_SEED_VAULT"
             android:targetActivity=".ui.seeddetail.SeedDetailActivity">
-            <intent-filter android:priority="100" android:order="-100">
+            <intent-filter android:priority="100" android:order="0">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_CREATE_SEED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:priority="100" android:order="-100">
+            <intent-filter android:priority="100" android:order="0">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_IMPORT_SEED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -84,15 +84,15 @@
             android:exported="true"
             android:permission="com.solanamobile.seedvault.ACCESS_SEED_VAULT_PRIVILEGED"
             android:targetActivity=".ui.seeddetail.SeedDetailActivity">
-            <intent-filter android:priority="100" android:order="0">
+            <intent-filter android:priority="100" android:order="100">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_CREATE_SEED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:priority="100" android:order="0">
+            <intent-filter android:priority="100" android:order="100">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_IMPORT_SEED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:priority="100" android:order="0">
+            <intent-filter android:priority="100" android:order="100">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SEED_SETTINGS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -106,26 +106,27 @@
 
         <!-- NOTE: Order set below that of the privileged alias in case an app holds both
              permissions. Apps normally should hold only one of the two permissions, but the
-             Seed Vault should gracefully handle the case where an app is granted both. These
-             intents are always explicit, so no elevated priority is required. -->
+             Seed Vault should gracefully handle the case where an app is granted both. While these
+             intents should always be explicit, apply elevated priority in case they are ever
+             referenced implicitly. -->
         <activity-alias
             android:name=".authActivityGenericAlias"
             android:exported="true"
             android:permission="com.solanamobile.seedvault.ACCESS_SEED_VAULT"
             android:targetActivity=".ui.AuthorizeActivity">
-            <intent-filter android:order="-100">
+            <intent-filter android:priority="100" android:order="0">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_AUTHORIZE_SEED_ACCESS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:order="-100">
+            <intent-filter android:priority="100" android:order="0">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_TRANSACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:order="-100">
+            <intent-filter android:priority="100" android:order="0">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_MESSAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:order="-100">
+            <intent-filter android:priority="100" android:order="0">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_GET_PUBLIC_KEY" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -133,26 +134,27 @@
 
         <!-- NOTE: Order set above that of the non-privileged alias in case an app holds both
              permissions. Apps normally should hold only one of the two permissions, but the
-             Seed Vault should gracefully handle the case where an app is granted both. These
-             intents are always explicit, so no elevated priority is required. -->
+             Seed Vault should gracefully handle the case where an app is granted both. While these
+             intents should always be explicit, apply elevated priority in case they are ever
+             referenced implicitly. -->
         <activity-alias
             android:name=".authActivityPrivilegedAlias"
             android:exported="true"
             android:permission="com.solanamobile.seedvault.ACCESS_SEED_VAULT_PRIVILEGED"
             android:targetActivity=".ui.AuthorizeActivity">
-            <intent-filter android:order="0">
+            <intent-filter android:priority="100" android:order="100">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_AUTHORIZE_SEED_ACCESS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:order="0">
+            <intent-filter android:priority="100" android:order="100">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_TRANSACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:order="0">
+            <intent-filter android:priority="100" android:order="100">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_SIGN_MESSAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter android:order="0">
+            <intent-filter android:priority="100" android:order="100">
                 <action android:name="com.solanamobile.seedvault.wallet.v1.ACTION_GET_PUBLIC_KEY" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

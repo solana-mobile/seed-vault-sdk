@@ -20,6 +20,7 @@ import com.solanamobile.seedvault.cts.data.TestResult
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.conditioncheckers.HasSeedVaultPermissionChecker
 import com.solanamobile.seedvault.cts.data.conditioncheckers.NewSeedDoesNotExistChecker
+import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
 import com.solanamobile.seedvault.cts.data.testdata.NewSeed
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
@@ -29,6 +30,7 @@ internal class CreateNewSeedTestCase @Inject constructor(
     hasSeedVaultPermissionChecker: HasSeedVaultPermissionChecker,
     newSeedExistsChecker: NewSeedDoesNotExistChecker,
     newSeed: NewSeed,
+    private val implementationDetails: ImplementationDetails,
     @ApplicationContext private val ctx: Context,
     private val logger: TestSessionLogger
 ) : TestCaseImpl(
@@ -40,7 +42,7 @@ internal class CreateNewSeedTestCase @Inject constructor(
 
     private class CreateSeedIntentContract : ActivityResultContract<Int, Result<Long>>() {
         override fun createIntent(context: Context, @WalletContractV1.Purpose input: Int): Intent =
-            Wallet.createSeed(input)
+            Wallet.createSeed(context, input)
 
         override fun parseResult(resultCode: Int, intent: Intent?): Result<Long> {
             return when (resultCode) {
@@ -91,11 +93,11 @@ internal class CreateNewSeedTestCase @Inject constructor(
     }
 
     private fun testWalletHelperConstructsExpectedIntent(): Boolean {
-        val helperIntent = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val helperIntent = Wallet.createSeed(ctx, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         val directIntent = Intent(WalletContractV1.ACTION_CREATE_SEED).putExtra(
             WalletContractV1.EXTRA_PURPOSE,
             WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
-        )
+        ).setComponent(implementationDetails.ACTION_CREATE_SEED_COMPONENT_NAME)
         return directIntent.filterEquals(helperIntent)
     }
 

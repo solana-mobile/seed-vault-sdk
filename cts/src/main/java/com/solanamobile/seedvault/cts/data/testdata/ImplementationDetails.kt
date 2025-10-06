@@ -4,6 +4,7 @@
 
 package com.solanamobile.seedvault.cts.data.testdata
 
+import android.content.ComponentName
 import android.os.Build
 import androidx.annotation.IntRange
 import com.solanamobile.seedvault.cts.BuildConfig
@@ -20,9 +21,13 @@ internal sealed interface ImplementationDetails {
     val MAX_REQUESTED_SIGNATURES: Int
     val MAX_REQUESTED_PUBLIC_KEYS: Int
     val IS_LEGACY_IMPLEMENTATION: Boolean
+    val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName
+    val ACTION_CREATE_SEED_COMPONENT_NAME: ComponentName
+    val ACTION_IMPORT_SEED_COMPONENT_NAME: ComponentName
+    val ACTION_SEED_SETTINGS_COMPONENT_NAME: ComponentName
 }
 
-private data object Generic : ImplementationDetails {
+private sealed class GenericCommon : ImplementationDetails {
     override fun generateSeedName(i: Int) = "Test ${i + 1}"
     override val IS_PIN_CONFIGURABLE_PER_SEED: Boolean = true
     override val DOES_PIN_FAILURE_WIPE_SEED_VAULT: Boolean = false
@@ -30,6 +35,42 @@ private data object Generic : ImplementationDetails {
     override val MAX_REQUESTED_SIGNATURES: Int = 3
     override val MAX_REQUESTED_PUBLIC_KEYS: Int = 10
     override val IS_LEGACY_IMPLEMENTATION: Boolean = false
+}
+
+private data object GenericStandard : GenericCommon() {
+    override val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.authActivityGenericAlias"
+    )
+    override val ACTION_CREATE_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailsGenericAlias"
+    )
+    override val ACTION_IMPORT_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailsGenericAlias"
+    )
+    override val ACTION_SEED_SETTINGS_COMPONENT_NAME: ComponentName
+        get() = throw NotImplementedError("Non-privileged Seed Vault implementations do not support ACTION_SEED_SETTINGS")
+}
+
+private data object GenericPrivileged : GenericCommon() {
+    override val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.authActivityPrivilegedAlias"
+    )
+    override val ACTION_CREATE_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailsPrivilegedAlias"
+    )
+    override val ACTION_IMPORT_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailsPrivilegedAlias"
+    )
+    override val ACTION_SEED_SETTINGS_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailsPrivilegedAlias"
+    )
 }
 
 private data object Saga : ImplementationDetails {
@@ -44,6 +85,20 @@ private data object Saga : ImplementationDetails {
     override val MAX_REQUESTED_SIGNATURES: Int = 3
     override val MAX_REQUESTED_PUBLIC_KEYS: Int = 10
     override val IS_LEGACY_IMPLEMENTATION: Boolean = true
+    override val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.ui.AuthorizeActivity"
+    )
+    override val ACTION_CREATE_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.osomprivacy.seedvaultmgmt",
+        "com.osomprivacy.seedvaultmgmt.ui.SeedCreateAndImportActivity"
+    )
+    override val ACTION_IMPORT_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.osomprivacy.seedvaultmgmt",
+        "com.osomprivacy.seedvaultmgmt.ui.SeedCreateAndImportActivity"
+    )
+    override val ACTION_SEED_SETTINGS_COMPONENT_NAME: ComponentName
+        get() = throw NotImplementedError("Non-privileged Seed Vault implementations do not support ACTION_SEED_SETTINGS")
 }
 
 private sealed class SeekerCommon : ImplementationDetails {
@@ -57,12 +112,42 @@ private data object SeekerStandard : SeekerCommon() {
     override val MAX_SIGNING_REQUESTS: Int = 3
     override val MAX_REQUESTED_SIGNATURES: Int = 3
     override val MAX_REQUESTED_PUBLIC_KEYS: Int = 10
+    override val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.authorizeActivityGenericAlias"
+    )
+    override val ACTION_CREATE_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailGenericAlias"
+    )
+    override val ACTION_IMPORT_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailGenericAlias"
+    )
+    override val ACTION_SEED_SETTINGS_COMPONENT_NAME: ComponentName
+        get() = throw NotImplementedError("Non-privileged Seed Vault implementations do not support ACTION_SEED_SETTINGS")
 }
 
 private data object SeekerPrivileged : SeekerCommon() {
     override val MAX_SIGNING_REQUESTS: Int = 10
     override val MAX_REQUESTED_SIGNATURES: Int = 3
     override val MAX_REQUESTED_PUBLIC_KEYS: Int = 30
+    override val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.authorizeActivityPrivilegedAlias"
+    )
+    override val ACTION_CREATE_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailPrivilegedAlias"
+    )
+    override val ACTION_IMPORT_SEED_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailPrivilegedAlias"
+    )
+    override val ACTION_SEED_SETTINGS_COMPONENT_NAME: ComponentName = ComponentName(
+        "com.solanamobile.seedvaultimpl",
+        "com.solanamobile.seedvaultimpl.seedDetailPrivilegedAlias"
+    )
 }
 
 @Module
@@ -76,7 +161,10 @@ internal object ImplementationDetailsModule {
                 "Privileged" -> SeekerPrivileged
                 else -> SeekerStandard
             }
-            else -> Generic
+            else -> when (BuildConfig.FLAVOR) {
+                "Privileged" -> GenericPrivileged
+                else -> GenericStandard
+            }
         }
     }
 }
