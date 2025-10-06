@@ -1,4 +1,4 @@
-# `@solana-mobile/seedvaultlib`
+# `@solana-mobile/seed-vault-lib`
 
 A React Native wrapper of the Seed Vault SDK.
 
