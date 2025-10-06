@@ -152,14 +152,14 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun requestAuthorizeNewSeed() {
         Log.d(TAG, "Requesting authorization for a new seed...")
-        val intent = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val intent = Wallet.authorizeSeed(reactContext, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_AUTHORIZE_SEED_ACCESS)
     }
 
     @ReactMethod
     fun authorizeNewSeed(promise: Promise) {
         Log.d(TAG, "Requesting authorization for a new seed...")
-        val intent = Wallet.authorizeSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val intent = Wallet.authorizeSeed(reactContext, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         registerForActivityResult(intent, REQUEST_AUTHORIZE_SEED_ACCESS) { resultCode, data -> 
             try {
                 val authToken = Wallet.onAuthorizeSeedResult(resultCode, data)
@@ -180,14 +180,14 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun requestCreateNewSeed() {
         Log.d(TAG, "Requesting creation of a new seed...")
-        val intent = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val intent = Wallet.createSeed(reactContext, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_CREATE_NEW_SEED)
     }
 
     @ReactMethod
     fun createNewSeed(promise: Promise) {
         Log.d(TAG, "Requesting creation of a new seed...")
-        val intent = Wallet.createSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val intent = Wallet.createSeed(reactContext, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         registerForActivityResult(intent, REQUEST_CREATE_NEW_SEED) { resultCode, data -> 
             try {
                 val authToken = Wallet.onCreateSeedResult(resultCode, data)
@@ -208,14 +208,14 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun requestImportExistingSeed() {
         Log.d(TAG, "Requesting import of an existing seed...")
-        val intent = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val intent = Wallet.importSeed(reactContext, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_IMPORT_EXISTING_SEED)
     }
 
     @ReactMethod
     fun importExistingSeed(promise: Promise) {
         Log.d(TAG, "Requesting import of an existing seed...")
-        val intent = Wallet.importSeed(WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
+        val intent = Wallet.importSeed(reactContext, WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION)
         registerForActivityResult(intent, REQUEST_IMPORT_EXISTING_SEED) { resultCode, data -> 
             try {
                 val authToken = Wallet.onImportSeedResult(resultCode, data)
@@ -258,7 +258,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun requestShowSeedSettings(authToken: String) {
         Log.d(TAG, "Requesting Seed Settings to be shown...")
-        val intent = Wallet.showSeedSettings(authToken.toLong())
+        val intent = Wallet.showSeedSettings(reactContext, authToken.toLong())
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SHOW_SEED_SETTINGS);
     }
 
@@ -271,7 +271,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     private fun showSeedSettingsAsync(authToken: String, callback: (error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting Seed Settings to be shown...")
-        val intent = Wallet.showSeedSettings(authToken.toLong())
+        val intent = Wallet.showSeedSettings(reactContext, authToken.toLong())
         try {
             registerForActivityResult(intent, REQUEST_SHOW_SEED_SETTINGS) { resultCode, data ->
                 if (resultCode != Activity.RESULT_CANCELED) {
@@ -304,7 +304,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     private fun requestSignMessages(authToken: String, signingRequests: List<SigningRequest>) {
         Log.d(TAG, "Requesting provided messages to be signed...")
-        val intent = Wallet.signMessages(authToken.toLong(), ArrayList(signingRequests))
+        val intent = Wallet.signMessages(reactContext, authToken.toLong(), ArrayList(signingRequests))
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SIGN_MESSAGES);
     }
 
@@ -327,7 +327,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     private fun signMessagesAsync(authToken: String, signingRequests: List<SigningRequest>, callback: (result: ReadableArray?, error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting provided messages to be signed...")
-        val intent = Wallet.signMessages(authToken.toLong(), ArrayList(signingRequests))
+        val intent = Wallet.signMessages(reactContext, authToken.toLong(), ArrayList(signingRequests))
         registerForActivityResult(intent, REQUEST_SIGN_MESSAGES) { resultCode, data ->
             try {
                 val result = Wallet.onSignMessagesResult(resultCode, data)
@@ -361,7 +361,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     private fun requestSignTransactions(authToken: String, signingRequests: List<SigningRequest>) {
         Log.d(TAG, "Requesting provided transactions to be signed...")
-        val intent = Wallet.signTransactions(authToken.toLong(), ArrayList(signingRequests))
+        val intent = Wallet.signTransactions(reactContext, authToken.toLong(), ArrayList(signingRequests))
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_SIGN_TRANSACTIONS)
     }
 
@@ -384,7 +384,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     private fun signTransactionsAsync(authToken: String, signingRequests: List<SigningRequest>, callback: (result: ReadableArray?, error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting provided transactions to be signed...")
-        val intent = Wallet.signTransactions(authToken.toLong(), ArrayList(signingRequests))
+        val intent = Wallet.signTransactions(reactContext, authToken.toLong(), ArrayList(signingRequests))
         registerForActivityResult(intent, REQUEST_SIGN_TRANSACTIONS) { resultCode, data ->
             try {
                 val result = Wallet.onSignTransactionsResult(resultCode, data)
@@ -444,7 +444,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     @ReactMethod
     fun requestPublicKeys(authToken: String, derivationPaths: ReadableArray) {
         Log.d(TAG, "Requesting public keys for provided derviation paths...")
-        val intent = Wallet.requestPublicKeys(authToken.toLong(), Arguments.toList(derivationPaths)?.mapNotNull {
+        val intent = Wallet.requestPublicKeys(reactContext, authToken.toLong(), Arguments.toList(derivationPaths)?.mapNotNull {
             (it as? String)?.let { uriString -> Uri.parse(uriString) }
         } as ArrayList ?: arrayListOf())
         reactContext.currentActivity?.startActivityForResult(intent, REQUEST_GET_PUBLIC_KEYS);
@@ -469,7 +469,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
 
     private fun getPublicKeysAsync(authToken: String, derivationPaths: ReadableArray, callback: (result: ReadableArray?, error: Throwable?) -> Unit) {
         Log.d(TAG, "Requesting public keys for provided derviation paths...")
-        val intent = Wallet.requestPublicKeys(authToken.toLong(), Arguments.toList(derivationPaths)?.mapNotNull {
+        val intent = Wallet.requestPublicKeys(reactContext, authToken.toLong(), Arguments.toList(derivationPaths)?.mapNotNull {
             (it as? String)?.let { uriString -> Uri.parse(uriString) }
         } as ArrayList ?: arrayListOf())
         registerForActivityResult(intent, REQUEST_GET_PUBLIC_KEYS) { resultCode, data ->
