@@ -79,7 +79,7 @@ jobs:
       ##########################################################################
 
       # Upload libraries to workflow artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: libraries
@@ -88,7 +88,7 @@ jobs:
           retention-days: 5
 
       # Upload javadoc to workflow artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: seedvault-javadoc
@@ -128,7 +128,7 @@ jobs:
       ##########################################################################
 
       # Upload test results to workflow artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           name: test-results
