@@ -52,11 +52,16 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun setActivtyResultTimeout(timeout: Long) {
-        activityResultTimeout = 
-            if (timeout > MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS) timeout 
-            else if (timeout == 0L) null 
-            else MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS
+    fun setActivtyResultTimeout(timeoutStr: String) {
+        try {
+            val timeout = timeoutStr.toLong()
+            activityResultTimeout =
+                if (timeout > MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS) timeout
+                else if (timeout == 0L) null
+                else MINIMUM_ACTIVITY_RESULT_TIMEOUT_MS
+        } catch (e: NumberFormatException) {
+            Log.e(TAG, "Invalid timeout value: $timeoutStr", e)
+        }
     }
 
     @ReactMethod
@@ -121,7 +126,7 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     @ReactMethod
-    fun getAccounts(authToken: String, filterOnColumn: String, value: Any, promise: Promise) {
+    fun getAccounts(authToken: String, filterOnColumn: String?, value: String?, promise: Promise) {
         val application = reactContext.currentActivity?.application!!
         val accountsCursor = Wallet.getAccounts(application, authToken.toLong(),
                     WalletContractV1.ACCOUNTS_ALL_COLUMNS, filterOnColumn, value)!!
@@ -238,21 +243,33 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
         Wallet.deauthorizeSeed(reactContext, authToken.toLong())
         Log.d(TAG, "Seed $authToken deauthorized")
     }
-
+    
     @ReactMethod
-    fun updateAccountName(authToken: String, accountId: Long, name: String?) {
-        Wallet.updateAccountName(reactContext, authToken.toLong(), accountId, name)
-        Log.d(TAG, "Account name updated (to '$name')")
+    fun updateAccountName(authToken: String, accountId: String, name: String?) {
+        try {
+            Wallet.updateAccountName(reactContext, authToken.toLong(), accountId.toLong(), name)
+            Log.d(TAG, "Account name updated (to '$name')")
+        } catch (e: NumberFormatException) {
+            Log.e(TAG, "Invalid accountId: $accountId", e)
+        }
     }
 
     @ReactMethod
     fun updateAccountIsUserWallet(authToken: String, accountId: String, isUserWallet: Boolean) {
-        Wallet.updateAccountIsUserWallet(reactContext, authToken.toLong(), accountId.toLong(), isUserWallet)
+        try {
+            Wallet.updateAccountIsUserWallet(reactContext, authToken.toLong(), accountId.toLong(), isUserWallet)
+        } catch (e: NumberFormatException) {
+            Log.e(TAG, "Invalid accountId: $accountId", e)
+        }
     }
 
     @ReactMethod
     fun updateAccountIsValid(authToken: String, accountId: String, isValid: Boolean) {
-        Wallet.updateAccountIsValid(reactContext, authToken.toLong(), accountId.toLong(), isValid)
+        try {
+            Wallet.updateAccountIsValid(reactContext, authToken.toLong(), accountId.toLong(), isValid)
+        } catch (e: NumberFormatException) {
+            Log.e(TAG, "Invalid accountId: $accountId", e)
+        }
     }
 
     @ReactMethod
