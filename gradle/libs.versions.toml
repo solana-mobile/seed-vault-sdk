@@ -4,7 +4,7 @@ android-material = "1.13.0"
 androidx-activity = "1.11.0"
 androidx-annotation = "1.9.1"
 androidx-appcompat = "1.7.1"
-androidx-compose-bom = "2025.09.00"
+androidx-compose-bom = "2025.11.00"
 androidx-constraintlayout = "2.2.1"
 androidx-core = "1.17.0"
 androidx-datastore = "1.1.7"
@@ -37,6 +37,7 @@ androidx-annotation = { group = "androidx.annotation", name = "annotation", vers
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidx-appcompat" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidx-compose-bom" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" } # versioned by androidx-compose-bom
+androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core" } # versioned by androidx-compose-bom
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" } # versioned by androidx-compose-bom
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" } # versioned by androidx-compose-bom
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" } # versioned by androidx-compose-bom
