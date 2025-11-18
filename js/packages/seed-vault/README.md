@@ -5,7 +5,7 @@ A React Native wrapper of the Seed Vault SDK.
 # Usage
 
 ### Check if Seed Vault is Available
-We first need to check if the seed vault service is available on the device. Currently only Saga implementes a seed vault. 
+We first need to check if the seed vault service is available on the device. Currently only Saga and Seeker implement a seed vault. 
 ```javascript
 const allowSimulated = false; // use true to allow simulated seed vault (for dev/testing)
 const seedVaultAvailable = await SolanaMobileSeedVaultLib.isSeedVaultAvailable(allowSimulated);
@@ -39,7 +39,7 @@ if (permissionResult === PermissionsAndroid.RESULTS.GRANTED) {
 }
 ```
 
-Read more about requesting Android Permission in React Natvie [here](https://reactnative.dev/docs/permissionsandroid).
+Read more about requesting Android Permission in React Native [here](https://reactnative.dev/docs/permissionsandroid).
 
 ### Authorize a Seed
 Before our app can access any seeds in the seed vault, we must first request authorization for our app to use a seed from the user.
