@@ -20,7 +20,7 @@ jobs:
         version: [ 52, 53, 54, latest]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: set up Node
         uses: actions/setup-node@v6
