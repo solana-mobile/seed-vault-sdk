@@ -55,11 +55,11 @@ interface AuthorizeSeedAPI {
 }
 
 interface AccountAPI {
-    getAccounts(authToken: AuthToken, filterOnColumn: string, value: any): Promise<Account[]>
+    getAccounts(authToken: AuthToken, filterOnColumn?: string, value?: string): Promise<Account[]>
     getUserWallets(authToken: AuthToken): Promise<Account[]>
-    updateAccountName(authToken: AuthToken, accountId: number, name?: string): void
-    updateAccountIsUserWallet(authToken: AuthToken, accountId: number, isUserWallet: boolean): void
-    updateAccountIsValid(authToken: AuthToken, accountId: number, isValid: boolean): void
+    updateAccountName(authToken: AuthToken, accountId: string, name?: string): void
+    updateAccountIsUserWallet(authToken: AuthToken, accountId: string, isUserWallet: boolean): void
+    updateAccountIsValid(authToken: AuthToken, accountId: string, isValid: boolean): void
 }
 
 interface CreateNewSeedAPI {
