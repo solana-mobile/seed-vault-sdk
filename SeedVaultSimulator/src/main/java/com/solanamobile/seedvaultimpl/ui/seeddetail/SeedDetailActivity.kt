@@ -68,6 +68,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -181,6 +182,7 @@ class SeedDetailActivity : AppCompatActivity() {
         setContent {
             val seedDetails = viewModel.seedDetailUiState.collectAsState().value
             val context = LocalContext.current
+            val resources = LocalResources.current
             val snackbarHostState = remember {
                 SnackbarHostState()
             }
@@ -387,7 +389,7 @@ class SeedDetailActivity : AppCompatActivity() {
                                             modifier = Modifier
                                                 .padding(end = Sizes.dp16)
                                                 .clearAndSetSemantics {
-                                                    contentDescription = context.getString(
+                                                    contentDescription = resources.getString(
                                                         R.string.phrase_length_description,
                                                         12
                                                     )
@@ -402,7 +404,7 @@ class SeedDetailActivity : AppCompatActivity() {
                                         FilterChip(
                                             modifier = Modifier
                                                 .clearAndSetSemantics {
-                                                    contentDescription = context.getString(
+                                                    contentDescription = resources.getString(
                                                         R.string.phrase_length_description,
                                                         24
                                                     )
