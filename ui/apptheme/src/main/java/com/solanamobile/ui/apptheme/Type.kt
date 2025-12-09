@@ -9,7 +9,6 @@ import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
@@ -17,6 +16,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalResources
 
 val LocalTypography = compositionLocalOf { Typography() }
 
@@ -49,10 +49,10 @@ fun ProvideTypography(
 
 @Composable
 fun displayScaleFactor(): Float {
-    if (LocalInspectionMode.current || LocalContext.current.resources.displayMetrics.densityDpi == DisplayMetrics.DENSITY_DEVICE_STABLE) {
+    if (LocalInspectionMode.current || LocalResources.current.displayMetrics.densityDpi == DisplayMetrics.DENSITY_DEVICE_STABLE) {
         return 1f // Optimize floating operation
     }
-    return LocalContext.current.resources.displayMetrics.densityDpi.toFloat().div(DisplayMetrics.DENSITY_DEVICE_STABLE)
+    return LocalResources.current.displayMetrics.densityDpi.toFloat().div(DisplayMetrics.DENSITY_DEVICE_STABLE)
 }
 
 // Disables display scale factor.
