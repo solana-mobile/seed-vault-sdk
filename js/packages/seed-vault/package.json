@@ -11,16 +11,11 @@
     "react-native": "lib/esm/index",
     "module": "lib/esm/index",
     "types": "lib/types/index.d.ts",
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "import": "./lib/esm/index.native.js"
-        }
-    },
     "files": [
         "android",
         "!android/build",
         "lib",
+        "src",
         "LICENSE"
     ],
     "publishConfig": {
