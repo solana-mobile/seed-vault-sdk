@@ -97,6 +97,7 @@ dependencies {
     implementation libs.androidx.compose.material3
 
     ksp libs.hilt.compiler
+    ksp libs.kotlin.metadata.jvm // to fix a metadata version compatibility issue between Hilt and KSP
     implementation libs.hilt.android
     implementation libs.hilt.navigation.compose
     implementation libs.android.material

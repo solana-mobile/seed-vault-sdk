@@ -205,7 +205,7 @@ class WalletContentProvider : ContentProvider() {
         seedRepository.seeds.value.values.forEach { seed ->
             seed.authorizations.forEach { auth ->
                 // Note: must be in the same order as defaultProjection
-                val values = arrayOf(
+                val values = arrayOf<Any>(
                     auth.authToken,                                             // WalletContractV1.AUTHORIZED_SEEDS_AUTH_TOKEN
                     auth.purpose.toWalletContractConstant(),                    // WalletContractV1.AUTHORIZED_SEEDS_AUTH_PURPOSE
                     seed.details.name ?: "",                                    // WalletContractV1.AUTHORIZED_SEEDS_SEED_NAME
@@ -265,7 +265,7 @@ class WalletContentProvider : ContentProvider() {
             val seedPurposeCount = seedsAuthorizedPurposeCounts[p]?.size ?: 0
 
             // NOTE: must be in the same order as defaultProjection
-            val values = arrayOf(
+            val values = arrayOf<Any>(
                 p.toWalletContractConstant(),                                   // WalletContractV1.UNAUTHORIZED_SEEDS_AUTH_PURPOSE
                 if (seedPurposeCount < seeds.size) 1.toShort() else 0.toShort() // WalletContractV1.UNAUTHORIZED_SEEDS_HAS_UNAUTHORIZED_SEEDS
             )
@@ -341,7 +341,7 @@ class WalletContentProvider : ContentProvider() {
         // Currently, all Purposes have the same set of implementation limits
         for (p in Authorization.Purpose.entries) {
             // NOTE: must be in the same order as defaultProjection
-            val values = arrayOf(
+            val values = arrayOf<Any>(
                 p.toWalletContractConstant(),                               // WalletContractV1.IMPLEMENTATION_LIMITS_AUTH_PURPOSE
                 RequestLimitsUseCase.MAX_SIGNING_REQUESTS.toShort(),        // WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS
                 RequestLimitsUseCase.MAX_REQUESTED_SIGNATURES.toShort(),    // WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES

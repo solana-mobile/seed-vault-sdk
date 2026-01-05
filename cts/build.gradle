@@ -116,5 +116,6 @@ dependencies {
     debugImplementation libs.androidx.compose.ui.test.manifest
 
     ksp libs.hilt.compiler
+    ksp libs.kotlin.metadata.jvm // to fix a metadata version compatibility issue between Hilt and KSP
     kspTest libs.hilt.testing.compiler
 }
