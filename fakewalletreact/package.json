@@ -2,6 +2,7 @@
   "name": "fakewalletreact",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "pnpm@10.12.1",
   "engines": {
     "node": ">=20.18.0 <21"
   },
@@ -30,6 +31,7 @@
     "@react-native-community/cli-platform-ios": "15.0.0",
     "@react-native/babel-preset": "0.76.1",
     "@react-native/eslint-config": "0.76.1",
+    "@react-native/gradle-plugin": "0.76.1",
     "@react-native/metro-config": "0.76.1",
     "@react-native/typescript-config": "0.76.1",
     "@types/jest": "^29.5.14",

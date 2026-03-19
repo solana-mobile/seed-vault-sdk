@@ -1,0 +1,61 @@
+name: Create Release PR or Publish to npm
+
+on:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    if: ${{ !github.event.repository.fork }}
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    defaults:
+      run:
+        working-directory: ./js
+
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+
+      - name: set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          cache: true
+          cache_dependency_path: 'js/pnpm-lock.yaml'
+          package_json_file: 'js/package.json'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Release PR or Publish to npm
+        uses: changesets/action@001cd79f0a536e733315164543a727bdf2d70aff # v1.5.1
+        with:
+          publish: pnpm publish-packages
+          commit: "chore: version packages"
+          title: "Bump JS Packages"
+          cwd: ./js
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}

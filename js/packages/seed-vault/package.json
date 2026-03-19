@@ -23,17 +23,19 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "build": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "cross-env echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.95.4",
+        "@types/react": "^18.3.12",
         "@types/react-native": "^0.69.3",
         "cross-env": "^7.0.3",
         "shx": "^0.3.4"
     },
     "peerDependencies": {
+        "react": ">=18",
         "react-native": ">0.69"
     }
 }
