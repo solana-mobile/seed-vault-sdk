@@ -7,10 +7,10 @@
     "license": "Apache-2.0",
     "type": "module",
     "sideEffects": false,
-    "main": "lib/esm/index",
-    "react-native": "lib/esm/index",
-    "module": "lib/esm/index",
-    "types": "lib/types/index.d.ts",
+    "main": "lib/index.js",
+    "react-native": "lib/index.js",
+    "module": "lib/index.js",
+    "types": "lib/index.d.ts",
     "files": [
         "android",
         "!android/build",
@@ -23,15 +23,13 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
-        "postbuild": "cross-env echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json"
+        "build": "tsdown",
+        "build:watch": "tsdown --watch"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.95.4",
         "@types/react": "^18.3.12",
         "@types/react-native": "^0.69.3",
-        "cross-env": "^7.0.3",
         "shx": "^0.3.4"
     },
     "peerDependencies": {
