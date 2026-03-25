@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.androidx.compose.compiler)
 }
 
@@ -27,10 +26,6 @@ android {
 
     buildFeatures {
         compose true
-    }
-
-    kotlinOptions {
-        jvmTarget = '11'
     }
 }
 

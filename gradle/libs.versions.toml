@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.1.0"
 android-material = "1.13.0"
 androidx-activity = "1.13.0"
 androidx-annotation = "1.9.1"
@@ -82,5 +82,4 @@ androidx-navigation-safeargs = { id = "androidx.navigation.safeargs", version.re
 google-kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "google-kotlin-ksp" }
 gradle-nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "gradle-nexus-publish" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobuf-gradle-plugin" }
