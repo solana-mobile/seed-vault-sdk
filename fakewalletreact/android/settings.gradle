@@ -19,7 +19,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
-            from(files("../../gradle/libs.versions.toml"))
+            from(files("../node_modules/react-native/gradle/libs.versions.toml"))
         }
     }
     repositories {
