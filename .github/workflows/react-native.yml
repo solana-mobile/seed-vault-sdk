@@ -23,7 +23,7 @@ jobs:
         with:
           node-version-file: 'fakewalletreact/package.json' # note - node engine should match between fakewalletreact/ and js/
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           cache: true
           cache_dependency_path: |
