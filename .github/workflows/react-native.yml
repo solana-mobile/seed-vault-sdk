@@ -38,7 +38,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: '[js] Install pnpm dependencies'
         working-directory: 'js/'
