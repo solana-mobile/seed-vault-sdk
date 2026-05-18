@@ -27,7 +27,7 @@ kotlinx-coroutines-android = "1.11.0"
 logback-android = "3.0.0"
 protobuf-gradle-plugin = "0.10.0"
 protobuf-java = "4.34.1"
-sl4j = "2.0.17"
+sl4j = "2.0.18"
 
 [libraries]
 android-material = { group = "com.google.android.material", name = "material", version.ref = "android-material" }
