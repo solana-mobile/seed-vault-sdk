@@ -26,7 +26,7 @@ kotlin = "2.3.21"
 kotlinx-coroutines-android = "1.11.0"
 logback-android = "3.0.0"
 protobuf-gradle-plugin = "0.10.0"
-protobuf-java = "4.34.1"
+protobuf-java = "4.35.0"
 sl4j = "2.0.18"
 
 [libraries]
