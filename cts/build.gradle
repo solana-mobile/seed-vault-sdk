@@ -11,7 +11,7 @@ plugins {
 
 android {
     namespace 'com.solanamobile.seedvault.cts'
-    compileSdk 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId "com.solanamobile.seedvault.cts"

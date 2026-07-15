@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace 'com.solanamobile.fakewallet'
-    compileSdk 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId "com.solanamobile.fakewallet"
