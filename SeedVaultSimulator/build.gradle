@@ -65,6 +65,10 @@ android {
         compose true
         viewBinding true
     }
+
+    installation {
+        timeOutInMs = 600000 // CI installs might go over remote adb
+    }
 }
 
 protobuf {

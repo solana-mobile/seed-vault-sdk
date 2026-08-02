@@ -76,6 +76,9 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    installation {
+        timeOutInMs = 600000 // CI installs might go over remote adb
+    }
 }
 
 dependencies {
