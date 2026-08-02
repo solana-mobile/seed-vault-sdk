@@ -525,6 +525,12 @@ fun NonPrivilegedAuthorizeContents(
                     }
                 }
             }
+
+            // The sheet drops its bottom inset (see contentWindowInsets above), so without this the
+            // button row lands under the navigation bar and cannot be tapped.
+            Box(
+                modifier = Modifier.navigationBarsPadding(),
+            )
         }
     }
 }
