@@ -61,7 +61,7 @@ jobs:
           packages: '' # runner image already ships platform-tools
 
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v6.2.0
 
       - name: AVD cache
         if: env.USE_GENYMOTION != 'true'
