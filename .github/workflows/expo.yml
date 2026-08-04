@@ -40,7 +40,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v6.2.0
 
       - name: 'Build Project'
         working-directory: 'js/'
