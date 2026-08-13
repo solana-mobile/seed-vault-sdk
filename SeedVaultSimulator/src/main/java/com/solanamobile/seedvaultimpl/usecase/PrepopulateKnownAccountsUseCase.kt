@@ -33,6 +33,29 @@ class PrepopulateKnownAccountsUseCase @Inject constructor(
                     seed.details, derivationRootPath
                 )
                 val knownAccounts = mutableListOf<Account>()
+            
+                val rootPath = derivationRootPath
+                val rootUri = rootPath.toUri()
+                if (seed.accounts.firstOrNull { it.purpose == purpose && it.bip32DerivationPathUri == rootUri } == null) {
+                    try {
+                        val rootPublicKey = ed25519Slip10UseCase.derivePublicKeyPartialDerivation(
+                            seed.details,
+                            rootPath
+                        )
+                        val rootAccount = Account(
+                            Account.INVALID_ACCOUNT_ID,
+                            purpose,
+                            rootUri,
+                            rootPublicKey
+                        )
+                        knownAccounts.add(rootAccount)
+                        Log.d(TAG, "Added ROOT Solana account ${GetNameUseCase.getName(rootAccount)} for $rootUri")
+                    } catch (e: BipDerivationUseCase.KeyDoesNotExistException) {
+                        Log.w(TAG, "Root key $rootUri does not exist; skipping…")
+                    }
+                } else {
+                    Log.d(TAG, "Root account for $rootUri already exists; skipping…")
+                }
 
                 for (i in 0 until SOLANA_NUM_KNOWN_ACCOUNTS) {
                     // Type 1 paths: m/44'/501'/X'
