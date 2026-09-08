@@ -1,7 +1,7 @@
 package com.solanamobile.seedvault.reactnative
 
-import android.app.Activity;
-import android.content.Intent;
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.net.Uri
@@ -16,13 +16,14 @@ import com.solanamobile.seedvault.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 import com.solanamobile.seedvault.model.SigningRequestSerializer
 
 class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
-    // Sets the name of the module in React, accessible at ReactNative.NativeModules.SeedVaultLib
     override fun getName() = "SolanaMobileSeedVaultLib"
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -39,6 +40,40 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
             }
         }
 
+    private val mPendingListeners = ConcurrentHashMap<Int, ActivityEventListener>()
+    private val observerRegistered = AtomicBoolean(false)
+    private val cleanedUp = AtomicBoolean(false)
+
+    private val seedVaultContentObserver =
+        object : ContentObserver(Handler(reactContext.mainLooper)) {
+            override fun onChange(selfChange: Boolean) =
+                dispatchContentChange(emptyList())
+
+            override fun onChange(selfChange: Boolean, uri: Uri?) =
+                dispatchContentChange(listOfNotNull(uri))
+
+            override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) =
+                dispatchContentChange(listOfNotNull(uri))
+
+            override fun onChange(selfChange: Boolean, uris: Collection<Uri>, flags: Int) =
+                dispatchContentChange(uris)
+        }
+
+    private fun dispatchContentChange(uris: Collection<Uri>) {
+        if (!reactContext.hasActiveReactInstance()) return
+        val effectiveUris = uris.ifEmpty {
+            listOf(WalletContractV1.WALLET_PROVIDER_CONTENT_URI_BASE)
+        }
+        sendEvent(reactContext, SEED_VAULT_CONTENT_CHANGE_EVENT_BRIDGE_NAME,
+            params = Arguments.createMap().apply {
+                putString("__type", "SeedVaultContentChange")
+                putArray("uris", Arguments.createArray().apply {
+                    effectiveUris.forEach { uri -> pushString(uri.toString()) }
+                })
+            }
+        )
+    }
+
     private var activityResultTimeout: Long? = DEFAULT_ACTIVITY_RESULT_TIMEOUT_MS
 
     init {
@@ -49,6 +84,27 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 && SeedVault.isAvailable(reactContext, true)) {
             observeSeedVaultContentChanges()
         }
+    }
+
+    private fun cleanupResources() {
+        if (!cleanedUp.compareAndSet(false, true)) return
+        stopObservingSeedVaultContentChanges()
+        runCatching { reactContext.removeActivityEventListener(mActivityEventListener) }
+        mPendingListeners.values.forEach { listener ->
+            runCatching { reactContext.removeActivityEventListener(listener) }
+        }
+        mPendingListeners.clear()
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onCatalystInstanceDestroy() {
+        cleanupResources()
+        super.onCatalystInstanceDestroy()
+    }
+
+    override fun invalidate() {
+        cleanupResources()
+        super.invalidate()
     }
 
     @ReactMethod
@@ -436,7 +492,8 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
             }
         }
 
-        reactContext.addActivityEventListener(object : BaseActivityEventListener() {
+        val settled = java.util.concurrent.atomic.AtomicBoolean(false)
+        val listener = object : BaseActivityEventListener() {
             override fun onActivityResult(
                 activity: Activity,
                 receivedRequestCode: Int,
@@ -444,12 +501,17 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
                 data: Intent?
             ) {
                 if (receivedRequestCode == requestCode) {
+                    if (!settled.compareAndSet(false, true)) return
+                    timeout?.cancel()
+                    mPendingListeners.remove(requestCode)
                     reactContext.removeActivityEventListener(this)
                     callback(resultCode, data)
-                    timeout?.cancel()
                 }
             }
-        })
+        }
+
+        mPendingListeners[requestCode] = listener
+        reactContext.addActivityEventListener(listener)
         
         reactContext.currentActivity?.startActivityForResult(intent, requestCode)
         timeout?.start()
@@ -540,31 +602,19 @@ class SolanaMobileSeedVaultLibModule(val reactContext: ReactApplicationContext) 
     }
 
     private fun observeSeedVaultContentChanges() {
+        if (!observerRegistered.compareAndSet(false, true)) return
         reactContext.contentResolver.registerContentObserver(
             WalletContractV1.WALLET_PROVIDER_CONTENT_URI_BASE,
             true,
-            object : ContentObserver(Handler(reactContext.mainLooper)) {
-                override fun onChange(selfChange: Boolean) =
-                    throw NotImplementedError("Stub for legacy onChange")
-                override fun onChange(selfChange: Boolean, uri: Uri?) =
-                    throw NotImplementedError("Stub for legacy onChange")
-                override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) =
-                    throw NotImplementedError("Stub for legacy onChange")
-
-                override fun onChange(selfChange: Boolean, uris: Collection<Uri>, flags: Int) {
-                    sendEvent(reactContext, SEED_VAULT_CONTENT_CHANGE_EVENT_BRIDGE_NAME, 
-                        params = Arguments.createMap().apply {
-                            putString("__type", "SeedVaultContentChange")
-                            putArray("uris", Arguments.createArray().apply {
-                                uris.forEach { uri ->
-                                    pushString(uri.toString())
-                                }
-                            })
-                        }
-                    )
-                }
-            }
+            seedVaultContentObserver
         )
+    }
+
+    private fun stopObservingSeedVaultContentChanges() {
+        if (!observerRegistered.compareAndSet(true, false)) return
+        runCatching {
+            reactContext.contentResolver.unregisterContentObserver(seedVaultContentObserver)
+        }
     }
 
     private fun handleActivityResult(requestCode: Int,  resultCode: Int, data: Intent?) {
