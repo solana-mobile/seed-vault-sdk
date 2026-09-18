@@ -127,12 +127,17 @@ class MainViewModel(
         }
         authorizedSeedsCursor.close()
 
-        // Note: Add a synthetic entry to the implementation limits, to display and test the BIP32
-        // path length limits (which are not a normal implementation limit)
+        // Note: Add synthetic entries to the implementation limits, to display and test the BIP32
+        // path length limit and the maximum transaction payload size (neither of which is a normal
+        // implementation limit exposed by the Wallet API)
         val implementationLimits = Wallet.getImplementationLimitsForPurpose(
             getApplication(),
             WalletContractV1.PURPOSE_SIGN_SOLANA_TRANSACTION
         ).plus(IMPLEMENTATION_LIMITS_MAX_BIP32_PATH_DEPTH to WalletContractV1.BIP32_URI_MAX_DEPTH.toLong())
+            .plus(
+                IMPLEMENTATION_LIMITS_MAX_TRANSACTION_SIZE to
+                        TransactionVersion.V1.maxTransactionSize.toLong()
+            )
         maxSigningRequests =
             implementationLimits[WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS]!!.toInt()
         maxRequestedSignatures =
@@ -287,8 +292,12 @@ class MainViewModel(
         showErrorMessage(resultCode)
     }
 
-    fun signFakeTransaction(@WalletContractV1.AuthToken authToken: Long, account: Account) {
-        val fakeTransaction = createFakeTransaction(0)
+    fun signFakeTransaction(
+        @WalletContractV1.AuthToken authToken: Long,
+        account: Account,
+        transactionVersion: TransactionVersion
+    ) {
+        val fakeTransaction = createFakeTransaction(0, transactionVersion.maxPayloadSize(1))
         viewModelScope.launch {
             val transaction = SigningRequest(fakeTransaction, listOf(account.derivationPath))
             _viewModelEvents.emit(
@@ -299,16 +308,19 @@ class MainViewModel(
 
     fun signMaxTransactionsWithMaxSignatures(
         @WalletContractV1.AuthToken authToken: Long,
+        transactionVersion: TransactionVersion
     ) {
         signMTransactionsWithNSignatures(
             authToken,
             maxSigningRequests,
             maxRequestedSignatures,
+            transactionVersion.maxPayloadSize(maxRequestedSignatures),
         )
     }
 
     fun signPermissionedAccountTransactions(
         @WalletContractV1.AuthToken authToken: Long,
+        transactionVersion: TransactionVersion
     ) {
         if (Build.VERSION.SDK_INT < SeedVault.MIN_API_FOR_SEED_VAULT_PRIVILEGED) {
             throw IllegalStateException("PermissionedAccount not available")
@@ -319,7 +331,10 @@ class MainViewModel(
                 PermissionedAccount.getPermissionedAccountDerivationPath(i * maxRequestedSignatures + j)
                     .toUri()
             }
-            SigningRequest(createFakeTransaction(i), derivationPaths)
+            SigningRequest(
+                createFakeTransaction(i, transactionVersion.maxPayloadSize(maxRequestedSignatures)),
+                derivationPaths
+            )
         }
 
         viewModelScope.launch {
@@ -333,6 +348,7 @@ class MainViewModel(
         @WalletContractV1.AuthToken authToken: Long,
         m: Int,
         n: Int,
+        payloadSize: Int,
     ) {
         val signingRequests = (0 until m).map { i ->
             val derivationPaths = (0 until n).map { j ->
@@ -341,7 +357,7 @@ class MainViewModel(
                     .build()
                     .toUri()
             }
-            SigningRequest(createFakeTransaction(i), derivationPaths)
+            SigningRequest(createFakeTransaction(i, payloadSize), derivationPaths)
         }
 
         viewModelScope.launch {
@@ -351,8 +367,8 @@ class MainViewModel(
         }
     }
 
-    private fun createFakeTransaction(i: Int): ByteArray {
-        return ByteArray(TRANSACTION_SIZE) { i.toByte() }
+    private fun createFakeTransaction(i: Int, payloadSize: Int): ByteArray {
+        return ByteArray(payloadSize) { i.toByte() }
     }
 
     fun onSignTransactionsSuccess(
@@ -519,13 +535,24 @@ class MainViewModel(
 
         when (implementationLimit) {
             WalletContractV1.IMPLEMENTATION_LIMITS_MAX_SIGNING_REQUESTS ->
-                signMTransactionsWithNSignatures(seed.authToken, maxSigningRequests + 1, 1)
+                signMTransactionsWithNSignatures(
+                    seed.authToken, maxSigningRequests + 1, 1,
+                    TransactionVersion.V1.maxPayloadSize(1)
+                )
             WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_SIGNATURES ->
-                signMTransactionsWithNSignatures(seed.authToken, 1, maxRequestedSignatures + 1)
+                signMTransactionsWithNSignatures(
+                    seed.authToken, 1, maxRequestedSignatures + 1,
+                    TransactionVersion.V1.maxPayloadSize(maxRequestedSignatures + 1)
+                )
             WalletContractV1.IMPLEMENTATION_LIMITS_MAX_REQUESTED_PUBLIC_KEYS ->
                 requestMPublicKeys(seed.authToken, maxRequestedPublicKeys + 1)
             IMPLEMENTATION_LIMITS_MAX_BIP32_PATH_DEPTH ->
                 exceedBip32PathMaxDepth(seed.authToken)
+            IMPLEMENTATION_LIMITS_MAX_TRANSACTION_SIZE ->
+                signMTransactionsWithNSignatures(
+                    seed.authToken, 1, 1,
+                    TransactionVersion.V1.maxPayloadSize(1) + 1
+                )
             else -> showMessage("Cannot test unknown implementation limit")
         }
     }
@@ -606,8 +633,33 @@ class MainViewModel(
         private val TAG = MainViewModel::class.simpleName
         private const val FIRST_REQUESTED_PUBLIC_KEY_INDEX = 1000
         private const val IMPLEMENTATION_LIMITS_MAX_BIP32_PATH_DEPTH = "MaxBip32PathDepth"
-        private const val TRANSACTION_SIZE = 512
+        private const val IMPLEMENTATION_LIMITS_MAX_TRANSACTION_SIZE = "MaxTransactionSize"
         private const val MESSAGE_SIZE = 512
+    }
+}
+
+/**
+ * The Solana transaction versions for which FakeWallet can build payloads, identified by the
+ * largest transaction each version permits.
+ */
+enum class TransactionVersion(
+    val label: String,
+    val maxTransactionSize: Int
+) {
+    V0("V0", 1232),
+    V1("V1", 4096);
+
+    /**
+     * The largest payload that fills a transaction of this version when [requestedSignatures]
+     * signatures are requested of it. A payload is the transaction message; each signature
+     * produced for it is prepended to that message to form the serialized transaction, so the
+     * payload must leave room for every signature requested.
+     */
+    fun maxPayloadSize(requestedSignatures: Int): Int =
+        maxTransactionSize - requestedSignatures * ED25519_SIGNATURE_SIZE
+
+    private companion object {
+        const val ED25519_SIGNATURE_SIZE = 64
     }
 }
 

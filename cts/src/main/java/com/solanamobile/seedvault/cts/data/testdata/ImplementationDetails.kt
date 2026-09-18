@@ -20,6 +20,7 @@ internal sealed interface ImplementationDetails {
     val MAX_SIGNING_REQUESTS: Int
     val MAX_REQUESTED_SIGNATURES: Int
     val MAX_REQUESTED_PUBLIC_KEYS: Int
+    val MAX_TRANSACTION_SIZE: Int
     val IS_LEGACY_IMPLEMENTATION: Boolean
     val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName
     val ACTION_CREATE_SEED_COMPONENT_NAME: ComponentName
@@ -34,6 +35,7 @@ private sealed class GenericCommon : ImplementationDetails {
     override val MAX_SIGNING_REQUESTS: Int = 3
     override val MAX_REQUESTED_SIGNATURES: Int = 3
     override val MAX_REQUESTED_PUBLIC_KEYS: Int = 10
+    override val MAX_TRANSACTION_SIZE: Int = 4096
     override val IS_LEGACY_IMPLEMENTATION: Boolean = false
 }
 
@@ -84,6 +86,7 @@ private data object Saga : ImplementationDetails {
     override val MAX_SIGNING_REQUESTS: Int = 3
     override val MAX_REQUESTED_SIGNATURES: Int = 3
     override val MAX_REQUESTED_PUBLIC_KEYS: Int = 10
+    override val MAX_TRANSACTION_SIZE: Int = 1232
     override val IS_LEGACY_IMPLEMENTATION: Boolean = true
     override val ACTION_AUTHORIZE_SEED_ACCESS_COMPONENT_NAME: ComponentName = ComponentName(
         "com.solanamobile.seedvaultimpl",
@@ -105,6 +108,7 @@ private sealed class SeekerCommon : ImplementationDetails {
     override fun generateSeedName(i: Int): String = "Seeker Seed ${i + 1}"
     override val IS_PIN_CONFIGURABLE_PER_SEED: Boolean = false
     override val DOES_PIN_FAILURE_WIPE_SEED_VAULT: Boolean = true
+    override val MAX_TRANSACTION_SIZE: Int = 4096
     override val IS_LEGACY_IMPLEMENTATION: Boolean = false
 }
 

@@ -236,6 +236,9 @@ class RunCtsTestsOnSimulator {
     internal inner class SignMessageSignaturesExceedLimitTestCase(override val id: String = "smsel") : CtsTestCase
     internal inner class SignTransactionRequestsExceedLimitTestCase(override val id: String = "strel") : CtsTestCase
     internal inner class SignTransactionSignaturesExceedLimitTestCase(override val id: String = "stsel") : CtsTestCase
+    internal inner class SignTransactionPayloadExceedsMaxSizeTestCase(override val id: String = "stpems") : CtsTestCase
+    internal inner class SignTransactionPayloadExceedsMaxSizeWithMaxSignaturesTestCase(override val id: String = "stpemsmaxs") : CtsTestCase
+    internal inner class SignTransactionOneOfTwoPayloadsExceedsMaxSizeTestCase(override val id: String = "stpemsb") : CtsTestCase
     internal inner class DeauthorizeSeed24TestCase(override val id: String = "ds24") : CtsTestCase
     internal inner class CannotShowSeedSettingsTestCase(override val id: String = "csss") : CtsTestCase
 
@@ -372,6 +375,9 @@ class RunCtsTestsOnSimulator {
     internal inner class SignMaxMessageWithMaxSignatureTestCase(override val id: String = "smaxmmaxs") : AuthorizeWithBiometricsTestCase()
     internal inner class SignMaxTransactionWithMaxSignatureBip44TestCase(override val id: String = "smaxtmaxsb44") : AuthorizeWithBiometricsTestCase()
     internal inner class SignMaxTransactionWithMaxSignatureTestCase(override val id: String = "smaxtmaxs") : AuthorizeWithBiometricsTestCase()
+    internal inner class Sign1TransactionV1With1SignatureTestCase(override val id: String = "s1t1sv1") : AuthorizeWithBiometricsTestCase()
+    internal inner class SignMaxTransactionV1WithMaxSignatureBip44TestCase(override val id: String = "smaxtmaxsb44v1") : AuthorizeWithBiometricsTestCase()
+    internal inner class SignMaxTransactionV1WithMaxSignatureTestCase(override val id: String = "smaxtmaxsv1") : AuthorizeWithBiometricsTestCase()
 
     internal inner class CreateNewSeedTestCase : CtsTestCase {
         override val id = "cns"
@@ -575,10 +581,16 @@ class RunCtsTestsOnSimulator {
         FetchMaxPubKeyTestCase(),
         FetchTooManyPubKeyTestCase(),
         Sign1TransactionWith1SignatureTestCase(),
+        Sign1TransactionV1With1SignatureTestCase(),
         SignMaxTransactionWithMaxSignatureTestCase(),
+        SignMaxTransactionV1WithMaxSignatureTestCase(),
         SignMaxTransactionWithMaxSignatureBip44TestCase(),
+        SignMaxTransactionV1WithMaxSignatureBip44TestCase(),
         SignTransactionRequestsExceedLimitTestCase(),
         SignTransactionSignaturesExceedLimitTestCase(),
+        SignTransactionPayloadExceedsMaxSizeTestCase(),
+        SignTransactionPayloadExceedsMaxSizeWithMaxSignaturesTestCase(),
+        SignTransactionOneOfTwoPayloadsExceedsMaxSizeTestCase(),
         DenySignTransactionTestCase(),
         IncorrectPinSignTransactionFailureTestCase(),
         Sign1MessageWith1SignatureTestCase(),

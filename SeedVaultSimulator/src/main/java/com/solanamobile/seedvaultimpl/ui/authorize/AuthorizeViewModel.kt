@@ -138,6 +138,18 @@ class AuthorizeViewModel @AssistedInject constructor(
                             authorizeCommonViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_IMPLEMENTATION_LIMIT_EXCEEDED)
                             return@collect
                         }
+                        if (request.type.type == AuthorizeRequestType.Signature.Type.Transaction) {
+                            val oversized = request.type.transactions.firstOrNull { t ->
+                                t.payload.size > RequestLimitsUseCase.maxPayloadSize(t.requestedSignatures.size)
+                            }
+                            if (oversized != null) {
+                                Log.e(TAG, "Transaction too large: payload=${oversized.payload.size}, " +
+                                        "signatures=${oversized.requestedSignatures.size}, " +
+                                        "max payload=${RequestLimitsUseCase.maxPayloadSize(oversized.requestedSignatures.size)}")
+                                authorizeCommonViewModel.completeAuthorizationWithError(WalletContractV1.RESULT_INVALID_PAYLOAD)
+                                return@collect
+                            }
+                        }
                         try {
                             val normalizedDerivationPaths = request.type.transactions.map { t ->
                                 normalizeDerivationPaths(t.requestedSignatures)

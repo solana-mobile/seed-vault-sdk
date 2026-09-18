@@ -10,4 +10,9 @@ object RequestLimitsUseCase {
     const val MAX_SIGNING_REQUESTS = WalletContractV1.MIN_SUPPORTED_SIGNING_REQUESTS
     const val MAX_REQUESTED_SIGNATURES = WalletContractV1.MIN_SUPPORTED_REQUESTED_SIGNATURES
     const val MAX_REQUESTED_PUBLIC_KEYS = WalletContractV1.MIN_SUPPORTED_REQUESTED_PUBLIC_KEYS
+    const val MAX_TRANSACTION_SIZE = 4096
+
+    fun maxPayloadSize(requestedSignatures: Int): Int =
+        MAX_TRANSACTION_SIZE -
+                requestedSignatures * SignPayloadUseCase.ED25519_SIGNATURE_SIZE.toInt()
 }

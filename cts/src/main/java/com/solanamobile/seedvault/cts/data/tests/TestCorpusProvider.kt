@@ -8,6 +8,7 @@ import com.solanamobile.seedvault.cts.PrivilegedSeedVaultChecker
 import com.solanamobile.seedvault.cts.data.TestCorpus
 import com.solanamobile.seedvault.cts.data.TestSessionLogger
 import com.solanamobile.seedvault.cts.data.testdata.ImplementationDetails
+import com.solanamobile.seedvault.cts.data.testdata.supportsTransactionV1
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -49,14 +50,20 @@ internal object TestCorpusProvider {
         seed24AccountsContentProviderTestCase: KnownSeed24AccountsContentProviderTestCase,
         showSeedSettingsTestCase: ShowSeedSettingsTestCase,
         sign1MessageWith1SignatureTestCase: Sign1MessageWith1SignatureTestCase,
+        sign1TransactionV1With1SignatureTestCase: Sign1TransactionV1With1SignatureTestCase,
         sign1TransactionWith1SignatureTestCase: Sign1TransactionWith1SignatureTestCase,
         signMaxMessageWithMaxSignatureBip44TestCase: SignMaxMessageWithMaxSignatureBip44TestCase,
         signMaxMessageWithMaxSignatureTestCase: SignMaxMessageWithMaxSignatureTestCase,
+        signMaxTransactionV1WithMaxSignatureBip44TestCase: SignMaxTransactionV1WithMaxSignatureBip44TestCase,
+        signMaxTransactionV1WithMaxSignatureTestCase: SignMaxTransactionV1WithMaxSignatureTestCase,
         signMaxTransactionWithMaxSignatureBip44TestCase: SignMaxTransactionWithMaxSignatureBip44TestCase,
         signMaxTransactionWithMaxSignatureTestCase: SignMaxTransactionWithMaxSignatureTestCase,
         signMessageRequestsExceedLimitTestCase: SignMessageRequestsExceedLimitTestCase,
         signMessageSignaturesExceedLimitTestCase: SignMessageSignaturesExceedLimitTestCase,
         signTransactionRequestsExceedLimitTestCase: SignTransactionRequestsExceedLimitTestCase,
+        signTransactionOneOfTwoPayloadsExceedsMaxSizeTestCase: SignTransactionOneOfTwoPayloadsExceedsMaxSizeTestCase,
+        signTransactionPayloadExceedsMaxSizeTestCase: SignTransactionPayloadExceedsMaxSizeTestCase,
+        signTransactionPayloadExceedsMaxSizeWithMaxSignaturesTestCase: SignTransactionPayloadExceedsMaxSizeWithMaxSignaturesTestCase,
         signTransactionSignaturesExceedLimitTestCase: SignTransactionSignaturesExceedLimitTestCase,
         logger: TestSessionLogger,
         implementationDetails: ImplementationDetails,
@@ -66,6 +73,10 @@ internal object TestCorpusProvider {
             logger.warn("Running additional bypass for legacy implementation only.")
         }
         val isGenericBuild = !privilegedSeedVaultChecker.isPrivileged()
+        val supportsTransactionV1 = implementationDetails.supportsTransactionV1
+        if (!supportsTransactionV1) {
+            logger.warn("Implementation does not support Transaction V1; skipping those test cases.")
+        }
         return listOfNotNull(
             noPermissionsContentProviderCheck.takeIf { isGenericBuild },
             acquireSeedVaultPrivilegedPermissionTestCase.takeIf { isGenericBuild },
@@ -80,10 +91,16 @@ internal object TestCorpusProvider {
             fetchMaxPubKeyTestCase,
             fetchTooManyPubKeyTestCase,
             sign1TransactionWith1SignatureTestCase,
+            sign1TransactionV1With1SignatureTestCase.takeIf { supportsTransactionV1 },
             signMaxTransactionWithMaxSignatureTestCase,
+            signMaxTransactionV1WithMaxSignatureTestCase.takeIf { supportsTransactionV1 },
             signMaxTransactionWithMaxSignatureBip44TestCase,
+            signMaxTransactionV1WithMaxSignatureBip44TestCase.takeIf { supportsTransactionV1 },
             signTransactionRequestsExceedLimitTestCase,
             signTransactionSignaturesExceedLimitTestCase,
+            signTransactionPayloadExceedsMaxSizeTestCase,
+            signTransactionPayloadExceedsMaxSizeWithMaxSignaturesTestCase,
+            signTransactionOneOfTwoPayloadsExceedsMaxSizeTestCase,
             denySignTransactionTestCase,
             incorrectPinSignTransactionFailureTestCase.takeIf { !implementationDetails.DOES_PIN_FAILURE_WIPE_SEED_VAULT },
             sign1MessageWith1SignatureTestCase,
