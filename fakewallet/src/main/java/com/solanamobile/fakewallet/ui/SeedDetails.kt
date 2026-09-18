@@ -60,15 +60,15 @@ data class ImplementationLimits(
 fun SeedDetails(
     seed: Seed,
     implementationLimits: ImplementationLimits,
-    onSignTransaction: (Seed, Account) -> Unit,
+    onSignTransaction: (Seed, Account, TransactionVersion) -> Unit,
     onSignMessage: (Seed, Account) -> Unit,
     onAccountNameUpdated: (Seed, Account, String) -> Unit,
     onDeauthorizeSeed: (Seed) -> Unit,
     onShowSeedSettings: (Seed) -> Unit,
     onRequestPublicKeys: (Seed) -> Unit,
     onRequestOpenPublicKeys: (Seed) -> Unit,
-    onSignMaxTransactionsWithMaxSignatures: (Seed) -> Unit,
-    onSignPermissionedAccountTransactions: (Seed) -> Unit,
+    onSignMaxTransactionsWithMaxSignatures: (Seed, TransactionVersion) -> Unit,
+    onSignPermissionedAccountTransactions: (Seed, TransactionVersion) -> Unit,
     onSignMaxMessagesWithMaxSignatures: (Seed) -> Unit,
     onSignPermissionedAccountMessages: (Seed) -> Unit
 ) {
@@ -162,36 +162,42 @@ fun SeedDetails(
                 )
             }
         }
-        TextButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Sizes.dp8),
-            onClick = { onSignMaxTransactionsWithMaxSignatures(seed) },
-            colors = ButtonDefaults.buttonColors()
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.action_sign_max_transactions_with_max_signatures,
-                    implementationLimits.maxSigningRequests,
-                    implementationLimits.maxRequestedSignatures
-                )
-            )
-        }
-        if (isSeedVaultPrivileged) {
+        TransactionVersion.entries.forEach { transactionVersion ->
             TextButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = Sizes.dp8),
-                onClick = { onSignPermissionedAccountTransactions(seed) },
+                onClick = { onSignMaxTransactionsWithMaxSignatures(seed, transactionVersion) },
                 colors = ButtonDefaults.buttonColors()
             ) {
                 Text(
                     text = stringResource(
-                        R.string.action_sign_no_auth_transactions,
+                        R.string.action_sign_max_transactions_with_max_signatures,
                         implementationLimits.maxSigningRequests,
-                        implementationLimits.maxRequestedSignatures
+                        implementationLimits.maxRequestedSignatures,
+                        transactionVersion.label
                     )
                 )
+            }
+        }
+        if (isSeedVaultPrivileged) {
+            TransactionVersion.entries.forEach { transactionVersion ->
+                TextButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Sizes.dp8),
+                    onClick = { onSignPermissionedAccountTransactions(seed, transactionVersion) },
+                    colors = ButtonDefaults.buttonColors()
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.action_sign_no_auth_transactions,
+                            implementationLimits.maxSigningRequests,
+                            implementationLimits.maxRequestedSignatures,
+                            transactionVersion.label
+                        )
+                    )
+                }
             }
         }
         TextButton(
@@ -230,7 +236,9 @@ fun SeedDetails(
             AccountComposable(
                 account = account,
                 onSignMessage = { onSignMessage(seed, account) },
-                onSignTransaction = { onSignTransaction(seed, account) },
+                onSignTransaction = { transactionVersion ->
+                    onSignTransaction(seed, account, transactionVersion)
+                },
                 onAccountNameUpdated = { editedName ->
                     if (account.name != editedName) {
                         onAccountNameUpdated(seed, account, editedName)
@@ -245,7 +253,7 @@ fun SeedDetails(
 fun AccountComposable(
     account: Account,
     onSignMessage: () -> Unit,
-    onSignTransaction: () -> Unit,
+    onSignTransaction: (TransactionVersion) -> Unit,
     onAccountNameUpdated: (String) -> Unit
 ) {
     var showRenameDialog by remember { mutableStateOf(false) }
@@ -386,19 +394,26 @@ fun AccountComposable(
             Text(
                 text = stringResource(id = R.string.label_sign)
             )
-            TextButton(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = Sizes.dp16),
-                onClick = onSignTransaction,
-                colors = ButtonDefaults.buttonColors()
-            ) {
-                Text(text = stringResource(R.string.action_sign_transaction))
+            TransactionVersion.entries.forEach { transactionVersion ->
+                TextButton(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = Sizes.dp4),
+                    onClick = { onSignTransaction(transactionVersion) },
+                    colors = ButtonDefaults.buttonColors()
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.action_sign_transaction,
+                            transactionVersion.label
+                        )
+                    )
+                }
             }
             TextButton(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = Sizes.dp16),
+                    .padding(horizontal = Sizes.dp4),
                 onClick = onSignMessage,
                 colors = ButtonDefaults.buttonColors()
             ) {

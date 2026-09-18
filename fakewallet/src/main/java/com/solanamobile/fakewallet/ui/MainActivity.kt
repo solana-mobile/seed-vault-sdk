@@ -116,8 +116,12 @@ class MainActivity : ComponentActivity() {
                                             uiState.firstRequestedPublicKey,
                                             uiState.lastRequestedPublicKey
                                         ),
-                                        onSignTransaction = { seed, account ->
-                                            viewModel.signFakeTransaction(seed.authToken, account)
+                                        onSignTransaction = { seed, account, transactionVersion ->
+                                            viewModel.signFakeTransaction(
+                                                seed.authToken,
+                                                account,
+                                                transactionVersion
+                                            )
                                         },
                                         onSignMessage = { seed, account ->
                                             viewModel.signFakeMessage(seed.authToken, account)
@@ -141,12 +145,16 @@ class MainActivity : ComponentActivity() {
                                         onRequestOpenPublicKeys = { seed ->
                                             viewModel.requestPermissionedPublicKeys(seed.authToken)
                                         },
-                                        onSignMaxTransactionsWithMaxSignatures = { seed ->
-                                            viewModel.signMaxTransactionsWithMaxSignatures(seed.authToken)
+                                        onSignMaxTransactionsWithMaxSignatures = { seed, transactionVersion ->
+                                            viewModel.signMaxTransactionsWithMaxSignatures(
+                                                seed.authToken,
+                                                transactionVersion
+                                            )
                                         },
-                                        onSignPermissionedAccountTransactions = { seed ->
+                                        onSignPermissionedAccountTransactions = { seed, transactionVersion ->
                                             viewModel.signPermissionedAccountTransactions(
                                                 authToken = seed.authToken,
+                                                transactionVersion = transactionVersion,
                                             )
                                         },
                                         onSignMaxMessagesWithMaxSignatures = { seed ->
