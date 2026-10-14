@@ -2,7 +2,7 @@
 agp = "9.1.1"
 android-material = "1.14.0"
 androidx-activity = "1.13.0"
-androidx-annotation = "1.10.0"
+androidx-annotation = "1.11.0"
 androidx-appcompat = "1.8.0"
 androidx-compose-bom = "2026.09.00"
 androidx-constraintlayout = "2.2.2"
